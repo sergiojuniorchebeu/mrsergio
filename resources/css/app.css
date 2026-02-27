@@ -1,0 +1,237 @@
+/* ============================================================
+   resources/css/app.css
+   Palette 2026 — "Teal & Cloud" par Sergio Junior Chebeu
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+@import 'tailwindcss';
+
+/* ── Plugin Typography — pour le contenu Markdown des projets ──────
+   Installe d'abord : npm install @tailwindcss/typography
+   Donne les classes prose prose-slate etc.
+────────────────────────────────────────────────────────────────── */
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    /* ── TYPOGRAPHIE ────────────────────────────────────────────── */
+    --font-display: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    --font-sans:    'DM Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* ── PALETTE PRINCIPALE : Deep Teal ──────────────────────────  */
+    --color-teal-50:  #effcf8;
+    --color-teal-100: #d2f5eb;
+    --color-teal-200: #a8ebd8;
+    --color-teal-300: #6fd9be;
+    --color-teal-400: #38bfa3;
+    --color-teal-500: #1aa389;
+    --color-teal-600: #138770;
+    --color-teal-700: #126b5b;
+    --color-teal-800: #125549;
+    --color-teal-900: #12463d;
+    --color-teal-950: #072b25;
+
+    /* ── PALETTE SECONDAIRE : Warm Slate ─────────────────────────  */
+    --color-slate-50:  #f8f8f7;
+    --color-slate-100: #f0efec;
+    --color-slate-200: #e2e0da;
+    --color-slate-300: #cac7be;
+    --color-slate-400: #a9a49a;
+    --color-slate-500: #8a8479;
+    --color-slate-600: #706a5f;
+    --color-slate-700: #5c564d;
+    --color-slate-800: #4d4840;
+    --color-slate-900: #433e37;
+    --color-slate-950: #1e1b16;
+
+    /* ── ACCENT : Warm Gold ───────────────────────────────────────  */
+    --color-gold-300: #fcd97a;
+    --color-gold-400: #f8c23e;
+    --color-gold-500: #e8a910;
+    --color-gold-600: #c98a07;
+
+    /* ── SURFACES ─────────────────────────────────────────────────  */
+    --color-surface:        #F4F3EF;
+    --color-surface-card:   #FAFAF8;
+    --color-surface-raised: #FFFFFF;
+    --color-surface-subtle: #EEECEA;
+
+    /* ── TEXTE ────────────────────────────────────────────────────  */
+    --color-ink-primary:   #1A1916;
+    --color-ink-secondary: #4A4740;
+    --color-ink-muted:     #7A7670;
+    --color-ink-subtle:    #AAA69E;
+
+    /* ── SÉMANTIQUE ───────────────────────────────────────────────  */
+    --color-success: #1aa389;
+    --color-warning: #e8a910;
+    --color-error:   #e05c4a;
+
+    /* ── EASINGS ──────────────────────────────────────────────────  */
+    --ease-smooth: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ── RAYONS ───────────────────────────────────────────────────  */
+    --radius-sm:   6px;
+    --radius-md:   12px;
+    --radius-lg:   18px;
+    --radius-xl:   24px;
+    --radius-full: 9999px;
+
+    /* ── KEYFRAMES ────────────────────────────────────────────────  */
+    @keyframes shine {
+        0%   { transform: translateX(-150%) skewX(-20deg); }
+        100% { transform: translateX(350%)  skewX(-20deg); }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50%       { transform: translateY(-12px); }
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50%       { opacity: 0.15; transform: scale(1.1); }
+    }
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes blink-cursor {
+        0%, 49%  { opacity: 1; }
+        50%, 100%{ opacity: 0; }
+    }
+}
+
+/* ── BASE ─────────────────────────────────────────────────────────── */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-color: var(--color-surface);
+        color: var(--color-ink-secondary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-display);
+        color: var(--color-ink-primary);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-teal-500);
+        outline-offset: 3px;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--color-surface); }
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-slate-300);
+        border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-slate-400); }
+
+    ::selection {
+        background-color: var(--color-teal-200);
+        color: var(--color-teal-950);
+    }
+}
+
+/* ── COMPOSANTS UTILITAIRES ─────────────────────────────────────────  */
+@layer components {
+
+    .container-main {
+        max-width: 72rem;
+        margin-inline: auto;
+        padding-inline: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+        .container-main {
+            padding-inline: 1.5rem;
+        }
+    }
+
+    .glass {
+        background: rgba(250, 250, 248, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .gradient-text {
+        background: linear-gradient(
+            135deg,
+            var(--color-teal-600) 0%,
+            var(--color-teal-400) 50%,
+            var(--color-gold-400) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .glow-teal {
+        box-shadow:
+            0 0 0 1px rgba(26, 163, 137, 0.15),
+            0 4px 24px rgba(26, 163, 137, 0.12),
+            0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .animate-float   { animation: float 6s ease-in-out infinite; }
+    .animate-fade-up { animation: fade-up 0.6s var(--ease-smooth) forwards; }
+    .animate-shine   { animation: shine 3s ease-in-out infinite; }
+
+    /* ── Scrollbar hide — pour la barre de filtres projets ────────
+       Utilisé sur le overflow-x-auto des filtres tags
+    ────────────────────────────────────────────────────────────── */
+    .scrollbar-none {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ── Prose custom — override du plugin Typography ──────────────
+       On surcharge les couleurs pour matcher notre palette teal/slate
+       Flutter équivalent : TextTheme appliqué sur du contenu riche
+    ────────────────────────────────────────────────────────────── */
+    .prose {
+        --tw-prose-body:        var(--color-ink-secondary);
+        --tw-prose-headings:    var(--color-ink-primary);
+        --tw-prose-lead:        var(--color-ink-muted);
+        --tw-prose-links:       var(--color-teal-600);
+        --tw-prose-bold:        var(--color-ink-primary);
+        --tw-prose-counters:    var(--color-ink-muted);
+        --tw-prose-bullets:     var(--color-teal-400);
+        --tw-prose-hr:          var(--color-slate-200);
+        --tw-prose-quotes:      var(--color-ink-primary);
+        --tw-prose-quote-borders: var(--color-teal-300);
+        --tw-prose-captions:    var(--color-ink-muted);
+        --tw-prose-code:        var(--color-teal-700);
+        --tw-prose-pre-code:    var(--color-slate-100);
+        --tw-prose-pre-bg:      var(--color-slate-900);
+        --tw-prose-th-borders:  var(--color-slate-200);
+        --tw-prose-td-borders:  var(--color-slate-100);
+    }
+}
+
+/* ── Animation blink cursor (TypingAnimation Magic UI) ────────────── */
+@theme inline {
+    --animate-blink-cursor: blink-cursor 1.2s step-end infinite;
+}
