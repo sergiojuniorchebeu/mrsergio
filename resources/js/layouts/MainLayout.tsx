@@ -1,27 +1,25 @@
 // resources/js/layouts/MainLayout.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Layout principal — Navbar sticky glass + Menu mobile + Footer soft
-// Flutter équivalent : Scaffold avec AppBar + BottomNavigationBar + endDrawer
-// ─────────────────────────────────────────────────────────────────────────────
+"use client";
 
-import { Link, usePage }         from '@inertiajs/react';
+import { Link, usePage }           from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReactNode, useState, useEffect } from 'react';
-import { cn }                    from '@/lib/utils';
-import { easings }               from '@/lib/utils';
+import { cn }                      from '@/lib/utils';
+import { easings }                 from '@/lib/utils';
+import { Particles }               from '@/components/ui/particles';
 
 interface Props {
     children: ReactNode;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DATA
+// NAV DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const navLinks = [
     { href: '/',           label: 'Accueil' },
     { href: '/projects',   label: 'Projets' },
     { href: '/blog',       label: 'Blog' },
-    { href: '/community',  label: 'Communauté' },
+    { href: '/formations', label: 'Formations' },
 ];
 
 const footerSocials = [
@@ -45,7 +43,7 @@ const footerSocials = [
     },
     {
         label: 'Email',
-        href:  'mailto:sergio@example.com',
+        href:  'mailto:contact@mrsergio.dev',
         icon: (
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -55,30 +53,72 @@ const footerSocials = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VARIANTS MENU MOBILE
-// Flutter équivalent : AnimatedContainer + SlideTransition pour le drawer
+// PREVIEW DATA — sera remplacé par Inertia::share() plus tard
+// ─────────────────────────────────────────────────────────────────────────────
+const previewProjects = [
+    {
+        slug:  'mrmarket-app-gestion-marche',
+        title: 'MrMarket — App de gestion de marché',
+        desc:  'Application mobile Flutter pour la gestion des vendeurs, stocks et transactions.',
+        tags:  ['Flutter', 'Laravel'],
+        // Unsplash image libre de droit — mobile app / market
+        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80',
+    },
+    {
+        slug:  'devconnect-communaute-developpeurs',
+        title: 'DevConnect — Communauté de développeurs',
+        desc:  'Plateforme de mise en relation de développeurs africains avec forum et mentorat.',
+        tags:  ['React', 'Laravel'],
+        image: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?w=600&q=80',
+    },
+    {
+        slug:  'analyticspro-dashboard-kpi',
+        title: 'AnalyticsPro — Dashboard de suivi KPI',
+        desc:  'Dashboard analytique en temps réel pour PME avec graphiques et exports.',
+        tags:  ['React', 'MySQL'],
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
+    },
+];
+
+const previewPosts = [
+    {
+        slug:  'mon-stack-2026-laravel-inertia-tailwind',
+        title: 'Mon stack 2026 : Laravel + Inertia + Tailwind',
+        date:  'il y a 10 jours',
+        tag:   'Laravel',
+        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80',
+    },
+    {
+        slug:  'architecture-propre-front-inertia',
+        title: 'Architecture propre côté Front Inertia',
+        date:  'il y a 6 jours',
+        tag:   'Inertia',
+        image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80',
+    },
+    {
+        slug:  'seeders-avancer-vite-sans-dashboard',
+        title: 'Seeders : avancer vite sans dashboard',
+        date:  'il y a 2 jours',
+        tag:   'Tips',
+        image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80',
+    },
+];
+
+const previewFormations = [
+    { slug: 'laravel-zero-api-rest',              title: "Laravel — API REST",             cat: 'Laravel', icon: '🔴', price: '29,99 €', free: false, image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=600&q=80' },
+    { slug: 'flutter-firebase-app-mobile',        title: 'Flutter & Firebase',             cat: 'Flutter', icon: '🔵', price: '29,99 €', free: false, image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80' },
+    { slug: 'python-automatisation-data',         title: 'Python — Automatisation',        cat: 'Python',  icon: '🐍', price: '24,99 €', free: false, image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80' },
+    { slug: 'java-programmation-orientee-objet',  title: 'Java — POO',                     cat: 'Java',    icon: '☕', price: 'Gratuit',  free: true,  image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80' },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MENU VARIANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const mobileMenuVariants = {
-    hidden: {
-        opacity: 0,
-        y: -8,
-        scale: 0.97,
-        transition: { duration: 0.2, ease: easings.snappy },
-    },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: { duration: 0.25, ease: easings.smooth },
-    },
-    exit: {
-        opacity: 0,
-        y: -8,
-        scale: 0.97,
-        transition: { duration: 0.18, ease: easings.snappy },
-    },
+    hidden:  { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.2,  ease: easings.snappy } },
+    visible: { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.25, ease: easings.smooth } },
+    exit:    { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.18, ease: easings.snappy } },
 };
-
 const mobileItemVariants = {
     hidden:  { opacity: 0, x: -12 },
     visible: (i: number) => ({
@@ -88,25 +128,214 @@ const mobileItemVariants = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPOSANT
+// SOUS-COMPOSANTS CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Card Projet — image pleine largeur + overlay + tags
+function ProjectCard({ p, i }: { p: typeof previewProjects[0]; i: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
+        >
+            <Link href={`/projects/${p.slug}`} className="group block h-full">
+                <div className={cn(
+                    'h-full flex flex-col rounded-2xl overflow-hidden',
+                    'bg-surface-raised border border-slate-200/60',
+                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
+                    'transition-all duration-300 hover:-translate-y-1',
+                )}>
+                    {/* Image */}
+                    <div className="relative h-44 overflow-hidden">
+                        <img
+                            src={p.image}
+                            alt={p.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                        {/* Tags sur l'image */}
+                        <div className="absolute bottom-3 left-3 flex gap-1.5">
+                            {p.tags.map(tag => (
+                                <span key={tag} className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/20">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Texte */}
+                    <div className="flex flex-col flex-1 p-4 gap-2">
+                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
+                            {p.title}
+                        </p>
+                        <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">{p.desc}</p>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-teal-600 pt-2 border-t border-slate-100 group-hover:gap-2 transition-all duration-200">
+                            Voir le projet
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </motion.div>
+    );
+}
+
+// Card Blog — image + tag badge + date
+function BlogCard({ p, i }: { p: typeof previewPosts[0]; i: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
+        >
+            <Link href={`/blog/${p.slug}`} className="group block h-full">
+                <div className={cn(
+                    'h-full flex flex-col rounded-2xl overflow-hidden',
+                    'bg-surface-card border border-slate-200/60',
+                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
+                    'transition-all duration-300 hover:-translate-y-1',
+                )}>
+                    {/* Image */}
+                    <div className="relative h-40 overflow-hidden">
+                        <img
+                            src={p.image}
+                            alt={p.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                        {/* Tag pill en bas */}
+                        <div className="absolute top-3 left-3">
+                            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-ink-secondary border border-white/60 shadow-sm">
+                                {p.tag}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Texte */}
+                    <div className="flex flex-col flex-1 p-4 gap-2">
+                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
+                            {p.title}
+                        </p>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <span className="text-xs text-ink-subtle">{p.date}</span>
+                            <span className="text-xs font-semibold text-teal-600 flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                                Lire
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </motion.div>
+    );
+}
+
+// Card Formation — image + prix badge + niveau
+function FormationCard({ f, i }: { f: typeof previewFormations[0]; i: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
+        >
+            <Link href={`/formations/${f.slug}`} className="group block h-full">
+                <div className={cn(
+                    'h-full flex flex-col rounded-2xl overflow-hidden',
+                    'bg-surface-raised border border-slate-200/60',
+                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
+                    'transition-all duration-300 hover:-translate-y-1',
+                )}>
+                    {/* Image */}
+                    <div className="relative h-36 overflow-hidden">
+                        <img
+                            src={f.image}
+                            alt={f.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        {/* Catégorie + icône */}
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/60 shadow-sm">
+                            <span className="text-sm">{f.icon}</span>
+                            <span className="text-xs font-semibold text-ink-secondary">{f.cat}</span>
+                        </div>
+                        {/* Prix badge */}
+                        <div className={cn(
+                            'absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm',
+                            f.free ? 'bg-teal-600 text-white' : 'bg-white/90 backdrop-blur-sm text-ink-primary border border-white/60',
+                        )}>
+                            {f.price}
+                        </div>
+                    </div>
+
+                    {/* Texte */}
+                    <div className="flex flex-col flex-1 p-4 gap-2">
+                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
+                            {f.title}
+                        </p>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <span className={cn('text-xs font-bold', f.free ? 'text-teal-600' : 'text-ink-primary')}>
+                                {f.price}
+                            </span>
+                            <span className="text-xs text-teal-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                Voir
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        </motion.div>
+    );
+}
+
+// Header de section
+function SectionHeader({ label, title, href, linkLabel }: { label: string; title: string; href: string; linkLabel: string }) {
+    return (
+        <div className="flex items-end justify-between mb-8">
+            <div>
+                <p className="text-xs font-medium text-ink-muted uppercase tracking-[0.2em] mb-1.5">{label}</p>
+                <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink-primary">{title}</h2>
+            </div>
+            <Link
+                href={href}
+                className="group flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:gap-3 transition-all duration-200 flex-shrink-0 ml-4"
+            >
+                {linkLabel}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+            </Link>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAYOUT PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 export default function MainLayout({ children }: Props) {
     const { url } = usePage();
-    const [menuOpen, setMenuOpen]     = useState(false);
-    const [scrolled, setScrolled]     = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    // Détecte le scroll pour renforcer le blur/shadow de la navbar
-    // Flutter équivalent : ScrollController + listener
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 12);
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // Ferme le menu si on change de page
     useEffect(() => { setMenuOpen(false); }, [url]);
 
-    // Bloque le scroll body quand le menu est ouvert (comme Flutter's modal)
     useEffect(() => {
         document.body.style.overflow = menuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
@@ -115,35 +344,22 @@ export default function MainLayout({ children }: Props) {
     return (
         <div className="min-h-screen bg-surface">
 
-            {/* ══════════════════════════════════════════════════════════════
-                NAVBAR — sticky, glassmorphism, responsive
-                Flutter équivalent : SliverAppBar avec pinned: true
-            ══════════════════════════════════════════════════════════════ */}
-            <header
-                className={cn(
-                    'sticky top-0 z-50 transition-all duration-300',
-                    scrolled
-                        ? 'bg-surface/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm shadow-slate-100'
-                        : 'bg-surface/60 backdrop-blur-md border-b border-transparent',
-                )}
-            >
+            {/* ── NAVBAR ─────────────────────────────────────────────────── */}
+            <header className={cn(
+                'sticky top-0 z-50 transition-all duration-300',
+                scrolled
+                    ? 'bg-surface/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm shadow-slate-100'
+                    : 'bg-surface/60 backdrop-blur-md border-b border-transparent',
+            )}>
                 <div className="container-main h-16 flex items-center justify-between">
 
-                    {/* ── Logo ──────────────────────────────────────────── */}
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2.5 group"
-                    >
-                        {/* Carré logo avec initiale */}
+                    <Link href="/" className="flex items-center gap-2.5 group">
                         <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center shadow-sm shadow-teal-500/30 group-hover:bg-teal-700 transition-colors duration-200">
                             <span className="text-white font-bold text-sm font-display">S</span>
                         </div>
-                        <span className="font-semibold text-ink-primary text-base font-display tracking-tight">
-                            mrsergio
-                        </span>
+                        <span className="font-semibold text-ink-primary text-base font-display tracking-tight">mrsergio</span>
                     </Link>
 
-                    {/* ── Nav desktop ───────────────────────────────────── */}
                     <nav className="hidden md:flex items-center gap-1">
                         {navLinks.map(link => {
                             const isActive = url === link.href;
@@ -153,12 +369,9 @@ export default function MainLayout({ children }: Props) {
                                     href={link.href}
                                     className={cn(
                                         'relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                                        isActive
-                                            ? 'text-teal-600'
-                                            : 'text-ink-muted hover:text-ink-primary hover:bg-slate-100/80',
+                                        isActive ? 'text-teal-600' : 'text-ink-muted hover:text-ink-primary hover:bg-slate-100/80',
                                     )}
                                 >
-                                    {/* Indicateur actif — underline animé */}
                                     {isActive && (
                                         <motion.span
                                             layoutId="nav-indicator"
@@ -173,98 +386,51 @@ export default function MainLayout({ children }: Props) {
                         })}
                     </nav>
 
-                    {/* ── CTA desktop ───────────────────────────────────── */}
                     <div className="hidden md:flex items-center gap-3">
-                        <Link
-                            href="/contact"
-                            className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors duration-200 shadow-sm shadow-teal-500/20"
-                        >
+                        <Link href="/contact" className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors duration-200 shadow-sm shadow-teal-500/20">
                             Me contacter
                         </Link>
                     </div>
 
-                    {/* ── Burger mobile ─────────────────────────────────────
-                        Trois lignes → croix animée
-                        Flutter équivalent : AnimatedIcon avec Animated.icons.menu_close
-                    ────────────────────────────────────────────────────── */}
                     <button
                         onClick={() => setMenuOpen(v => !v)}
                         aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
                         className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200"
                     >
-                        <motion.span
-                            animate={menuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-                            transition={{ duration: 0.22 }}
-                            className="block w-5 h-[1.5px] bg-ink-primary rounded-full origin-center"
-                        />
-                        <motion.span
-                            animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-                            transition={{ duration: 0.18 }}
-                            className="block w-5 h-[1.5px] bg-ink-primary rounded-full"
-                        />
-                        <motion.span
-                            animate={menuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
-                            transition={{ duration: 0.22 }}
-                            className="block w-5 h-[1.5px] bg-ink-primary rounded-full origin-center"
-                        />
+                        <motion.span animate={menuOpen ? { rotate: 45,  y: 7  } : { rotate: 0, y: 0 }} transition={{ duration: 0.22 }} className="block w-5 h-[1.5px] bg-ink-primary rounded-full origin-center" />
+                        <motion.span animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }} transition={{ duration: 0.18 }} className="block w-5 h-[1.5px] bg-ink-primary rounded-full" />
+                        <motion.span animate={menuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }} transition={{ duration: 0.22 }} className="block w-5 h-[1.5px] bg-ink-primary rounded-full origin-center" />
                     </button>
                 </div>
 
-                {/* ── Menu mobile dropdown ──────────────────────────────────
-                    AnimatePresence = détruit/recrée l'élément avec animation
-                    Flutter équivalent : AnimatedSwitcher
-                ────────────────────────────────────────────────────────── */}
                 <AnimatePresence>
                     {menuOpen && (
                         <motion.div
                             key="mobile-menu"
                             variants={mobileMenuVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
+                            initial="hidden" animate="visible" exit="exit"
                             className="md:hidden border-t border-slate-100 bg-surface/95 backdrop-blur-xl"
                         >
                             <div className="container-main py-4 space-y-1">
                                 {navLinks.map((link, i) => {
                                     const isActive = url === link.href;
                                     return (
-                                        <motion.div
-                                            key={link.href}
-                                            custom={i}
-                                            variants={mobileItemVariants}
-                                            initial="hidden"
-                                            animate="visible"
-                                        >
+                                        <motion.div key={link.href} custom={i} variants={mobileItemVariants} initial="hidden" animate="visible">
                                             <Link
                                                 href={link.href}
                                                 className={cn(
                                                     'flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
-                                                    isActive
-                                                        ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                        : 'text-ink-secondary hover:bg-slate-100 hover:text-ink-primary',
+                                                    isActive ? 'bg-teal-50 text-teal-600 border border-teal-100' : 'text-ink-secondary hover:bg-slate-100 hover:text-ink-primary',
                                                 )}
                                             >
                                                 {link.label}
-                                                {isActive && (
-                                                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                                                )}
+                                                {isActive && <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />}
                                             </Link>
                                         </motion.div>
                                     );
                                 })}
-
-                                {/* CTA mobile */}
-                                <motion.div
-                                    custom={navLinks.length}
-                                    variants={mobileItemVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    className="pt-2"
-                                >
-                                    <Link
-                                        href="/contact"
-                                        className="flex items-center justify-center gap-2 w-full bg-teal-600 text-white px-4 py-3 rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors duration-200"
-                                    >
+                                <motion.div custom={navLinks.length} variants={mobileItemVariants} initial="hidden" animate="visible" className="pt-2">
+                                    <Link href="/contact" className="flex items-center justify-center gap-2 w-full bg-teal-600 text-white px-4 py-3 rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors duration-200">
                                         Me contacter
                                     </Link>
                                 </motion.div>
@@ -274,20 +440,51 @@ export default function MainLayout({ children }: Props) {
                 </AnimatePresence>
             </header>
 
-            {/* PAGE CONTENT */}
+            {/* ── PAGE CONTENT ────────────────────────────────────────────── */}
             <main>{children}</main>
 
             {/* ══════════════════════════════════════════════════════════════
-                FOOTER — soft, minimal, élégant
-                Flutter équivalent : BottomAppBar avec Column
+                SECTIONS DÉFILANTES
             ══════════════════════════════════════════════════════════════ */}
-            <footer className="border-t border-slate-200/70 bg-surface-card mt-0">
-                <div className="container-main py-12">
 
-                    {/* Ligne principale */}
+            {/* ── Projets ─────────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface-card">
+                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={30} ease={80} color="#1aa389" />
+                <div className="container-main relative z-10 py-14 sm:py-16">
+                    <SectionHeader label="Portfolio" title="Projets récents" href="/projects" linkLabel="Voir tout" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        {previewProjects.map((p, i) => <ProjectCard key={p.slug} p={p} i={i} />)}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Blog ────────────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface">
+                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={25} ease={80} color="#1aa389" />
+                <div className="container-main relative z-10 py-14 sm:py-16">
+                    <SectionHeader label="Lecture" title="Articles récents" href="/blog" linkLabel="Voir tout" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        {previewPosts.map((p, i) => <BlogCard key={p.slug} p={p} i={i} />)}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Formations ──────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface-card">
+                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={30} ease={80} color="#1aa389" />
+                <div className="container-main relative z-10 py-14 sm:py-16">
+                    <SectionHeader label="Apprendre" title="Mes formations" href="/formations" linkLabel="Voir tout" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {previewFormations.map((f, i) => <FormationCard key={f.slug} f={f} i={i} />)}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── FOOTER ──────────────────────────────────────────────────── */}
+            <footer className="border-t border-slate-200/70 bg-surface-card">
+                <div className="container-main py-12">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
 
-                        {/* Logo + tagline */}
                         <div className="flex flex-col items-center md:items-start gap-2">
                             <Link href="/" className="flex items-center gap-2">
                                 <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
@@ -300,20 +497,14 @@ export default function MainLayout({ children }: Props) {
                             </p>
                         </div>
 
-                        {/* Liens nav footer */}
-                        <nav className="flex items-center gap-6">
+                        <nav className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
                             {navLinks.map(link => (
-                                <Link
-                                    key={link.href}
-                                    href={link.href}
-                                    className="text-xs text-ink-muted hover:text-teal-600 transition-colors duration-200 font-medium"
-                                >
+                                <Link key={link.href} href={link.href} className="text-xs text-ink-muted hover:text-teal-600 transition-colors duration-200 font-medium">
                                     {link.label}
                                 </Link>
                             ))}
                         </nav>
 
-                        {/* Icônes sociales */}
                         <div className="flex items-center gap-2">
                             {footerSocials.map(social => (
                                 <a
@@ -330,17 +521,13 @@ export default function MainLayout({ children }: Props) {
                         </div>
                     </div>
 
-                    {/* Séparateur */}
                     <div className="h-px bg-slate-100 my-8" />
 
-                    {/* Copyright */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
                         <p className="text-xs text-ink-subtle">
                             © {new Date().getFullYear()} Sergio Junior Chebeu — Tous droits réservés.
                         </p>
-                        <p className="text-xs text-ink-subtle">
-                            Conçu & développé avec ❤️ · Laravel · React · Tailwind
-                        </p>
+                        <p className="text-xs text-ink-subtle">contact@mrsergio.dev</p>
                     </div>
                 </div>
             </footer>

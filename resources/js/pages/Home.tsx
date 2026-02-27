@@ -12,9 +12,6 @@ import { TypingAnimation }     from '@/components/ui/typing-animation';
 import { AvatarGlow }          from '@/components/ui/AvatarGlow';
 import { RevealText }          from '@/components/ui/AnimatedText';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VARIANTS
-// ─────────────────────────────────────────────────────────────────────────────
 const containerVariants: Variants = {
     hidden:  {},
     visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
@@ -28,9 +25,6 @@ const itemVariants: Variants = {
     },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SOCIAL LINKS
-// ─────────────────────────────────────────────────────────────────────────────
 const socials = [
     {
         label: 'GitHub',
@@ -61,9 +55,6 @@ const socials = [
     },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PAGE
-// ─────────────────────────────────────────────────────────────────────────────
 export default function Home() {
     return (
         <MainLayout>
@@ -71,7 +62,6 @@ export default function Home() {
 
             <section className="relative min-h-screen flex items-center overflow-hidden">
 
-                {/* Fond grille animée */}
                 <AnimatedGridPattern
                     numSquares={40}
                     maxOpacity={0.04}
@@ -83,7 +73,6 @@ export default function Home() {
                     )}
                 />
 
-                {/* Orbes décoratifs */}
                 <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-400/4 rounded-full blur-2xl pointer-events-none" />
 
@@ -95,17 +84,15 @@ export default function Home() {
                         className="grid lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-24 items-center"
                     >
 
-                        {/* ── Colonne gauche : Texte ───────────────────── */}
-                        <div className="order-2 lg:order-1 space-y-6 sm:space-y-8">
+                        {/* ── Colonne gauche : Texte — order-1 sur TOUS les écrans ── */}
+                        <div className="order-1 lg:order-1 space-y-6 sm:space-y-8">
 
-                            {/* Label intro */}
                             <motion.div variants={itemVariants}>
                                 <p className="text-ink-muted text-xs font-sans font-medium tracking-[0.2em] uppercase">
                                     Développeur Full Stack
                                 </p>
                             </motion.div>
 
-                            {/* Nom */}
                             <motion.div variants={itemVariants}>
                                 <h1 className="leading-[1.08] tracking-tight">
                                     <RevealText
@@ -125,7 +112,6 @@ export default function Home() {
                                 </h1>
                             </motion.div>
 
-                            {/* Description */}
                             <motion.p
                                 variants={itemVariants}
                                 className="text-base sm:text-lg text-ink-secondary leading-relaxed max-w-md"
@@ -136,10 +122,7 @@ export default function Home() {
                                 Laravel, React, Flutter — du backend à l'app mobile.
                             </motion.p>
 
-                            {/* CTAs + Socials */}
                             <motion.div variants={itemVariants} className="space-y-4">
-
-                                {/* Boutons */}
                                 <div className="flex flex-wrap items-center gap-3">
                                     <Link href="/projects" className="flex-shrink-0">
                                         <ShinyButton className="bg-teal-600 text-white px-5 sm:px-7 py-2.5 sm:py-3 text-sm font-semibold rounded-xl">
@@ -166,7 +149,6 @@ export default function Home() {
                                     </Link>
                                 </div>
 
-                                {/* Icônes sociales */}
                                 <div className="flex items-center gap-2 pt-1">
                                     {socials.map((social) => (
                                         <motion.a
@@ -187,10 +169,10 @@ export default function Home() {
                             </motion.div>
                         </div>
 
-                        {/* ── Colonne droite : Photo ───────────────────── */}
+                        {/* ── Colonne droite : Photo — order-2 sur TOUS les écrans ── */}
                         <motion.div
                             variants={itemVariants}
-                            className="order-1 lg:order-2 flex justify-center lg:justify-end"
+                            className="order-2 lg:order-2 flex justify-center lg:justify-end"
                         >
                             <motion.div
                                 animate={{ y: [0, -10, 0] }}

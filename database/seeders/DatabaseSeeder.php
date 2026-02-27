@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
          $this->call([
         ProjectSeeder::class,
         BlogPostSeeder::class,
+        FormationSeeder::class,
     ]);
     }
  
