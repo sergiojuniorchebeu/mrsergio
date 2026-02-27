@@ -6,15 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ReactNode, useState, useEffect } from 'react';
 import { cn }                      from '@/lib/utils';
 import { easings }                 from '@/lib/utils';
-import { Particles }               from '@/components/ui/particles';
 
 interface Props {
     children: ReactNode;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// NAV DATA
-// ─────────────────────────────────────────────────────────────────────────────
 const navLinks = [
     { href: '/',           label: 'Accueil' },
     { href: '/projects',   label: 'Projets' },
@@ -52,73 +48,12 @@ const footerSocials = [
     },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PREVIEW DATA — sera remplacé par Inertia::share() plus tard
-// ─────────────────────────────────────────────────────────────────────────────
-const previewProjects = [
-    {
-        slug:  'mrmarket-app-gestion-marche',
-        title: 'MrMarket — App de gestion de marché',
-        desc:  'Application mobile Flutter pour la gestion des vendeurs, stocks et transactions.',
-        tags:  ['Flutter', 'Laravel'],
-        // Unsplash image libre de droit — mobile app / market
-        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80',
-    },
-    {
-        slug:  'devconnect-communaute-developpeurs',
-        title: 'DevConnect — Communauté de développeurs',
-        desc:  'Plateforme de mise en relation de développeurs africains avec forum et mentorat.',
-        tags:  ['React', 'Laravel'],
-        image: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?w=600&q=80',
-    },
-    {
-        slug:  'analyticspro-dashboard-kpi',
-        title: 'AnalyticsPro — Dashboard de suivi KPI',
-        desc:  'Dashboard analytique en temps réel pour PME avec graphiques et exports.',
-        tags:  ['React', 'MySQL'],
-        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
-    },
-];
-
-const previewPosts = [
-    {
-        slug:  'mon-stack-2026-laravel-inertia-tailwind',
-        title: 'Mon stack 2026 : Laravel + Inertia + Tailwind',
-        date:  'il y a 10 jours',
-        tag:   'Laravel',
-        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80',
-    },
-    {
-        slug:  'architecture-propre-front-inertia',
-        title: 'Architecture propre côté Front Inertia',
-        date:  'il y a 6 jours',
-        tag:   'Inertia',
-        image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80',
-    },
-    {
-        slug:  'seeders-avancer-vite-sans-dashboard',
-        title: 'Seeders : avancer vite sans dashboard',
-        date:  'il y a 2 jours',
-        tag:   'Tips',
-        image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80',
-    },
-];
-
-const previewFormations = [
-    { slug: 'laravel-zero-api-rest',              title: "Laravel — API REST",             cat: 'Laravel', icon: '🔴', price: '29,99 €', free: false, image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=600&q=80' },
-    { slug: 'flutter-firebase-app-mobile',        title: 'Flutter & Firebase',             cat: 'Flutter', icon: '🔵', price: '29,99 €', free: false, image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&q=80' },
-    { slug: 'python-automatisation-data',         title: 'Python — Automatisation',        cat: 'Python',  icon: '🐍', price: '24,99 €', free: false, image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80' },
-    { slug: 'java-programmation-orientee-objet',  title: 'Java — POO',                     cat: 'Java',    icon: '☕', price: 'Gratuit',  free: true,  image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80' },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MENU VARIANTS
-// ─────────────────────────────────────────────────────────────────────────────
 const mobileMenuVariants = {
     hidden:  { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.2,  ease: easings.snappy } },
     visible: { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.25, ease: easings.smooth } },
     exit:    { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.18, ease: easings.snappy } },
 };
+
 const mobileItemVariants = {
     hidden:  { opacity: 0, x: -12 },
     visible: (i: number) => ({
@@ -127,202 +62,6 @@ const mobileItemVariants = {
     }),
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SOUS-COMPOSANTS CARDS
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Card Projet — image pleine largeur + overlay + tags
-function ProjectCard({ p, i }: { p: typeof previewProjects[0]; i: number }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-30px' }}
-            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
-        >
-            <Link href={`/projects/${p.slug}`} className="group block h-full">
-                <div className={cn(
-                    'h-full flex flex-col rounded-2xl overflow-hidden',
-                    'bg-surface-raised border border-slate-200/60',
-                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
-                    'transition-all duration-300 hover:-translate-y-1',
-                )}>
-                    {/* Image */}
-                    <div className="relative h-44 overflow-hidden">
-                        <img
-                            src={p.image}
-                            alt={p.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                        {/* Tags sur l'image */}
-                        <div className="absolute bottom-3 left-3 flex gap-1.5">
-                            {p.tags.map(tag => (
-                                <span key={tag} className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/20">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Texte */}
-                    <div className="flex flex-col flex-1 p-4 gap-2">
-                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
-                            {p.title}
-                        </p>
-                        <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">{p.desc}</p>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-teal-600 pt-2 border-t border-slate-100 group-hover:gap-2 transition-all duration-200">
-                            Voir le projet
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </motion.div>
-    );
-}
-
-// Card Blog — image + tag badge + date
-function BlogCard({ p, i }: { p: typeof previewPosts[0]; i: number }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-30px' }}
-            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
-        >
-            <Link href={`/blog/${p.slug}`} className="group block h-full">
-                <div className={cn(
-                    'h-full flex flex-col rounded-2xl overflow-hidden',
-                    'bg-surface-card border border-slate-200/60',
-                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
-                    'transition-all duration-300 hover:-translate-y-1',
-                )}>
-                    {/* Image */}
-                    <div className="relative h-40 overflow-hidden">
-                        <img
-                            src={p.image}
-                            alt={p.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                        {/* Tag pill en bas */}
-                        <div className="absolute top-3 left-3">
-                            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-ink-secondary border border-white/60 shadow-sm">
-                                {p.tag}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Texte */}
-                    <div className="flex flex-col flex-1 p-4 gap-2">
-                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
-                            {p.title}
-                        </p>
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                            <span className="text-xs text-ink-subtle">{p.date}</span>
-                            <span className="text-xs font-semibold text-teal-600 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                                Lire
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </motion.div>
-    );
-}
-
-// Card Formation — image + prix badge + niveau
-function FormationCard({ f, i }: { f: typeof previewFormations[0]; i: number }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-30px' }}
-            transition={{ duration: 0.5, ease: easings.smooth, delay: i * 0.09 }}
-        >
-            <Link href={`/formations/${f.slug}`} className="group block h-full">
-                <div className={cn(
-                    'h-full flex flex-col rounded-2xl overflow-hidden',
-                    'bg-surface-raised border border-slate-200/60',
-                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
-                    'transition-all duration-300 hover:-translate-y-1',
-                )}>
-                    {/* Image */}
-                    <div className="relative h-36 overflow-hidden">
-                        <img
-                            src={f.image}
-                            alt={f.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        {/* Catégorie + icône */}
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/60 shadow-sm">
-                            <span className="text-sm">{f.icon}</span>
-                            <span className="text-xs font-semibold text-ink-secondary">{f.cat}</span>
-                        </div>
-                        {/* Prix badge */}
-                        <div className={cn(
-                            'absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm',
-                            f.free ? 'bg-teal-600 text-white' : 'bg-white/90 backdrop-blur-sm text-ink-primary border border-white/60',
-                        )}>
-                            {f.price}
-                        </div>
-                    </div>
-
-                    {/* Texte */}
-                    <div className="flex flex-col flex-1 p-4 gap-2">
-                        <p className="text-sm font-semibold text-ink-primary group-hover:text-teal-600 transition-colors leading-snug flex-1">
-                            {f.title}
-                        </p>
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                            <span className={cn('text-xs font-bold', f.free ? 'text-teal-600' : 'text-ink-primary')}>
-                                {f.price}
-                            </span>
-                            <span className="text-xs text-teal-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                Voir
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </motion.div>
-    );
-}
-
-// Header de section
-function SectionHeader({ label, title, href, linkLabel }: { label: string; title: string; href: string; linkLabel: string }) {
-    return (
-        <div className="flex items-end justify-between mb-8">
-            <div>
-                <p className="text-xs font-medium text-ink-muted uppercase tracking-[0.2em] mb-1.5">{label}</p>
-                <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink-primary">{title}</h2>
-            </div>
-            <Link
-                href={href}
-                className="group flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:gap-3 transition-all duration-200 flex-shrink-0 ml-4"
-            >
-                {linkLabel}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-            </Link>
-        </div>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LAYOUT PRINCIPAL
-// ─────────────────────────────────────────────────────────────────────────────
 export default function MainLayout({ children }: Props) {
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
@@ -440,47 +179,10 @@ export default function MainLayout({ children }: Props) {
                 </AnimatePresence>
             </header>
 
-            {/* ── PAGE CONTENT ────────────────────────────────────────────── */}
+            {/* ── CONTENU DE LA PAGE ──────────────────────────────────────── */}
             <main>{children}</main>
 
-            {/* ══════════════════════════════════════════════════════════════
-                SECTIONS DÉFILANTES
-            ══════════════════════════════════════════════════════════════ */}
-
-            {/* ── Projets ─────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface-card">
-                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={30} ease={80} color="#1aa389" />
-                <div className="container-main relative z-10 py-14 sm:py-16">
-                    <SectionHeader label="Portfolio" title="Projets récents" href="/projects" linkLabel="Voir tout" />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {previewProjects.map((p, i) => <ProjectCard key={p.slug} p={p} i={i} />)}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Blog ────────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface">
-                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={25} ease={80} color="#1aa389" />
-                <div className="container-main relative z-10 py-14 sm:py-16">
-                    <SectionHeader label="Lecture" title="Articles récents" href="/blog" linkLabel="Voir tout" />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                        {previewPosts.map((p, i) => <BlogCard key={p.slug} p={p} i={i} />)}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Formations ──────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden border-t border-slate-200/60 bg-surface-card">
-                <Particles className="absolute inset-0 z-0 pointer-events-none" quantity={30} ease={80} color="#1aa389" />
-                <div className="container-main relative z-10 py-14 sm:py-16">
-                    <SectionHeader label="Apprendre" title="Mes formations" href="/formations" linkLabel="Voir tout" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {previewFormations.map((f, i) => <FormationCard key={f.slug} f={f} i={i} />)}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── FOOTER ──────────────────────────────────────────────────── */}
+            {/* ── FOOTER ─────────────────────────────────────────────────── */}
             <footer className="border-t border-slate-200/70 bg-surface-card">
                 <div className="container-main py-12">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">

@@ -41,7 +41,7 @@ class FormationController extends Controller
             ->sort()
             ->values();
 
-        return Inertia::render('Formations/Index', [
+        return Inertia::render('formations/FormationsIndex', [
             'formations' => $formations,
             'categories' => $categories,
         ]);
@@ -100,7 +100,7 @@ class FormationController extends Controller
                 ]);
         }
 
-        return Inertia::render('Formations/Show', [
+        return Inertia::render('formations/FormationsShow', [
             'formation' => [
                 'id'                  => $formation->id,
                 'title'               => $formation->title,
