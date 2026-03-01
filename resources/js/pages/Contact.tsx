@@ -2,8 +2,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion }                 from 'framer-motion';
 import { useEffect }              from 'react';
-import MainLayout                 from '@/layouts/MainLayout';
 import { DottedMap }              from '@/components/ui/dotted-map';
+import MainLayout                 from '@/layouts/MainLayout';
 import { cn, easings }            from '@/lib/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ export default function Contact() {
     // Reset form après succès
     useEffect(() => {
         if (flash.success) reset();
-    }, [flash.success]);
+    }, [flash.success, reset]);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

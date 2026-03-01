@@ -3,7 +3,8 @@
 
 import { Link, usePage }           from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ReactNode, useState, useEffect } from 'react';
+import type { ReactNode} from 'react';
+import { useState, useEffect } from 'react';
 import { cn }                      from '@/lib/utils';
 import { easings }                 from '@/lib/utils';
 
@@ -73,7 +74,11 @@ export default function MainLayout({ children }: Props) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    useEffect(() => { setMenuOpen(false); }, [url]);
+    // Ferme le menu mobile au changement de page (déférer le setState pour éviter des rendus en cascade)
+    useEffect(() => {
+        const id = setTimeout(() => setMenuOpen(false), 0);
+        return () => clearTimeout(id);
+    }, [url]);
 
     useEffect(() => {
         document.body.style.overflow = menuOpen ? 'hidden' : '';

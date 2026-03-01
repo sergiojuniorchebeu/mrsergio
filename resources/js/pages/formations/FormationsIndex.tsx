@@ -1,9 +1,9 @@
 // resources/js/Pages/Formations/Index.tsx
 import { Head, Link }              from '@inertiajs/react';
-import { useState, useMemo }       from 'react';
 import { motion }                  from 'framer-motion';
-import MainLayout                  from '@/layouts/MainLayout';
+import { useState, useMemo }       from 'react';
 import { AnimatedGridPattern }     from '@/components/ui/animated-grid-pattern';
+import MainLayout                  from '@/layouts/MainLayout';
 import { cn, easings }             from '@/lib/utils';
 import type { FormationsIndexProps, Formation } from '@/types';
 
@@ -144,7 +144,7 @@ export default function Index({ formations, categories }: FormationsIndexProps) 
         return formations.filter(f => f.category === activeCategory);
     }, [formations, activeCategory]);
 
-    const featured = formations.find(f => f.featured);
+    // featured variable not used in this component; remove to satisfy linter
 
     return (
         <MainLayout>

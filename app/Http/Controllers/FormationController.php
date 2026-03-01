@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Controllers/FormationController.php
 
 namespace App\Http\Controllers;
@@ -10,119 +9,69 @@ use Inertia\Response;
 
 class FormationController extends Controller
 {
-    // GET /formations
     public function index(): Response
     {
-        $formations = Formation::published()
-            ->ordered()
+        $formations = Formation::where('published', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
             ->get()
-            ->map(fn($f) => [
-                'id'                 => $f->id,
-                'title'              => $f->title,
-                'slug'               => $f->slug,
-                'excerpt'            => $f->excerpt,
-                'cover_image_url'    => $f->cover_image_url,
-                'category'           => $f->category,
-                'tags'               => $f->tags,
-                'level'              => $f->level,
-                'level_color'        => $f->level_color,
-                'duration_formatted' => $f->duration_formatted,
-                'lessons_count'      => $f->lessons_count,
-                'students_count'     => $f->students_count,
-                'is_free'            => $f->is_free,
-                'price_formatted'    => $f->price_formatted,
-                'featured'           => $f->featured,
-            ]);
+            ->map(fn($f) => $this->formatFormation($f));
 
-        // Catégories disponibles pour les filtres
-        $categories = Formation::published()
-            ->distinct()
-            ->pluck('category')
-            ->sort()
-            ->values();
+        $categories = $formations->pluck('category')->unique()->values()->toArray();
 
-        return Inertia::render('formations/FormationsIndex', [
-            'formations' => $formations,
-            'categories' => $categories,
-        ]);
+        return Inertia::render('formations/FormationsIndex', compact('formations', 'categories'));
     }
 
-    // GET /formations/{formation:slug}
     public function show(Formation $formation): Response
     {
         abort_unless($formation->published, 404);
 
-        $related = Formation::published()
+        $related = Formation::where('published', true)
             ->where('id', '!=', $formation->id)
             ->where('category', $formation->category)
-            ->ordered()
             ->take(3)
-            ->get()
-            ->map(fn($f) => [
-                'id'                 => $f->id,
-                'title'              => $f->title,
-                'slug'               => $f->slug,
-                'excerpt'            => $f->excerpt,
-                'cover_image_url'    => $f->cover_image_url,
-                'category'           => $f->category,
-                'tags'               => $f->tags,
-                'level'              => $f->level,
-                'level_color'        => $f->level_color,
-                'duration_formatted' => $f->duration_formatted,
-                'lessons_count'      => $f->lessons_count,
-                'is_free'            => $f->is_free,
-                'price_formatted'    => $f->price_formatted,
-                'featured'           => $f->featured,
-            ]);
+            ->get();
 
-        // Si pas de related dans la même catégorie, prendre d'autres formations
-        if ($related->isEmpty()) {
-            $related = Formation::published()
-                ->where('id', '!=', $formation->id)
-                ->ordered()
-                ->take(3)
-                ->get()
-                ->map(fn($f) => [
-                    'id'                 => $f->id,
-                    'title'              => $f->title,
-                    'slug'               => $f->slug,
-                    'excerpt'            => $f->excerpt,
-                    'cover_image_url'    => $f->cover_image_url,
-                    'category'           => $f->category,
-                    'tags'               => $f->tags,
-                    'level'              => $f->level,
-                    'level_color'        => $f->level_color,
-                    'duration_formatted' => $f->duration_formatted,
-                    'lessons_count'      => $f->lessons_count,
-                    'is_free'            => $f->is_free,
-                    'price_formatted'    => $f->price_formatted,
-                    'featured'           => $f->featured,
-                ]);
+        if ($related->count() < 3) {
+            $ids = $related->pluck('id')->push($formation->id);
+            $more = Formation::where('published', true)
+                ->whereNotIn('id', $ids)
+                ->take(3 - $related->count())
+                ->get();
+            $related = $related->merge($more);
         }
 
         return Inertia::render('formations/FormationsShow', [
-            'formation' => [
-                'id'                  => $formation->id,
-                'title'               => $formation->title,
-                'slug'                => $formation->slug,
-                'excerpt'             => $formation->excerpt,
-                'content'             => $formation->content,
-                'cover_image_url'     => $formation->cover_image_url,
-                'preview_video_url'   => $formation->preview_video_url,
-                'category'            => $formation->category,
-                'tags'                => $formation->tags,
-                'level'               => $formation->level,
-                'level_color'         => $formation->level_color,
-                'language'            => $formation->language,
-                'duration_formatted'  => $formation->duration_formatted,
-                'lessons_count'       => $formation->lessons_count,
-                'students_count'      => $formation->students_count,
-                'is_free'             => $formation->is_free,
-                'price_formatted'     => $formation->price_formatted,
-                'featured'            => $formation->featured,
-                'published_at'        => optional($formation->published_at)->format('d/m/Y'),
-            ],
-            'related' => $related,
+            'formation' => $this->formatFormation($formation, true),
+            'related'   => $related->map(fn($f) => $this->formatFormation($f)),
         ]);
+    }
+
+    private function formatFormation(Formation $f, bool $withContent = false): array
+    {
+        $data = [
+            'id'                 => $f->id,
+            'title'              => $f->title,
+            'slug'               => $f->slug,
+            'excerpt'            => $f->excerpt,
+            'category'           => $f->category,
+            'tags'               => $f->tags ?? [],
+            'level'              => $f->level,
+            'level_color'        => $f->level_color,
+            'language'           => $f->language,
+            'duration_hours'     => $f->duration_hours,
+            'duration_formatted' => $f->duration_formatted,
+            'lessons_count'      => $f->lessons_count,
+            'is_free'            => $f->is_free,
+            'price_formatted'    => $f->price_formatted,
+            'featured'           => $f->featured,
+            'cover_image_url'    => $f->cover_image_url,
+        ];
+
+        if ($withContent) {
+            $data['content'] = $f->content;
+        }
+
+        return $data;
     }
 }

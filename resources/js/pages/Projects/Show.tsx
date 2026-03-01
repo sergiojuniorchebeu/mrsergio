@@ -6,8 +6,8 @@
 
 import { Head, Link }            from '@inertiajs/react';
 import { motion }                from 'framer-motion';
-import MainLayout                from '@/layouts/MainLayout';
 import { ProjectCard }           from '@/components/ui/ProjectCard';
+import MainLayout                from '@/layouts/MainLayout';
 import { cn, easings }           from '@/lib/utils';
 import type { ProjectShowProps } from '@/types';
 

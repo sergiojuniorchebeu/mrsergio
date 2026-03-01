@@ -1,9 +1,9 @@
 import { Head }                  from '@inertiajs/react';
-import { useState, useMemo }     from 'react';
 import { motion }                from 'framer-motion';
-import MainLayout                from '@/layouts/MainLayout';
-import { ProjectCard }           from '@/components/ui/ProjectCard';
+import { useState, useMemo }     from 'react';
 import { AnimatedGridPattern }   from '@/components/ui/animated-grid-pattern';
+import { ProjectCard }           from '@/components/ui/ProjectCard';
+import MainLayout                from '@/layouts/MainLayout';
 import { cn, easings }           from '@/lib/utils';
 import type { ProjectsIndexProps } from '@/types';
 

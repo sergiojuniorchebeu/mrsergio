@@ -1,8 +1,8 @@
 // resources/js/Pages/Blog/Index.tsx
 import { Head, Link }            from '@inertiajs/react';
 import { motion }                from 'framer-motion';
-import MainLayout                from '@/layouts/MainLayout';
 import { AnimatedGridPattern }   from '@/components/ui/animated-grid-pattern';
+import MainLayout                from '@/layouts/MainLayout';
 import { cn, easings }           from '@/lib/utils';
 import type { BlogIndexProps }   from '@/types';
 
