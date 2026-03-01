@@ -82,11 +82,7 @@ const BookOpenIcon = () => (
     </svg>
 );
 
-const UsersIcon = () => (
-    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-);
+/* UsersIcon removed (unused) */
 
 const StarIcon = () => (
     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
@@ -323,7 +319,6 @@ function CategoryIcon({ category }: { category: string }) {
 }
 
 function FormationCard({ f, i }: { f: any; i: number }) {
-    const tags: string[] = f.tags ?? (f.cat ? [f.cat] : []);
     const isFree = f.is_free ?? f.free ?? false;
     const price  = f.price_formatted ?? f.price ?? (isFree ? 'Gratuit' : null);
     const category = f.category ?? f.cat ?? 'Formation';

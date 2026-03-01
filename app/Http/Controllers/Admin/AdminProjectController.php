@@ -36,6 +36,15 @@ class AdminProjectController extends Controller
             $data['image'] = $request->file('image')->store('projects', 'public');
         }
 
+        // handle screenshots uploads (multiple)
+        $screenshots = [];
+        if ($request->hasFile('screenshots')) {
+            foreach ($request->file('screenshots') as $file) {
+                $screenshots[] = $file->store('projects/screenshots', 'public');
+            }
+        }
+        if (! empty($screenshots)) $data['screenshots'] = $screenshots;
+
         $data['slug'] = Str::slug($data['title']);
 
         Project::create($data);
@@ -60,6 +69,15 @@ class AdminProjectController extends Controller
                 Storage::disk('public')->delete($project->image);
             }
             $data['image'] = $request->file('image')->store('projects', 'public');
+        }
+
+        // append new screenshots if provided
+        $screenshots = $project->screenshots ?? [];
+        if ($request->hasFile('screenshots')) {
+            foreach ($request->file('screenshots') as $file) {
+                $screenshots[] = $file->store('projects/screenshots', 'public');
+            }
+            $data['screenshots'] = $screenshots;
         }
 
         $data['slug'] = Str::slug($data['title']);
@@ -96,6 +114,11 @@ class AdminProjectController extends Controller
             'content'     => ['nullable', 'string'],
             'demo_url'    => ['nullable', 'url', 'max:255'],
             'github_url'  => ['nullable', 'url', 'max:255'],
+            'private_repo' => ['nullable', 'boolean'],
+            'platforms'   => ['nullable', 'array'],
+            'platforms.*' => ['string'],
+            'screenshots' => ['nullable', 'array', 'max:8'],
+            'screenshots.*' => ['image', 'max:2048'],
             'tags'        => ['nullable', 'array'],
             'tags.*'      => ['string'],
             'featured'    => ['nullable', 'boolean'],

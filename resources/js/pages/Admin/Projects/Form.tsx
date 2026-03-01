@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion }             from 'framer-motion';
 import { useState }           from 'react';
-import { Field, inputCls, errorInputCls, ImageUpload, TagInput, MarkdownEditor } from '@/components/admin/shared';
+import { Field, inputCls, errorInputCls, ImageUpload, TagInput, MarkdownEditor, MultiImageUpload } from '@/components/admin/shared';
 import AdminLayout            from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
 
@@ -18,33 +18,55 @@ interface Project {
     published:   boolean;
     sort_order:  number;
     image:       string | null;
+    // New optional fields coming from the backend
+    private_repo?: boolean;
+    platforms?: string[];
+    screenshots?: string[];
 }
 
 interface FormErrors {
     title?: string; description?: string; content?: string;
     demo_url?: string; github_url?: string; tags?: string;
     featured?: string; published?: string; sort_order?: string; image?: string;
+    platforms?: string; screenshots?: string; private_repo?: string;
+}
+
+interface Values {
+    title: string;
+    description: string;
+    content: string;
+    demo_url: string;
+    github_url: string;
+    private_repo: boolean;
+    platforms: string[];
+    tags: string[];
+    featured: boolean;
+    published: boolean;
+    sort_order: number;
 }
 
 export default function ProjectForm({ project }: { project: Project | null }) {
     const isEdit = !!project;
 
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<Values>({
         title:       project?.title       ?? '',
         description: project?.description ?? '',
         content:     project?.content     ?? '',
         demo_url:    project?.demo_url    ?? '',
         github_url:  project?.github_url  ?? '',
+        private_repo: project?.private_repo ?? false,
+        platforms:    project?.platforms ?? [] as string[],
         tags:        project?.tags        ?? [] as string[],
         featured:    project?.featured    ?? false,
         published:   project?.published   ?? false,
         sort_order:  project?.sort_order  ?? 0,
     });
     const [image, setImage]       = useState<File | null>(null);
+    const [screenshots, setScreenshots] = useState<File[]>([]);
     const [errors, setErrors]     = useState<FormErrors>({});
     const [processing, setProcessing] = useState(false);
 
-    function set<K extends keyof typeof values>(key: K, value: typeof values[K]) {
+    function set<K extends keyof Values>(key: K, value: Values[K]) {
         setValues(v => ({ ...v, [key]: value }));
     }
 
@@ -64,6 +86,9 @@ export default function ProjectForm({ project }: { project: Project | null }) {
         formData.append('published',   values.published ? '1' : '0');
         formData.append('sort_order',  String(values.sort_order));
         values.tags.forEach(tag => formData.append('tags[]', tag));
+        values.platforms.forEach((pl: string) => formData.append('platforms[]', pl));
+        formData.append('private_repo', values.private_repo ? '1' : '0');
+        screenshots.forEach(s => formData.append('screenshots[]', s));
         if (image) formData.append('image', image);
 
         const url = isEdit ? `/admin/projects/${project.id}` : '/admin/projects';
@@ -125,6 +150,10 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                                         className={cn(inputCls, errors.github_url && errorInputCls)} />
                                 </Field>
                             </div>
+                            <div className="mt-4">
+                                <label className="text-sm font-semibold text-slate-700 block mb-2">Plateformes</label>
+                                <TagInput tags={values.platforms} onChange={v => set('platforms', v)} />
+                            </div>
                         </motion.div>
 
                         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -166,6 +195,18 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                             className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
                             <ImageUpload label="Image du projet" value={image} onChange={setImage}
                                 currentUrl={project?.image ? `/storage/${project.image}` : null} />
+                            <div className="mt-4">
+                                <MultiImageUpload values={screenshots} onChange={setScreenshots} currentUrls={project?.screenshots ? project.screenshots.map((s: string) => `/storage/${s}`) : []} />
+                            </div>
+                            <div className="mt-4">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-sm text-slate-700">Repo privé (masquer le bouton GitHub)</span>
+                                    <button type="button" onClick={() => set('private_repo', !values.private_repo)}
+                                        className={cn('relative w-10 h-5 rounded-full transition-colors duration-200', values.private_repo ? 'bg-slate-700' : 'bg-slate-300')}>
+                                        <span className={cn('absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200', values.private_repo ? 'translate-x-5' : 'translate-x-0.5')} />
+                                    </button>
+                                </label>
+                            </div>
                             {errors.image && <p className="text-xs text-red-500 mt-1">{errors.image}</p>}
                         </motion.div>
 

@@ -171,6 +171,61 @@ export function ImageUpload({
     );
 }
 
+// Multi image upload (max N previews, can remove before submit)
+export function MultiImageUpload({
+    values, onChange, currentUrls = [], label = 'Captures d\'écran (max 8)'
+}: {
+    values: File[];
+    onChange: (files: File[]) => void;
+    currentUrls?: string[];
+    label?: string;
+}) {
+    function addFiles(files: FileList | null) {
+        if (!files) return;
+        const arr = Array.from(files).slice(0, 8 - (values.length + currentUrls.length));
+        onChange([...values, ...arr]);
+    }
+
+    function removeAt(index: number) {
+        const copy = [...values];
+        copy.splice(index, 1);
+        onChange(copy);
+    }
+
+    return (
+        <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">{label}</label>
+            <div className="grid grid-cols-4 gap-3">
+                {currentUrls.map((u, i) => (
+                    <div key={`cur-${i}`} className="relative w-full h-24 rounded-lg overflow-hidden border">
+                        <img src={u} alt={`screenshot-${i}`} className="w-full h-full object-cover" />
+                    </div>
+                ))}
+                {values.map((f, i) => (
+                    <div key={`new-${i}`} className="relative w-full h-24 rounded-lg overflow-hidden border">
+                        <img src={URL.createObjectURL(f)} alt={`preview-${i}`} className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => removeAt(i)} className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center text-white">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                ))}
+                {values.length + currentUrls.length < 8 && (
+                    <label className="flex items-center justify-center h-24 rounded-lg border-dashed border p-2 cursor-pointer text-slate-400">
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={e => addFiles(e.target.files)} />
+                        <div className="text-center">
+                            <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center mb-2">
+                                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                            <p className="text-xs">Ajouter</p>
+                        </div>
+                    </label>
+                )}
+            </div>
+            <p className="text-xs text-slate-400">Jusqu\'à 8 images, PNG/JPG/WebP · max 2 Mo chacune</p>
+        </div>
+    );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FIELD (label + erreur)
 // ─────────────────────────────────────────────────────────────────────────────

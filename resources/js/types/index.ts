@@ -2,22 +2,40 @@
 
 // ── Project ───────────────────────────────────────────────────────────────────
 export interface Project {
-    id:          number;
-    title:       string;
-    slug:        string;
-    description: string;
-    content?:    string;
-    image_url:   string;
-    demo_url:    string | null;
-    github_url:  string | null;
-    tags:        string[];
-    featured:    boolean;
-    created_at?: string;
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  content?: string;
+
+  image_url: string;
+  demo_url: string | null;
+  github_url: string | null;
+
+  private_repo: boolean;
+  platforms: string[];
+  screenshots: string[];
+
+  tags: string[];
+  featured: boolean;
+  created_at?: string;
 }
-export interface ProjectsIndexProps { projects: Project[]; }
+
+export interface ProjectsIndexProps {
+  projects: Project[];
+}
+
 export interface ProjectShowProps {
-    project: Project;
-    related: Omit<Project, 'content' | 'demo_url' | 'github_url' | 'featured' | 'created_at'>[];
+  project: Project;
+  related: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    description: string;
+    image_url: string;
+    tags: string[];
+    platforms: string[];
+  }>;
 }
 
 // ── BlogPost ──────────────────────────────────────────────────────────────────
