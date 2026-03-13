@@ -57,7 +57,8 @@ class Formation extends Model
         if ($this->cover_image) {
             return asset('storage/' . $this->cover_image);
         }
-        return 'https://og-image.vercel.app/' . urlencode($this->title) . '.png';
+        // Placeholder fiable — image de cours générique
+        return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=70&auto=format';
     }
 
     // Prix formaté — "Gratuit" ou "29,99 €"

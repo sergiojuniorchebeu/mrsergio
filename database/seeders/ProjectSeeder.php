@@ -1,24 +1,16 @@
 <?php
 
 // database/seeders/ProjectSeeder.php
-// ─────────────────────────────────────────────────────────────────────────────
-// Seeder — 3 projets réalistes pour Sergio Junior Chebeu
-// Flutter équivalent : une liste de données mock pour les tests
-// Lance avec : php artisan db:seed --class=ProjectSeeder
-// Ou tout reset : php artisan migrate:fresh --seed
-// ─────────────────────────────────────────────────────────────────────────────
 
 namespace Database\Seeders;
 
 use App\Models\Project;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class ProjectSeeder extends Seeder
 {
     public function run(): void
     {
-        // Vider la table avant de re-seeder (évite les doublons)
         Project::truncate();
 
         $projects = [
@@ -54,8 +46,11 @@ MrMarket est une application mobile développée pour digitaliser la gestion d\'
 Ce projet m\'a permis de maîtriser l\'architecture clean en Flutter (BLoC pattern) et la mise en place d\'une API REST robuste avec Laravel Sanctum pour l\'authentification multi-device.
                 ',
                 'image'       => null,
+                'screenshots' => null,
+                'platforms'   => ['Android', 'iOS'],
                 'demo_url'    => null,
                 'github_url'  => 'https://github.com/sergiojuniorchebeu/mrmarket',
+                'private_repo'=> false,
                 'tags'        => ['Flutter', 'Laravel', 'MySQL', 'Firebase', 'Dart'],
                 'featured'    => true,
                 'published'   => true,
@@ -95,8 +90,11 @@ DevConnect est une plateforme communautaire conçue pour connecter les développ
 J\'ai utilisé le pattern Repository pour abstraire la couche de données, et des Jobs Laravel pour les tâches asynchrones (envoi d\'emails, génération de thumbnails).
                 ',
                 'image'       => null,
+                'screenshots' => null,
+                'platforms'   => ['Web'],
                 'demo_url'    => 'https://devconnect.demo',
                 'github_url'  => 'https://github.com/sergiojuniorchebeu/devconnect',
+                'private_repo'=> false,
                 'tags'        => ['Laravel', 'React', 'TypeScript', 'PostgreSQL', 'Redis'],
                 'featured'    => true,
                 'published'   => true,
@@ -135,12 +133,55 @@ AnalyticsPro est un outil SaaS de suivi des indicateurs clés de performance pou
 La partie la plus complexe était la gestion du cache des métriques avec Redis. J\'ai mis en place un système d\'invalidation intelligent qui recalcule uniquement les métriques impactées par une nouvelle entrée de données, réduisant le temps de chargement de 3s à 180ms.
                 ',
                 'image'       => null,
+                'screenshots' => null,
+                'platforms'   => ['Web'],
                 'demo_url'    => 'https://analyticspro.demo',
                 'github_url'  => 'https://github.com/sergiojuniorchebeu/analyticspro',
+                'private_repo'=> false,
                 'tags'        => ['Laravel', 'React', 'MySQL', 'Redis', 'Python'],
                 'featured'    => true,
                 'published'   => true,
                 'sort_order'  => 3,
+            ],
+
+            // ── Projet 4 — Portfolio mrsergio ─────────────────────────────
+            [
+                'title'       => 'mrsergio.dev — Portfolio personnel',
+                'slug'        => 'mrsergio-portfolio',
+                'description' => 'Portfolio full stack avec Laravel 12, Inertia.js et React/TypeScript. Admin CMS intégré, blog, formations, gestion de projets et formulaire de contact.',
+                'content'     => '
+## Ce projet, justement
+
+Ce portfolio est lui-même un projet full stack conçu pour démontrer mes compétences en développement web moderne.
+
+## Stack technique
+
+- **Backend** : Laravel 12
+- **Frontend** : React 18 + TypeScript + Inertia.js
+- **Styling** : Tailwind CSS + animations Framer Motion
+- **BDD** : SQLite (local) / MySQL (prod)
+- **Cache** : Laravel Cache (file/database)
+- **Admin** : CMS maison avec authentification
+
+## Fonctionnalités
+
+- Portfolio de projets avec filtres par technologie
+- Blog avec rendu Markdown
+- Section formations avec prix et niveaux
+- Formulaire de contact avec anti-spam
+- Dashboard admin CRUD complet
+- SEO optimisé (meta, Open Graph)
+                ',
+                'image'       => null,
+                'screenshots' => null,
+                'platforms'   => ['Web'],
+                'demo_url'    => 'https://mrsergio.dev',
+                'github_url'  => null,
+                'private_repo'=> true,
+                'tags'        => ['Laravel', 'React', 'TypeScript', 'Inertia', 'Tailwind'],
+                'featured'    => false,
+                'published'   => true,
+                'sort_order'  => 4,
             ],
         ];
 
@@ -148,6 +189,6 @@ La partie la plus complexe était la gestion du cache des métriques avec Redis.
             Project::create($data);
         }
 
-        $this->command->info('✅ 3 projets seedés avec succès !');
+        $this->command->info('✅ 4 projets seedés avec succès !');
     }
 }

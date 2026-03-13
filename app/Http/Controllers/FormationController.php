@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Formation;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -11,11 +12,12 @@ class FormationController extends Controller
 {
     public function index(): Response
     {
-        $formations = Formation::where('published', true)
-            ->orderBy('sort_order')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn($f) => $this->formatFormation($f));
+        $formations = Cache::remember('formations.index', 600, function () {
+            return Formation::published()
+                ->ordered()
+                ->get()
+                ->map(fn($f) => $this->formatFormation($f));
+        });
 
         $categories = $formations->pluck('category')->unique()->values()->toArray();
 
@@ -26,24 +28,30 @@ class FormationController extends Controller
     {
         abort_unless($formation->published, 404);
 
-        $related = Formation::where('published', true)
-            ->where('id', '!=', $formation->id)
-            ->where('category', $formation->category)
-            ->take(3)
-            ->get();
-
-        if ($related->count() < 3) {
-            $ids = $related->pluck('id')->push($formation->id);
-            $more = Formation::where('published', true)
-                ->whereNotIn('id', $ids)
-                ->take(3 - $related->count())
+        $related = Cache::remember("formations.related.{$formation->id}", 600, function () use ($formation) {
+            // Chercher dans la même catégorie en premier
+            $related = Formation::published()
+                ->where('id', '!=', $formation->id)
+                ->where('category', $formation->category)
+                ->take(3)
                 ->get();
-            $related = $related->merge($more);
-        }
+
+            // Compléter si pas assez
+            if ($related->count() < 3) {
+                $ids  = $related->pluck('id')->push($formation->id);
+                $more = Formation::published()
+                    ->whereNotIn('id', $ids)
+                    ->take(3 - $related->count())
+                    ->get();
+                $related = $related->merge($more);
+            }
+
+            return $related->map(fn($f) => $this->formatFormation($f));
+        });
 
         return Inertia::render('formations/FormationsShow', [
             'formation' => $this->formatFormation($formation, true),
-            'related'   => $related->map(fn($f) => $this->formatFormation($f)),
+            'related'   => $related,
         ]);
     }
 

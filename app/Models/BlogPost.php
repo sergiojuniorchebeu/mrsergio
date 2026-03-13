@@ -55,7 +55,7 @@ class BlogPost extends Model
             return asset('storage/' . $this->cover_image);
         }
 
-        // Placeholder simple
-        return 'https://og-image.vercel.app/' . urlencode($this->title) . '.png';
+        // Placeholder fiable — image de blog générique
+        return 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=70&auto=format';
     }
 }

@@ -61,7 +61,8 @@ class Project extends Model
             return asset('storage/' . $this->image);
         }
 
-        return 'https://og-image.vercel.app/' . urlencode($this->title) . '.png';
+        // Placeholder Unsplash (stable, fiable, pas de rate limit pour portfolios)
+        return 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=70&auto=format';
     }
 
     // URLs complètes des screenshots
