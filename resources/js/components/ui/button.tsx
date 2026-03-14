@@ -1,64 +1,104 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
+// resources/js/components/ui/Button.tsx
+//
+// Bouton pro minimal — zéro effet shiny, zéro gimmick.
+// 3 variants : primary · ghost · dark
+// Tailles : sm · md (défaut) · lg
+// Usage :
+//   <Button>Voir mes projets</Button>
+//   <Button variant="ghost">Me contacter</Button>
+//   <Button variant="dark" size="lg">Découvrir</Button>
 
-import { cn } from "@/lib/utils"
+import React from 'react'
+import { motion, type HTMLMotionProps } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Variant = 'primary' | 'ghost' | 'dark'
+type Size    = 'sm' | 'md' | 'lg'
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
-
-  return (
-    <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
+    variant?:  Variant
+    size?:     Size
+    children:  React.ReactNode
+    icon?:     React.ReactNode  // icône droite optionnelle
+    loading?:  boolean
 }
 
-export { Button, buttonVariants }
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const base = cn(
+    'relative inline-flex items-center justify-center gap-2',
+    'font-medium tracking-[-0.01em] rounded-xl',
+    'transition-all duration-200 ease-out',
+    'disabled:opacity-40 disabled:cursor-not-allowed',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:ring-offset-2',
+)
+
+const variants: Record<Variant, string> = {
+    // Teal plein — CTA principal
+    primary: cn(
+        'bg-teal-600 text-white',
+        'shadow-[0_1px_2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(29,158,117,0.3)_inset]',
+        'hover:bg-teal-700',
+        'active:bg-teal-800 active:scale-[0.98]',
+    ),
+    // Contour transparent — CTA secondaire
+    ghost: cn(
+        'bg-transparent text-slate-700',
+        'border border-slate-200',
+        'hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900',
+        'active:scale-[0.98]',
+    ),
+    // Dark section — bouton sur fond sombre
+    dark: cn(
+        'bg-white/10 text-white',
+        'border border-white/15',
+        'backdrop-blur-sm',
+        'hover:bg-white/18 hover:border-white/25',
+        'active:scale-[0.98]',
+    ),
+}
+
+const sizes: Record<Size, string> = {
+    sm: 'h-8  px-3.5 text-xs',
+    md: 'h-10 px-5   text-sm',
+    lg: 'h-11 px-6   text-[15px]',
+}
+
+// ─── Icône flèche par défaut ──────────────────────────────────────────────────
+const ArrowRight = () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+)
+
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+const Spinner = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="animate-spin">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.5" />
+        <path d="M7 1.5A5.5 5.5 0 0112.5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+)
+
+// ─── Composant ────────────────────────────────────────────────────────────────
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ variant = 'primary', size = 'md', children, icon, loading, className, disabled, ...props }, ref) => (
+        <motion.button
+            ref={ref}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.1 }}
+            disabled={disabled || loading}
+            className={cn(base, variants[variant], sizes[size], className)}
+            {...props}
+        >
+            {loading ? <Spinner /> : null}
+            {children}
+            {!loading && icon ? icon : null}
+        </motion.button>
+    )
+)
+
+Button.displayName = 'Button'
+
+// ─── Exports raccourcis ───────────────────────────────────────────────────────
+export { ArrowRight }
+export type { ButtonProps, Variant as ButtonVariant, Size as ButtonSize }

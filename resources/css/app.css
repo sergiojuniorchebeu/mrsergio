@@ -1,16 +1,13 @@
 /* ============================================================
    resources/css/app.css
-   Palette 2026 — "Teal & Cloud" par Sergio Junior Chebeu
+   Palette 2026 — "Warm Studio" par Sergio Junior Chebeu
+   Light theme premium — crème chaud + teal profond
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 @import 'tailwindcss';
 
-/* ── Plugin Typography — pour le contenu Markdown des projets ──────
-   Installe d'abord : npm install @tailwindcss/typography
-   Donne les classes prose prose-slate etc.
-────────────────────────────────────────────────────────────────── */
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -64,6 +61,11 @@
     --color-ink-muted:     #7A7670;
     --color-ink-subtle:    #AAA69E;
 
+    /* ── FOOTER ───────────────────────────────────────────────────  */
+    --color-footer-bg:     #0F1A17;
+    --color-footer-card:   #162420;
+    --color-footer-border: #1D3029;
+
     /* ── SÉMANTIQUE ───────────────────────────────────────────────  */
     --color-success: #1aa389;
     --color-warning: #e8a910;
@@ -106,6 +108,16 @@
         0%, 49%  { opacity: 1; }
         50%, 100%{ opacity: 0; }
     }
+
+    @keyframes shimmer-slide {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    @keyframes spin-slow {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 }
 
 /* ── BASE ─────────────────────────────────────────────────────────── */
@@ -137,8 +149,8 @@
         border-radius: 4px;
     }
 
-    ::-webkit-scrollbar       { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--color-surface); }
+    ::-webkit-scrollbar       { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb {
         background: var(--color-slate-300);
         border-radius: 999px;
@@ -167,10 +179,17 @@
     }
 
     .glass {
-        background: rgba(250, 250, 248, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: rgba(250, 250, 248, 0.72);
+        backdrop-filter: blur(20px) saturate(1.6);
+        -webkit-backdrop-filter: blur(20px) saturate(1.6);
         border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .glass-dark {
+        background: rgba(15, 26, 23, 0.85);
+        backdrop-filter: blur(20px) saturate(1.4);
+        -webkit-backdrop-filter: blur(20px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .gradient-text {
@@ -178,6 +197,19 @@
             135deg,
             var(--color-teal-600) 0%,
             var(--color-teal-400) 50%,
+            var(--color-gold-400) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .gradient-text-hero {
+        background: linear-gradient(
+            135deg,
+            var(--color-teal-700) 0%,
+            var(--color-teal-500) 40%,
+            var(--color-teal-400) 70%,
             var(--color-gold-400) 100%
         );
         -webkit-background-clip: text;
@@ -196,9 +228,6 @@
     .animate-fade-up { animation: fade-up 0.6s var(--ease-smooth) forwards; }
     .animate-shine   { animation: shine 3s ease-in-out infinite; }
 
-    /* ── Scrollbar hide — pour la barre de filtres projets ────────
-       Utilisé sur le overflow-x-auto des filtres tags
-    ────────────────────────────────────────────────────────────── */
     .scrollbar-none {
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -207,10 +236,18 @@
         display: none;
     }
 
-    /* ── Prose custom — override du plugin Typography ──────────────
-       On surcharge les couleurs pour matcher notre palette teal/slate
-       Flutter équivalent : TextTheme appliqué sur du contenu riche
-    ────────────────────────────────────────────────────────────── */
+    /* ── Noise texture overlay ─────────────────────────────────── */
+    .noise-overlay::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        opacity: 0.025;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+        background-size: 128px 128px;
+        z-index: 1;
+    }
+
     .prose {
         --tw-prose-body:        var(--color-ink-secondary);
         --tw-prose-headings:    var(--color-ink-primary);
@@ -231,7 +268,6 @@
     }
 }
 
-/* ── Animation blink cursor (TypingAnimation Magic UI) ────────────── */
 @theme inline {
     --animate-blink-cursor: blink-cursor 1.2s step-end infinite;
 }
