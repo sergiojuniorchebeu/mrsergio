@@ -1,6 +1,5 @@
 // resources/js/Pages/Projects/Show.tsx
 
-"use client"
 import { Head, Link } from '@inertiajs/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMemo, useState, useEffect, useCallback } from 'react'
@@ -61,16 +60,16 @@ function Lightbox({
   const next = () => onJump((index + 1) % shots.length)
 
   useEffect(() => {
-    const prev = document.body.style.overflow
+    const savedOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') prev
-      if (e.key === 'ArrowRight') next
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
     }
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = prev
+      document.body.style.overflow = savedOverflow
       window.removeEventListener('keydown', onKey)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

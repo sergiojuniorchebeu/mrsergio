@@ -1,10 +1,42 @@
 // resources/js/Pages/Blog/Show.tsx
 import { Head, Link }          from '@inertiajs/react';
 import { motion }              from 'framer-motion';
+import { useState }            from 'react';
 import ReactMarkdown           from 'react-markdown';
 import MainLayout              from '@/layouts/MainLayout';
 import { cn, easings }         from '@/lib/utils';
 import type { BlogShowProps }  from '@/types';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IMAGE AVEC FALLBACK — utilise le state React au lieu de innerHTML
+// ─────────────────────────────────────────────────────────────────────────────
+function ImageWithFallback({ src, alt, className }: { src: string; alt: string; className?: string }) {
+    const [failed, setFailed] = useState(false);
+
+    if (failed) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center space-y-2">
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                        </svg>
+                    </div>
+                    <p className="text-xs text-slate-400">Image à venir</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={alt}
+            className={className}
+            onError={() => setFailed(true)}
+        />
+    );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COULEURS TAGS
@@ -105,25 +137,10 @@ export default function Show({ post, related }: BlogShowProps) {
                             transition={{ duration: 0.6, ease: easings.smooth, delay: 0.2 }}
                             className="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-slate-100 to-slate-50 shadow-xl shadow-slate-200/60 border border-slate-200/60"
                         >
-                            <img
+                            <ImageWithFallback
                                 src={post.cover_image_url}
                                 alt={post.title}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    const el = e.target as HTMLImageElement;
-                                    el.parentElement!.innerHTML = `
-                                        <div class="w-full h-full flex items-center justify-center">
-                                            <div class="text-center space-y-2">
-                                                <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center">
-                                                    <svg class="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                                    </svg>
-                                                </div>
-                                                <p class="text-xs text-slate-400">Image à venir</p>
-                                            </div>
-                                        </div>
-                                    `;
-                                }}
                             />
                         </motion.div>
                     </div>

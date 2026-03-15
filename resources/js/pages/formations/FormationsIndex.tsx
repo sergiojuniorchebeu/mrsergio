@@ -186,7 +186,7 @@ export default function Index({ formations, categories }: FormationsIndexProps) 
                         <div className="flex flex-wrap items-center gap-6">
                             {[
                                 { label: 'formations', value: formations.length },
-                                { label: 'heures de contenu', value: formations.reduce((a, f) => a + (f.lessons_count || 0), 0) + '+' },
+                                { label: 'leçons', value: formations.reduce((a, f) => a + (f.lessons_count || 0), 0) + '+' },
                                 { label: 'technologies', value: categories.length },
                             ].map(stat => (
                                 <div key={stat.label} className="flex items-baseline gap-1.5">

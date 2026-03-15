@@ -2,13 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Project extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        $invalidate = function (Project $project): void {
+            Cache::forget('home.projects');
+            Cache::forget('projects.index');
+            Cache::forget("projects.related.{$project->id}");
+        };
+
+        static::saved($invalidate);
+        static::deleted($invalidate);
+    }
 
     protected $fillable = [
         'title',
@@ -28,12 +41,12 @@ class Project extends Model
     ];
 
     protected $casts = [
-        'tags'        => 'array',
-        'platforms'   => 'array',
+        'tags' => 'array',
+        'platforms' => 'array',
         'screenshots' => 'array',
-        'private_repo'=> 'boolean',
-        'featured'    => 'boolean',
-        'published'   => 'boolean',
+        'private_repo' => 'boolean',
+        'featured' => 'boolean',
+        'published' => 'boolean',
     ];
 
     // ── Scopes ───────────────────────────────────────────────────────────
@@ -58,7 +71,7 @@ class Project extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            return asset('storage/'.$this->image);
         }
 
         // Placeholder Unsplash (stable, fiable, pas de rate limit pour portfolios)
@@ -68,10 +81,12 @@ class Project extends Model
     // URLs complètes des screenshots
     public function getScreenshotsUrlsAttribute(): array
     {
-        if (! $this->screenshots) return [];
+        if (! $this->screenshots) {
+            return [];
+        }
 
         return array_map(
-            fn ($p) => asset('storage/' . $p),
+            fn ($p) => asset('storage/'.$p),
             $this->screenshots
         );
     }

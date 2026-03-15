@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/BlogController.php
 
 namespace App\Http\Controllers;
@@ -16,16 +17,16 @@ class BlogController extends Controller
             return BlogPost::published()
                 ->ordered()
                 ->get()
-                ->map(fn($post) => [
-                    'id'              => $post->id,
-                    'title'           => $post->title,
-                    'slug'            => $post->slug,
-                    'excerpt'         => $post->excerpt,
+                ->map(fn ($post) => [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'excerpt' => $post->excerpt,
                     'cover_image_url' => $post->cover_image_url,
-                    'tags'            => $post->tags ?? [],
-                    'featured'        => (bool) $post->featured,
-                    'published_at'    => $post->published_at?->format('d M Y'),
-                    'reading_time'    => $this->readingTime($post->content),
+                    'tags' => $post->tags ?? [],
+                    'featured' => (bool) $post->featured,
+                    'published_at' => $post->published_at?->format('d M Y'),
+                    'reading_time' => $post->reading_time,
                 ]);
         });
 
@@ -42,39 +43,31 @@ class BlogController extends Controller
                 ->ordered()
                 ->take(3)
                 ->get()
-                ->map(fn($p) => [
-                    'id'              => $p->id,
-                    'title'           => $p->title,
-                    'slug'            => $p->slug,
-                    'excerpt'         => $p->excerpt,
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'title' => $p->title,
+                    'slug' => $p->slug,
+                    'excerpt' => $p->excerpt,
                     'cover_image_url' => $p->cover_image_url,
-                    'tags'            => $p->tags ?? [],
-                    'published_at'    => $p->published_at?->format('d M Y'),
+                    'tags' => $p->tags ?? [],
+                    'published_at' => $p->published_at?->format('d M Y'),
                 ]);
         });
 
         return Inertia::render('Blog/Show', [
-            'post'    => [
-                'id'              => $post->id,
-                'title'           => $post->title,
-                'slug'            => $post->slug,
-                'excerpt'         => $post->excerpt,
-                'content'         => $post->content,
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'content' => $post->content,
                 'cover_image_url' => $post->cover_image_url,
-                'tags'            => $post->tags ?? [],
-                'featured'        => (bool) $post->featured,
-                'published_at'    => $post->published_at?->format('d M Y'),
-                'reading_time'    => $this->readingTime($post->content),
+                'tags' => $post->tags ?? [],
+                'featured' => (bool) $post->featured,
+                'published_at' => $post->published_at?->format('d M Y'),
+                'reading_time' => $post->reading_time,
             ],
             'related' => $related,
         ]);
-    }
-
-    private function readingTime(?string $content): string
-    {
-        if (!$content) return '1 min';
-        $words = str_word_count(strip_tags($content));
-        $minutes = max(1, (int) ceil($words / 200));
-        return "{$minutes} min";
     }
 }
