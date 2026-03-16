@@ -1,4 +1,5 @@
-// resources/js/components/ui/Button.tsx
+// resources/js/components/ui/AppButton.tsx
+// Renommé AppButton pour éviter le conflit avec @/components/ui/button (Untitled UI)
 //
 // Bouton pro minimal — zéro effet shiny, zéro gimmick.
 // 3 variants : primary · ghost · dark
@@ -19,8 +20,8 @@ type Size    = 'sm' | 'md' | 'lg'
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
     variant?:  Variant
     size?:     Size
-    children:  React.ReactNode
-    icon?:     React.ReactNode  // icône droite optionnelle
+    children?: React.ReactNode
+    icon?:     React.ReactNode
     loading?:  boolean
 }
 
@@ -80,7 +81,7 @@ const Spinner = () => (
 )
 
 // ─── Composant ────────────────────────────────────────────────────────────────
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const AppButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ variant = 'primary', size = 'md', children, icon, loading, className, disabled, ...props }, ref) => (
         <motion.button
             ref={ref}
@@ -97,7 +98,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     )
 )
 
-Button.displayName = 'Button'
+AppButton.displayName = 'AppButton'
+
+// Alias pour compatibilité descendante
+export const Button = AppButton
 
 // ─── Exports raccourcis ───────────────────────────────────────────────────────
 export { ArrowRight }
