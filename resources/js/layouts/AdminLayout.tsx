@@ -1,264 +1,523 @@
 // resources/js/layouts/AdminLayout.tsx
-import { Link, usePage, router }   from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect }     from 'react';
-import { cn }                      from '@/lib/utils';
+import { Link, usePage, router }        from '@inertiajs/react';
+import { motion, AnimatePresence }      from 'framer-motion';
+import { useState, useEffect }          from 'react';
+import { cn }                           from '@/lib/utils';
 
 interface Props {
-    children: React.ReactNode;
-    title?:   string;
+    children:    React.ReactNode;
+    title?:      string;
+    breadcrumb?: { label: string; href?: string }[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NAV ITEMS
+// ICÔNES SVG — clean, 16×16, stroke moderne
+// ─────────────────────────────────────────────────────────────────────────────
+const Icons = {
+    // Vue d'ensemble — grille 2×2
+    Dashboard: () => (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <rect x="1.5" y="1.5" width="5" height="5" rx="1.5"/>
+            <rect x="9.5" y="1.5" width="5" height="5" rx="1.5"/>
+            <rect x="1.5" y="9.5" width="5" height="5" rx="1.5"/>
+            <rect x="9.5" y="9.5" width="5" height="5" rx="1.5"/>
+        </svg>
+    ),
+    // Projets — bracket code
+    Projects: () => (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M5.5 3.5L2 8l3.5 4.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10.5 3.5L14 8l-3.5 4.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9.5 2l-3 12" strokeLinecap="round"/>
+        </svg>
+    ),
+    // Blog — document lignes
+    Blog: () => (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <rect x="2" y="1.5" width="12" height="13" rx="2"/>
+            <path d="M5 5.5h6M5 8h6M5 10.5h4" strokeLinecap="round"/>
+        </svg>
+    ),
+    // Formations — chapeau académique
+    Formations: () => (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M8 2.5L1.5 6 8 9.5 14.5 6 8 2.5z" strokeLinejoin="round"/>
+            <path d="M4.5 7.5V11c0 1.5 1.5 2.5 3.5 2.5S11.5 12.5 11.5 11V7.5" strokeLinecap="round"/>
+            <path d="M14.5 6v4" strokeLinecap="round"/>
+        </svg>
+    ),
+    // Messages — enveloppe
+    Messages: () => (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/>
+            <path d="M1.5 3.5l6.5 5 6.5-5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Chevron droite
+    ChevronRight: () => (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M4.5 2.5L7.5 6l-3 3.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Chevron gauche (collapse)
+    ChevronLeft: () => (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M9 3L5 7l4 4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Déconnexion
+    Logout: () => (
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M10 5V3.5A1.5 1.5 0 008.5 2h-5A1.5 1.5 0 002 3.5v8A1.5 1.5 0 003.5 13h5A1.5 1.5 0 0010 11.5V10" strokeLinecap="round"/>
+            <path d="M13 7.5H6m3.5-2.5L13 7.5l-3.5 2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Lien externe
+    ExternalLink: () => (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" strokeWidth="1.3" stroke="currentColor" aria-hidden>
+            <path d="M2 10L10 2M10 2H5.5M10 2v4.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Burger
+    Menu: () => (
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" strokeWidth="1.5" stroke="currentColor" aria-hidden>
+            <path d="M3 5h12M3 9h12M3 13h8" strokeLinecap="round"/>
+        </svg>
+    ),
+    // Fermer (toast)
+    Close: () => (
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden>
+            <path d="M2.5 2.5l8 8M10.5 2.5l-8 8" strokeLinecap="round"/>
+        </svg>
+    ),
+    // Check (toast success)
+    Check: () => (
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" strokeWidth="1.5" stroke="currentColor" aria-hidden>
+            <circle cx="7.5" cy="7.5" r="6"/>
+            <path d="M4.5 7.5l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
+    // Erreur (toast error)
+    AlertCircle: () => (
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" strokeWidth="1.5" stroke="currentColor" aria-hidden>
+            <circle cx="7.5" cy="7.5" r="6"/>
+            <path d="M7.5 4.5v3.5M7.5 10.5v.5" strokeLinecap="round"/>
+        </svg>
+    ),
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAV CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
 const navItems = [
-    {
-        label: 'Vue d\'ensemble',
-        href:  '/admin',
-        exact: true,
-        icon: (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Projets',
-        href:  '/admin/projects',
-        exact: false,
-        icon: (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Blog',
-        href:  '/admin/blog',
-        exact: false,
-        icon: (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Formations',
-        href:  '/admin/formations',
-        exact: false,
-        icon: (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-        ),
-    },
-    {
-        label: 'Messages',
-        href:  '/admin/messages',
-        exact: false,
-        icon: (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-        ),
-    },
-];
+    { label: "Vue d'ensemble", href: '/admin',            exact: true,  Icon: Icons.Dashboard   },
+    { label: 'Projets',        href: '/admin/projects',   exact: false, Icon: Icons.Projects    },
+    { label: 'Blog',           href: '/admin/blog',       exact: false, Icon: Icons.Blog        },
+    { label: 'Formations',     href: '/admin/formations', exact: false, Icon: Icons.Formations  },
+    { label: 'Messages',       href: '/admin/messages',   exact: false, Icon: Icons.Messages    },
+]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-function isActive(href: string, currentUrl: string, exact: boolean): boolean {
-    if (exact) return currentUrl === href;
-    return currentUrl.startsWith(href);
-}
+const isActive = (href: string, url: string, exact: boolean) =>
+    exact ? url === href : url.startsWith(href)
 
-function logout() {
-    router.post('/logout');
+const logout = () => router.post('/logout')
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGO MARK SVG
+// ─────────────────────────────────────────────────────────────────────────────
+function LogoMark({ size = 24 }: { size?: number }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-label="mrsergio">
+            <polygon points="32,3 58,17 58,47 32,61 6,47 6,17" fill="#1D9E75" fillOpacity="0.12"/>
+            <polygon points="32,3 58,17 58,47 32,61 6,47 6,17" fill="none" stroke="#1D9E75" strokeWidth="1.5"/>
+            <path d="M20 24Q20 18 26 18L38 18Q44 18 44 24Q44 30 32 34Q20 38 20 44Q20 50 26 50L38 50Q44 50 44 44"
+                stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+            <circle cx="54" cy="17" r="5" fill="#1D9E75"/>
+        </svg>
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPOSANT
+// SKELETON LOADER exporté
 // ─────────────────────────────────────────────────────────────────────────────
-export default function AdminLayout({ children, title }: Props) {
-    const { url, props } = usePage<{ auth: { user: { name: string; email: string } }; flash: { success?: string; error?: string } }>();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const flash = props.flash ?? {};
+export function AdminSkeleton({ rows = 5 }: { rows?: number }) {
+    return (
+        <div className="animate-pulse space-y-3 p-1">
+            <div className="h-7 w-40 bg-slate-200 rounded-lg"/>
+            <div className="h-px bg-slate-100 my-4"/>
+            {Array.from({ length: rows }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-slate-200 rounded-xl flex-shrink-0"/>
+                    <div className="flex-1 space-y-2">
+                        <div className="h-3.5 bg-slate-200 rounded w-2/3"/>
+                        <div className="h-3 bg-slate-100 rounded w-1/3"/>
+                    </div>
+                    <div className="h-7 w-14 bg-slate-200 rounded-lg flex-shrink-0"/>
+                </div>
+            ))}
+        </div>
+    )
+}
 
-    // Ferme sidebar mobile au changement de page (déférer le setState pour éviter des rendus en cascade)
+// ─────────────────────────────────────────────────────────────────────────────
+// FLASH TOAST
+// ─────────────────────────────────────────────────────────────────────────────
+function FlashToast({ type, message }: { type: 'success' | 'error'; message: string }) {
+    const [show, setShow] = useState(true)
+
     useEffect(() => {
-        const id = setTimeout(() => setSidebarOpen(false), 0);
-        return () => clearTimeout(id);
-    }, [url]);
+        const t = setTimeout(() => setShow(false), 4500)
+        return () => clearTimeout(t)
+    }, [message])
+
+    if (!show) return null
+
+    const isSuccess = type === 'success'
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: [0, 0, 0.2, 1] }}
+            className={cn(
+                'fixed top-4 right-4 z-[100] flex items-start gap-3',
+                'px-4 py-3 rounded-xl shadow-lg max-w-sm w-full',
+                'border backdrop-blur-sm text-[13px] font-medium',
+                isSuccess
+                    ? 'bg-white border-teal-200/80 text-slate-800 shadow-teal-100'
+                    : 'bg-white border-red-200/80 text-slate-800 shadow-red-100',
+            )}
+        >
+            <span className={isSuccess ? 'text-teal-600 mt-[1px] flex-shrink-0' : 'text-red-500 mt-[1px] flex-shrink-0'}>
+                {isSuccess ? <Icons.Check /> : <Icons.AlertCircle />}
+            </span>
+            <span className="flex-1 leading-relaxed">{message}</span>
+            <button
+                onClick={() => setShow(false)}
+                aria-label="Fermer"
+                className="flex-shrink-0 text-slate-300 hover:text-slate-500 transition-colors mt-[1px]"
+            >
+                <Icons.Close />
+            </button>
+        </motion.div>
+    )
+}
 
-            {/* ── OVERLAY MOBILE ──────────────────────────────────────────── */}
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPOSANT PRINCIPAL
+// ─────────────────────────────────────────────────────────────────────────────
+export default function AdminLayout({ children, title, breadcrumb }: Props) {
+    const { url, props } = usePage<{
+        auth:  { user: { name: string; email: string } }
+        flash: { success?: string; error?: string }
+    }>()
+
+    const [mobileOpen, setMobileOpen] = useState(false)
+    const [collapsed,  setCollapsed]  = useState(false)
+    const flash = props.flash ?? {}
+    const user  = props.auth?.user
+
+    // Initiales sur 2 lettres
+    const initials = user?.name
+        ?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'A'
+
+    // Ferme le menu mobile au changement de route
+    useEffect(() => {
+        const id = setTimeout(() => setMobileOpen(false), 0)
+        return () => clearTimeout(id)
+    }, [url])
+
+    // Bloque le scroll quand mobile ouvert
+    useEffect(() => {
+        document.body.style.overflow = mobileOpen ? 'hidden' : ''
+        return () => { document.body.style.overflow = '' }
+    }, [mobileOpen])
+
+    // Largeur sidebar
+    const sidebarW = collapsed ? 60 : 220
+
+    return (
+        <div className="min-h-screen bg-[#f5f6fa] flex">
+
+            {/* ── FLASH ────────────────────────────────────────────────── */}
+            <AnimatePresence mode="wait">
+                {flash.success && <FlashToast key={`s-${flash.success}`} type="success" message={flash.success}/>}
+                {flash.error   && <FlashToast key={`e-${flash.error}`}   type="error"   message={flash.error}/>}
+            </AnimatePresence>
+
+            {/* ── OVERLAY MOBILE ───────────────────────────────────────── */}
             <AnimatePresence>
-                {sidebarOpen && (
+                {mobileOpen && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setSidebarOpen(false)}
-                        className="fixed inset-0 z-20 bg-black/30 backdrop-blur-sm lg:hidden"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        onClick={() => setMobileOpen(false)}
+                        className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] lg:hidden"
+                        aria-hidden
                     />
                 )}
             </AnimatePresence>
 
-            {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
-            <aside className={cn(
-                'fixed top-0 left-0 z-30 h-full w-60 bg-white border-r border-slate-200/80 flex flex-col',
-                'transition-transform duration-300 ease-out',
-                'lg:translate-x-0 lg:static lg:z-auto',
-                sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
-            )}>
-                {/* Logo */}
-                <div className="h-16 flex items-center gap-3 px-5 border-b border-slate-100 flex-shrink-0">
-                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center shadow-sm shadow-teal-500/30">
-                        <span className="text-white font-bold text-sm font-display">S</span>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold text-slate-800 font-display leading-none">mrsergio</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Dashboard</p>
-                    </div>
+            {/* ════════════════════════════════════════════════════════════
+                SIDEBAR LIGHT — pleine hauteur, border-r fine
+                ════════════════════════════════════════════════════════════ */}
+            <aside
+                style={{ width: sidebarW }}
+                className={cn(
+                    // Positionnement : fixe en mobile, static sticky en desktop
+                    'fixed top-0 left-0 z-30 h-full',
+                    'lg:sticky lg:top-0 lg:h-screen lg:z-auto',
+                    // Fond blanc + border droite
+                    'bg-white border-r border-slate-200/80',
+                    'flex flex-col',
+                    // Transition smooth largeur + slide mobile
+                    'transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                    'lg:translate-x-0',
+                    mobileOpen ? 'translate-x-0 shadow-[2px_0_24px_rgba(0,0,0,0.08)]' : '-translate-x-full',
+                    // Toujours 220px sur mobile (pas de collapse)
+                    'w-[220px] lg:w-auto',
+                )}
+            >
+                {/* ─── HEADER SIDEBAR ───────────────────────────────── */}
+                <div className={cn(
+                    'h-[60px] flex items-center flex-shrink-0',
+                    'border-b border-slate-100',
+                    collapsed ? 'justify-center px-3' : 'justify-between px-4',
+                )}>
+                    {!collapsed ? (
+                        <Link href="/" className="flex items-center gap-2.5 group min-w-0">
+                            <LogoMark size={22}/>
+                            <div className="flex flex-col leading-none min-w-0">
+                                <span className="text-[13px] font-bold text-slate-900 tracking-tight">
+                                    mr<span className="text-teal-600">sergio</span>
+                                </span>
+                                <span className="text-[9px] font-mono text-slate-400 tracking-[0.18em] mt-[2px]">
+                                    .dev / admin
+                                </span>
+                            </div>
+                        </Link>
+                    ) : (
+                        <Link href="/" title="mrsergio.dev">
+                            <LogoMark size={20}/>
+                        </Link>
+                    )}
+
+                    {/* Collapse — desktop seulement */}
+                    <button
+                        onClick={() => setCollapsed(v => !v)}
+                        className={cn(
+                            'hidden lg:flex w-6 h-6 items-center justify-center rounded-lg',
+                            'text-slate-400 hover:text-slate-600 hover:bg-slate-100',
+                            'transition-all duration-150',
+                            collapsed && 'mt-8',
+                        )}
+                        aria-label={collapsed ? 'Étendre' : 'Réduire'}
+                    >
+                        <motion.span
+                            animate={{ rotate: collapsed ? 180 : 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex"
+                        >
+                            <Icons.ChevronLeft/>
+                        </motion.span>
+                    </button>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-[0.15em] px-3 mb-3">
-                        Gestion
-                    </p>
-                    {navItems.map(item => {
-                        const active = isActive(item.href, url, item.exact);
+                {/* ─── NAV ──────────────────────────────────────────── */}
+                <nav className={cn(
+                    'flex-1 overflow-y-auto overflow-x-hidden',
+                    'py-3 space-y-0.5',
+                    collapsed ? 'px-2' : 'px-3',
+                )}>
+                    {!collapsed && (
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.16em] px-2 mb-2 pt-1 select-none">
+                            Gestion
+                        </p>
+                    )}
+
+                    {navItems.map(({ label, href, exact, Icon }) => {
+                        const active = isActive(href, url, exact)
                         return (
                             <Link
-                                key={item.href}
-                                href={item.href}
+                                key={href}
+                                href={href}
+                                title={collapsed ? label : undefined}
                                 className={cn(
-                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                                    'relative flex items-center rounded-xl',
+                                    'text-[13px] font-medium transition-all duration-150',
+                                    'group',
+                                    collapsed
+                                        ? 'h-9 w-9 mx-auto justify-center'
+                                        : 'gap-3 px-3 py-2.5',
                                     active
-                                        ? 'bg-teal-50 text-teal-700 border border-teal-100'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                                        ? 'bg-teal-50 text-teal-700'
+                                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50',
                                 )}
                             >
-                                <span className={cn(active ? 'text-teal-600' : 'text-slate-400')}>
-                                    {item.icon}
+                                {/* Barre gauche active */}
+                                {active && !collapsed && (
+                                    <motion.span
+                                        layoutId="sidebar-active"
+                                        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] bg-teal-500 rounded-full"
+                                        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+                                    />
+                                )}
+
+                                <span className={cn(
+                                    'flex-shrink-0 transition-colors duration-150',
+                                    active
+                                        ? 'text-teal-600'
+                                        : 'text-slate-400 group-hover:text-slate-600',
+                                )}>
+                                    <Icon/>
                                 </span>
-                                {item.label}
-                                {active && (
-                                    <span className="ml-auto w-1.5 h-1.5 bg-teal-500 rounded-full" />
+
+                                {!collapsed && (
+                                    <span className="truncate leading-none">{label}</span>
+                                )}
+
+                                {/* Dot actif collapsed */}
+                                {active && collapsed && (
+                                    <span className="absolute right-1 top-1 w-1.5 h-1.5 bg-teal-500 rounded-full"/>
                                 )}
                             </Link>
-                        );
+                        )
                     })}
                 </nav>
 
-                {/* User + Logout */}
-                <div className="p-3 border-t border-slate-100 flex-shrink-0">
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50">
-                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-white">
-                                {props.auth?.user?.name?.charAt(0) ?? 'A'}
-                            </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-slate-800 truncate">{props.auth?.user?.name}</p>
-                            <p className="text-xs text-slate-400 truncate">{props.auth?.user?.email}</p>
-                        </div>
-                        <button
-                            onClick={logout}
-                            title="Déconnexion"
-                            className="text-slate-400 hover:text-red-500 transition-colors flex-shrink-0"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                        </button>
-                    </div>
+                {/* ─── DIVIDER ──────────────────────────────────────── */}
+                <div className="h-px bg-slate-100 mx-3"/>
 
-                    {/* Lien vers le site public */}
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 px-3 py-2 mt-1 rounded-lg text-xs text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Voir le site public
-                    </Link>
+                {/* ─── FOOTER SIDEBAR : user + lien public ──────────── */}
+                <div className={cn('py-3 flex-shrink-0', collapsed ? 'px-2' : 'px-3')}>
+
+                    {/* User block */}
+                    {!collapsed ? (
+                        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-slate-50 transition-colors">
+                            {/* Avatar */}
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
+                            </div>
+                            {/* Infos */}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-semibold text-slate-800 truncate leading-none mb-[2px]">
+                                    {user?.name ?? 'Admin'}
+                                </p>
+                                <p className="text-[10px] text-slate-400 truncate">{user?.email ?? ''}</p>
+                            </div>
+                            {/* Déconnexion */}
+                            <button
+                                onClick={logout}
+                                title="Déconnexion"
+                                aria-label="Déconnexion"
+                                className="flex-shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+                            >
+                                <Icons.Logout/>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-2">
+                            <div
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-sm cursor-default"
+                                title={user?.name}
+                            >
+                                <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
+                            </div>
+                            <button
+                                onClick={logout}
+                                title="Déconnexion"
+                                aria-label="Déconnexion"
+                                className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+                            >
+                                <Icons.Logout/>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Voir le site public */}
+                    {!collapsed && (
+                        <Link
+                            href="/"
+                            className="mt-1 flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] text-slate-400 hover:text-teal-600 hover:bg-teal-50/60 transition-all duration-150"
+                        >
+                            <Icons.ExternalLink/>
+                            Voir le site public
+                        </Link>
+                    )}
                 </div>
             </aside>
 
-            {/* ── CONTENU PRINCIPAL ───────────────────────────────────────── */}
-            <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+            {/* ════════════════════════════════════════════════════════════
+                ZONE PRINCIPALE
+                ════════════════════════════════════════════════════════════ */}
+            <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden">
 
-                {/* Topbar */}
-                <header className="h-16 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
+                {/* ─── TOPBAR ───────────────────────────────────────── */}
+                <header className={cn(
+                    'h-[60px] bg-white border-b border-slate-200/70',
+                    'flex items-center justify-between',
+                    'px-4 sm:px-6 flex-shrink-0 sticky top-0 z-10',
+                    'shadow-[0_1px_0_rgba(0,0,0,0.03)]',
+                )}>
+                    {/* Gauche : burger + breadcrumb/titre */}
+                    <div className="flex items-center gap-3 min-w-0">
                         {/* Burger mobile */}
                         <button
-                            onClick={() => setSidebarOpen(v => !v)}
-                            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+                            onClick={() => setMobileOpen(v => !v)}
+                            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-500 transition-colors flex-shrink-0"
+                            aria-label="Ouvrir le menu"
                         >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            <Icons.Menu/>
                         </button>
 
-                        {/* Titre de page */}
-                        {title && (
-                            <h1 className="text-base font-semibold text-slate-800 font-display">
-                                {title}
-                            </h1>
-                        )}
+                        {/* Breadcrumb ou titre */}
+                        {breadcrumb ? (
+                            <nav className="flex items-center gap-1.5 min-w-0 flex-wrap" aria-label="Breadcrumb">
+                                {breadcrumb.map((crumb, i) => (
+                                    <div key={i} className="flex items-center gap-1.5 min-w-0">
+                                        {i > 0 && <span className="text-slate-300 flex-shrink-0"><Icons.ChevronRight/></span>}
+                                        {crumb.href ? (
+                                            <Link href={crumb.href} className="text-[13px] text-slate-400 hover:text-slate-700 transition-colors truncate font-medium">
+                                                {crumb.label}
+                                            </Link>
+                                        ) : (
+                                            <span className="text-[13px] font-semibold text-slate-800 truncate" aria-current="page">
+                                                {crumb.label}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </nav>
+                        ) : title ? (
+                            <h1 className="text-[14px] font-semibold text-slate-800 truncate">{title}</h1>
+                        ) : null}
                     </div>
 
-                    {/* Badge admin */}
-                    <div className="flex items-center gap-2">
-                        <span className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded-full">
-                            <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
+                    {/* Droite : badge + avatar */}
+                    <div className="flex items-center gap-2.5 flex-shrink-0">
+                        <span className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-teal-700 bg-teal-50 border border-teal-100/80 px-2.5 py-[5px] rounded-full">
+                            <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" aria-hidden/>
                             Admin
                         </span>
+                        <div
+                            className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-sm cursor-default"
+                            title={user?.name}
+                            aria-label={`Connecté en tant que ${user?.name ?? 'Admin'}`}
+                        >
+                            <span className="text-[11px] font-bold text-white leading-none">{initials}</span>
+                        </div>
                     </div>
                 </header>
 
-                {/* Flash messages */}
-                <AnimatePresence>
-                    {flash.success && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            className="mx-4 sm:mx-6 mt-4 flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-200 rounded-xl text-sm font-medium text-teal-800"
-                        >
-                            <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            {flash.success}
-                        </motion.div>
-                    )}
-                    {flash.error && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            className="mx-4 sm:mx-6 mt-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm font-medium text-red-800"
-                        >
-                            <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {flash.error}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Page content */}
-                <main className="flex-1 p-4 sm:p-6">
+                {/* ─── CONTENU ──────────────────────────────────────── */}
+                <main className="flex-1 p-4 sm:p-6 overflow-auto">
                     {children}
                 </main>
             </div>
         </div>
-    );
+    )
 }

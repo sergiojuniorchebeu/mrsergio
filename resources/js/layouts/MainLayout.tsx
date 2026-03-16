@@ -293,7 +293,7 @@ export default function MainLayout({ children }: Props) {
               © {new Date().getFullYear()} Sergio Junior Chebeu — Tous droits réservés.
             </p>
             <span className="text-[11px] text-white/20 font-medium">
-              Disponible pour de nouveaux projets
+              Host by <a href="https://www.kennhosting.com" target="_blank" rel="noreferrer" className="underline hover:text-teal-400 transition-colors duration-200">KennHosting</a>
             </span>
           </div>
         </div>
