@@ -26,6 +26,7 @@ class Project extends Model
     protected $fillable = [
         'title',
         'slug',
+        'project_type',
         'description',
         'content',
         'image',
@@ -34,6 +35,7 @@ class Project extends Model
         'demo_url',
         'github_url',
         'private_repo',
+        'store_links',
         'tags',
         'featured',
         'published',
@@ -44,12 +46,11 @@ class Project extends Model
         'tags' => 'array',
         'platforms' => 'array',
         'screenshots' => 'array',
+        'store_links' => 'array',
         'private_repo' => 'boolean',
         'featured' => 'boolean',
         'published' => 'boolean',
     ];
-
-    // ── Scopes ───────────────────────────────────────────────────────────
 
     public function scopePublished(Builder $query): Builder
     {
@@ -66,19 +67,15 @@ class Project extends Model
         return $query->orderBy('sort_order')->orderByDesc('created_at');
     }
 
-    // ── Accessors ────────────────────────────────────────────────────────
-
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
-            return asset('storage/'.$this->image);
+            return asset('storage/' . $this->image);
         }
 
-        // Placeholder Unsplash (stable, fiable, pas de rate limit pour portfolios)
         return 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=70&auto=format';
     }
 
-    // URLs complètes des screenshots
     public function getScreenshotsUrlsAttribute(): array
     {
         if (! $this->screenshots) {
@@ -86,8 +83,19 @@ class Project extends Model
         }
 
         return array_map(
-            fn ($p) => asset('storage/'.$p),
+            fn ($p) => asset('storage/' . $p),
             $this->screenshots
         );
+    }
+
+    public function getProjectTypeLabelAttribute(): string
+    {
+        return match ($this->project_type) {
+            'web' => 'Web',
+            'mobile' => 'Mobile',
+            'desktop' => 'Desktop',
+            'api' => 'API',
+            default => 'Projet',
+        };
     }
 }
