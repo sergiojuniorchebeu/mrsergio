@@ -7,9 +7,11 @@ use Inertia\Inertia;
 
 class HomeController extends Controller
 {
+    private const HOME_PROJECTS_CACHE_KEY = 'home.projects.v2';
+
     public function index()
     {
-        $projects = Cache::remember('home.projects', 600, function () {
+        $projects = Cache::remember(self::HOME_PROJECTS_CACHE_KEY, 600, function () {
             return \App\Models\Project::published()
                 ->featured()
                 ->ordered()
@@ -19,8 +21,15 @@ class HomeController extends Controller
                     'id' => $p->id,
                     'title' => $p->title,
                     'slug' => $p->slug,
+                    'project_type' => $p->project_type,
+                    'project_type_label' => $p->project_type_label,
                     'description' => $p->description,
                     'image_url' => $p->image_url,
+                    'demo_url' => $p->demo_url,
+                    'github_url' => $p->github_url,
+                    'private_repo' => (bool) $p->private_repo,
+                    'store_links' => $p->store_links,
+                    'screenshots_urls' => $p->screenshots_urls,
                     'tags' => $p->tags ?? [],
                     'featured' => (bool) $p->featured,
                 ]);
@@ -66,10 +75,15 @@ class HomeController extends Controller
                 ]);
         });
 
+        $projectsCount = Cache::remember('home.projects_count', 600, function () {
+            return \App\Models\Project::published()->count();
+        });
+
         return Inertia::render('Home', [
             'projects' => $projects,
             'posts' => $posts,
             'formations' => $formations,
+            'projectsCount' => $projectsCount,
         ]);
     }
 }

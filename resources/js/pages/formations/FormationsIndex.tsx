@@ -1,269 +1,344 @@
-// resources/js/Pages/Formations/Index.tsx
-import { Head, Link }              from '@inertiajs/react';
-import { motion }                  from 'framer-motion';
-import { useState, useMemo }       from 'react';
-import { AnimatedGridPattern }     from '@/components/ui/animated-grid-pattern';
-import MainLayout                  from '@/layouts/MainLayout';
-import { cn, easings }             from '@/lib/utils';
-import type { FormationsIndexProps, Formation } from '@/types';
+// resources/js/pages/formations/FormationsIndex.tsx
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COULEURS catégories
-// ─────────────────────────────────────────────────────────────────────────────
-const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string; icon: string }> = {
-    'Laravel': { bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100',    icon: '🔴' },
-    'Flutter': { bg: 'bg-blue-50',   text: 'text-blue-600',   border: 'border-blue-100',   icon: '🔵' },
-    'Python':  { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-100', icon: '🐍' },
-    'Java':    { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100', icon: '☕' },
-};
-const defaultCat = { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-100', icon: '📚' };
+import { Head, Link } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo, useState } from 'react';
+import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
+import { FormationCard } from '@/components/ui/FormationCard';
+import MainLayout from '@/layouts/MainLayout';
+import { cn } from '@/lib/utils';
+import type { FormationsIndexProps } from '@/types';
 
-const LEVEL_COLORS: Record<string, string> = {
-    'débutant':      'bg-green-50  text-green-700  border-green-100',
-    'intermédiaire': 'bg-amber-50  text-amber-700  border-amber-100',
-    'avancé':        'bg-red-50    text-red-700    border-red-100',
+type Level = 'débutant' | 'intermédiaire' | 'avancé';
+
+const LEVEL_ORDER: Level[] = ['débutant', 'intermédiaire', 'avancé'];
+const LEVEL_LABELS: Record<Level, string> = {
+    'débutant':      'Débutant',
+    'intermédiaire': 'Intermédiaire',
+    'avancé':        'Avancé',
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FORMATION CARD
-// ─────────────────────────────────────────────────────────────────────────────
-function FormationCard({ formation, index }: { formation: Formation; index: number }) {
-    const cat = CATEGORY_COLORS[formation.category] ?? defaultCat;
-
+// ─── Chip ─────────────────────────────────────────────────────────────────────
+function Chip({
+    active,
+    onClick,
+    children,
+    count,
+}: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    count?: number;
+}) {
     return (
-        <motion.article
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.55, ease: easings.smooth, delay: index * 0.08 }}
+        <button
+            onClick={onClick}
+            className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40',
+                active
+                    ? 'border-teal-600 bg-teal-600 text-white shadow-sm shadow-teal-500/20'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50/60 hover:text-teal-700',
+            )}
         >
-            <Link href={`/formations/${formation.slug}`} className="group block h-full">
-                <div className={cn(
-                    'h-full flex flex-col rounded-2xl overflow-hidden',
-                    'bg-surface-card border border-slate-200/70',
-                    'shadow-sm hover:shadow-xl hover:shadow-teal-900/8',
-                    'transition-all duration-300 hover:-translate-y-1',
+            {children}
+            {count !== undefined && (
+                <span className={cn(
+                    'flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                    active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500',
                 )}>
-
-                    {/* ── Image / Cover ─────────────────────────────────── */}
-                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-100 to-slate-50 overflow-hidden flex-shrink-0">
-                        <img
-                            src={formation.cover_image_url}
-                            alt={formation.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-
-                        {/* Catégorie badge */}
-                        <div className={cn(
-                            'absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border',
-                            'bg-white/90 backdrop-blur-sm text-ink-primary border-white/60',
-                        )}>
-                            <span>{cat.icon}</span>
-                            {formation.category}
-                        </div>
-
-                        {/* Prix badge */}
-                        <div className={cn(
-                            'absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold',
-                            formation.is_free
-                                ? 'bg-teal-600 text-white'
-                                : 'bg-white/90 backdrop-blur-sm text-ink-primary border border-white/60',
-                        )}>
-                            {formation.price_formatted}
-                        </div>
-
-                        {/* Métriques overlay bas */}
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3">
-                            <span className="flex items-center gap-1 text-xs text-white/90 font-medium">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {formation.duration_formatted}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-white/90 font-medium">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                {formation.lessons_count} leçons
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* ── Contenu ───────────────────────────────────────── */}
-                    <div className="flex flex-col flex-1 p-5 space-y-3">
-
-                        {/* Niveau */}
-                        <span className={cn(
-                            'self-start text-xs font-medium px-2.5 py-0.5 rounded-full border',
-                            LEVEL_COLORS[formation.level],
-                        )}>
-                            {formation.level.charAt(0).toUpperCase() + formation.level.slice(1)}
-                        </span>
-
-                        {/* Titre */}
-                        <h2 className="font-display font-bold text-lg text-ink-primary leading-snug group-hover:text-teal-600 transition-colors duration-200">
-                            {formation.title}
-                        </h2>
-
-                        {/* Extrait */}
-                        <p className="text-sm text-ink-muted leading-relaxed flex-1 line-clamp-3">
-                            {formation.excerpt}
-                        </p>
-
-                        {/* Footer */}
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                            <span className="text-sm font-semibold text-teal-600 flex items-center gap-1 group-hover:gap-2 transition-all duration-200">
-                                Voir la formation
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </span>
-                            {formation.featured && (
-                                <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                                    ⭐ Populaire
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </motion.article>
+                    {count}
+                </span>
+            )}
+        </button>
     );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PAGE
-// ─────────────────────────────────────────────────────────────────────────────
-export default function Index({ formations, categories }: FormationsIndexProps) {
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function FormationsIndex({ formations, categories }: FormationsIndexProps) {
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [activeLevel,    setActiveLevel]    = useState<Level | null>(null);
 
-    const filtered = useMemo(() => {
-        if (!activeCategory) return formations;
-        return formations.filter(f => f.category === activeCategory);
-    }, [formations, activeCategory]);
+    // Levels present in the data
+    const availableLevels = useMemo(() => {
+        const s = new Set<Level>();
+        formations.forEach((f) => { if (f.level) s.add(f.level as Level); });
+        return LEVEL_ORDER.filter((l) => s.has(l));
+    }, [formations]);
 
-    // featured variable not used in this component; remove to satisfy linter
+    // Counts
+    const countForCategory = (cat: string) =>
+        formations.filter((f) => {
+            const lvl = !activeLevel || f.level === activeLevel;
+            return lvl && f.category === cat;
+        }).length;
+
+    const countForLevel = (lvl: Level) =>
+        formations.filter((f) => {
+            const cat = !activeCategory || f.category === activeCategory;
+            return cat && f.level === lvl;
+        }).length;
+
+    // Filter
+    const filtered = useMemo(() =>
+        formations.filter((f) => {
+            const matchCat = !activeCategory || f.category === activeCategory;
+            const matchLvl = !activeLevel    || f.level    === activeLevel;
+            return matchCat && matchLvl;
+        }),
+        [formations, activeCategory, activeLevel],
+    );
+
+    const hasFilters = !!(activeCategory || activeLevel);
+
+    // Stats
+    const totalLessons  = formations.reduce((acc, f) => acc + (f.lessons_count || 0), 0);
+    const totalStudents = formations.reduce((acc, f) => acc + (f.students_count || 0), 0);
 
     return (
         <MainLayout>
             <Head title="Formations — Sergio Junior Chebeu" />
 
-            {/* ── Header ───────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden bg-surface-card border-b border-slate-200/60">
+            {/* ── Hero ─────────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden bg-[#fafaf8] pt-[88px] pb-14">
                 <AnimatedGridPattern
                     numSquares={20}
-                    maxOpacity={0.03}
+                    maxOpacity={0.045}
                     duration={5}
-                    repeatDelay={1}
+                    repeatDelay={1.4}
+                    width={36}
+                    height={36}
                     className={cn(
-                        'absolute inset-0 w-full h-full text-teal-600',
-                        '[mask-image:radial-gradient(600px_circle_at_50%_100%,white,transparent)]',
+                        'absolute inset-0 h-full w-full',
+                        'fill-transparent stroke-teal-500/[0.10] text-teal-500',
+                        '[mask-image:radial-gradient(ellipse_80%_70%_at_50%_42%,black_18%,rgba(0,0,0,0.65)_52%,transparent_88%)]',
                     )}
                 />
-                <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="container-main py-14 sm:py-20 relative z-10">
+                {/* Gradient mesh — cohérent avec la section formations de la home */}
+                <div aria-hidden className="pointer-events-none absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(26,163,137,0.08) 0%, transparent 70%)' }} />
+                <div aria-hidden className="pointer-events-none absolute -bottom-20 -right-20 h-[500px] w-[500px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(248,194,62,0.07) 0%, transparent 70%)' }} />
+                <div aria-hidden className="pointer-events-none absolute top-1/2 right-1/3 h-[320px] w-[320px] -translate-y-1/2 rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(26,163,137,0.04) 0%, transparent 70%)' }} />
+
+                {/* Watermark */}
+                <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <span
+                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] whitespace-nowrap text-slate-900/[0.025]"
+                        style={{ fontSize: 'clamp(48px, 10vw, 140px)' }}
+                    >
+                        Formations
+                    </span>
+                </div>
+
+                <div className="container-main relative z-10">
+                    {/* Breadcrumb */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: easings.smooth }}
+                        transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                        className="mb-8 flex items-center gap-2 text-[12px] font-medium text-slate-400"
+                    >
+                        <Link href="/" className="transition-colors hover:text-teal-600">Accueil</Link>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-slate-600">Formations</span>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.05, ease: [0.23, 1, 0.32, 1] }}
                         className="max-w-2xl"
                     >
-                        <p className="text-xs font-medium text-ink-muted uppercase tracking-[0.2em] mb-5">
+                        {/* Badge */}
+                        <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                             Apprendre · Pratiquer · Maîtriser
-                        </p>
-                        <h1 className="text-4xl sm:text-5xl font-display font-bold text-ink-primary tracking-tight leading-tight mb-4">
-                            Mes <span className="gradient-text">formations</span>
+                        </span>
+
+                        {/* Title */}
+                        <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-[#1a1916] sm:text-5xl lg:text-[52px]">
+                            Mes{' '}
+                            <span className="text-teal-600">formations</span>
                         </h1>
-                        <p className="text-lg text-ink-secondary leading-relaxed mb-6">
+
+                        {/* Description */}
+                        <p className="mt-5 text-[17px] leading-[1.75] text-slate-600 max-w-lg">
                             Des formations pratiques sur Laravel, Flutter, Firebase, Python et Java —
                             conçues pour passer de zéro à opérationnel rapidement.
                         </p>
 
-                        {/* Stats rapides */}
-                        <div className="flex flex-wrap items-center gap-6">
+                        {/* Stats */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="mt-8 flex flex-wrap items-center gap-6"
+                        >
                             {[
-                                { label: 'formations', value: formations.length },
-                                { label: 'leçons', value: formations.reduce((a, f) => a + (f.lessons_count || 0), 0) + '+' },
-                                { label: 'technologies', value: categories.length },
-                            ].map(stat => (
-                                <div key={stat.label} className="flex items-baseline gap-1.5">
-                                    <span className="text-xl font-bold font-display text-teal-600">{stat.value}</span>
-                                    <span className="text-sm text-ink-muted">{stat.label}</span>
+                                { value: filtered.length, label: hasFilters ? 'filtrées' : 'formations' },
+                                { value: `${totalLessons}+`, label: 'leçons' },
+                                { value: categories.length, label: 'technologies' },
+                                ...(totalStudents > 0 ? [{ value: `${totalStudents}+`, label: 'apprenants' }] : []),
+                            ].map((s, i) => (
+                                <div key={i} className="flex items-baseline gap-1.5">
+                                    <span className="font-display text-2xl font-bold text-[#1a1916]">{s.value}</span>
+                                    <span className="text-[13px] font-medium text-slate-400">{s.label}</span>
                                 </div>
                             ))}
-                        </div>
+                        </motion.div>
                     </motion.div>
                 </div>
             </section>
 
-            {/* ── Filtres catégories ────────────────────────────────────── */}
-            <section className="sticky top-16 z-30 bg-surface/90 backdrop-blur-md border-b border-slate-200/60">
-                <div className="container-main py-3">
-                    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
-                        <button
-                            onClick={() => setActiveCategory(null)}
-                            className={cn(
-                                'flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border',
-                                activeCategory === null
-                                    ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                                    : 'bg-surface-card text-ink-muted border-slate-200 hover:border-teal-300 hover:text-teal-600',
-                            )}
-                        >
-                            Toutes
-                        </button>
-
-                        {categories.map(cat => {
-                            const c = CATEGORY_COLORS[cat] ?? defaultCat;
-                            return (
-                                <button
-                                    key={cat}
-                                    onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
-                                    className={cn(
-                                        'flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border',
-                                        activeCategory === cat
-                                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                                            : 'bg-surface-card text-ink-muted border-slate-200 hover:border-teal-300 hover:text-teal-600',
-                                    )}
-                                >
-                                    <span>{c.icon}</span>
-                                    {cat}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Grille formations ─────────────────────────────────────── */}
-            <section className="container-main py-12 sm:py-16">
-                {filtered.length === 0 ? (
-                    <div className="text-center py-24">
-                        <p className="text-ink-muted font-medium">Aucune formation dans cette catégorie</p>
-                        <button
-                            onClick={() => setActiveCategory(null)}
-                            className="mt-3 text-sm text-teal-600 hover:underline"
-                        >
-                            Voir toutes les formations
-                        </button>
-                    </div>
-                ) : (
+            {/* ── Filters — scrolle avec la page ───────────────────────── */}
+            <div className="border-y border-slate-100 bg-white">
+                <div className="container-main py-5">
                     <motion.div
-                        key={activeCategory}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                        className="space-y-4"
                     >
-                        {filtered.map((formation, i) => (
-                            <FormationCard key={formation.id} formation={formation} index={i} />
-                        ))}
-                    </motion.div>
-                )}
-            </section>
+                        {/* Catégories */}
+                        {categories.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 shrink-0">
+                                    Catégorie
+                                </span>
+                                <Chip active={activeCategory === null} onClick={() => setActiveCategory(null)}>
+                                    Toutes
+                                </Chip>
+                                {categories.map((cat) => (
+                                    <Chip
+                                        key={cat}
+                                        active={activeCategory === cat}
+                                        onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                                        count={countForCategory(cat)}
+                                    >
+                                        {cat}
+                                    </Chip>
+                                ))}
+                            </div>
+                        )}
 
+                        {/* Niveaux */}
+                        {availableLevels.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 shrink-0">
+                                    Niveau
+                                </span>
+                                <Chip active={activeLevel === null} onClick={() => setActiveLevel(null)}>
+                                    Tous
+                                </Chip>
+                                {availableLevels.map((lvl) => (
+                                    <Chip
+                                        key={lvl}
+                                        active={activeLevel === lvl}
+                                        onClick={() => setActiveLevel(activeLevel === lvl ? null : lvl)}
+                                        count={countForLevel(lvl)}
+                                    >
+                                        {LEVEL_LABELS[lvl]}
+                                    </Chip>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Clear */}
+                        {hasFilters && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                onClick={() => { setActiveCategory(null); setActiveLevel(null); }}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 transition-colors hover:text-red-500"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Effacer les filtres
+                            </motion.button>
+                        )}
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* ── Grid ─────────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden bg-[#fafaf8] py-14 sm:py-18">
+
+                {/* Blobs discrets en fond */}
+                <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/4 h-[400px] w-[400px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(26,163,137,0.05) 0%, transparent 70%)' }} />
+                <div aria-hidden className="pointer-events-none absolute top-1/4 right-0 h-[350px] w-[350px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(248,194,62,0.05) 0%, transparent 70%)' }} />
+
+                <div className="container-main relative z-10">
+                    <AnimatePresence mode="wait">
+                        {filtered.length === 0 ? (
+                            <motion.div
+                                key="empty"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="py-24 text-center"
+                            >
+                                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-300">
+                                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                                <p className="text-[15px] font-semibold text-slate-500">Aucune formation pour ce filtre</p>
+                                <button
+                                    onClick={() => { setActiveCategory(null); setActiveLevel(null); }}
+                                    className="mt-3 text-[13px] font-semibold text-teal-600 hover:underline"
+                                >
+                                    Voir toutes les formations
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key={`${activeCategory ?? 'all'}-${activeLevel ?? 'all'}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                            >
+                                {filtered.map((formation, i) => (
+                                    <FormationCard key={formation.id} formation={formation} index={i} />
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* CTA bas de page */}
+                    {filtered.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="mt-16 flex flex-col items-center gap-4 text-center"
+                        >
+                            <p className="text-[14px] font-medium text-slate-400">
+                                Tu veux une formation sur un sujet spécifique ?
+                            </p>
+                            <Link
+                                href="/contact"
+                                className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+                            >
+                                Suggérer un sujet
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </Link>
+                        </motion.div>
+                    )}
+                </div>
+            </section>
         </MainLayout>
     );
 }

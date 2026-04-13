@@ -15,6 +15,7 @@ class Project extends Model
     {
         $invalidate = function (Project $project): void {
             Cache::forget('home.projects');
+            Cache::forget('home.projects.v2');
             Cache::forget('projects.index');
             Cache::forget("projects.related.{$project->id}");
         };
@@ -70,7 +71,7 @@ class Project extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
-            return asset('storage/' . $this->image);
+            return asset('storage/'.$this->image);
         }
 
         return 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=70&auto=format';
@@ -83,7 +84,7 @@ class Project extends Model
         }
 
         return array_map(
-            fn ($p) => asset('storage/' . $p),
+            fn ($p) => asset('storage/'.$p),
             $this->screenshots
         );
     }

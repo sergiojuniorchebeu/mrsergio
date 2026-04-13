@@ -3,14 +3,15 @@
 import { Head, Link } from "@inertiajs/react";
 import { motion, useInView } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
+import NumberFlow from "@number-flow/react";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
-import { RevealText } from "@/components/ui/AnimatedText";
+import { HexagonPattern } from "@/components/ui/hexagon-pattern";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { AvatarGlow } from "@/components/ui/AvatarGlow";
 import { ProjectCard } from "@/components/ui/ProjectCard";
-import { ShinyButton } from "@/components/ui/shiny-button";
-import { TypingAnimation } from "@/components/ui/typing-animation";
+import { FormationCard } from "@/components/ui/FormationCard";
 
 import MainLayout from "@/layouts/MainLayout";
 import { easings, cn } from "@/lib/utils";
@@ -67,53 +68,32 @@ function BlurFade({
     );
 }
 
-// ─── DotPattern ──────────────────────────────────────────────────────────────
-function DotPattern({ className }: { className?: string }) {
-    return (
-        <svg className={cn("pointer-events-none absolute inset-0 h-full w-full", className)} aria-hidden>
-            <defs>
-                <pattern id="dot-bg" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-                    <circle cx="1" cy="1" r="1" fill="currentColor" />
-                </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dot-bg)" />
-        </svg>
-    );
-}
-
-// ─── NumberTicker ────────────────────────────────────────────────────────────
-function NumberTicker({
+// ─── AnimatedStat ─────────────────────────────────────────────────────────────
+function AnimatedStat({
     value,
     suffix = "",
-    className,
+    label,
 }: {
     value: number;
     suffix?: string;
-    className?: string;
+    label: string;
 }) {
-    const ref = useRef<HTMLSpanElement>(null);
-    const inView = useInView(ref, { once: true });
-    const [display, setDisplay] = useState(0);
-
-    useEffect(() => {
-        if (!inView) return;
-
-        let s = 0;
-        const step = (ts: number) => {
-            if (!s) s = ts;
-            const p = Math.min((ts - s) / 1200, 1);
-            setDisplay(Math.floor((1 - Math.pow(1 - p, 3)) * value));
-            if (p < 1) requestAnimationFrame(step);
-        };
-
-        requestAnimationFrame(step);
-    }, [inView, value]);
+    const ref  = useRef<HTMLDivElement>(null);
+    const inView = useInView(ref, { once: true, margin: "-60px" });
 
     return (
-        <span ref={ref} className={className}>
-            {display}
-            {suffix}
-        </span>
+        <div ref={ref} className="flex flex-col items-center gap-1.5">
+            <span className="font-display text-4xl font-bold tracking-tight text-[#1a1916] sm:text-5xl tabular-nums">
+                <NumberFlow
+                    value={inView ? value : 0}
+                    transformTiming={{ duration: 900, easing: "ease-out" }}
+                />
+                <span className="text-teal-500">{suffix}</span>
+            </span>
+            <span className="text-[12px] font-medium uppercase tracking-[0.16em] text-slate-400">
+                {label}
+            </span>
+        </div>
     );
 }
 
@@ -138,35 +118,39 @@ const fadeUp: Variants = {
 };
 
 // ─── Tech stack ──────────────────────────────────────────────────────────────
-const techStack = [
+const techStack: { name: string; color: string; icon: React.ReactNode }[] = [
     {
         name: "Laravel",
+        color: "text-[#FF2D20]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.007-.04-.013-.059-.024L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.038.01-.073.014-.11a.337.337 0 01.033-.067c.01-.016.018-.034.03-.05.015-.014.032-.025.048-.038L5.044.05a.375.375 0 01.376 0L9.93 2.788c.018.01.03.026.044.038.016.013.033.024.048.039a.377.377 0 01.063.116c.006.016.006.033.01.051.003.036.012.072.012.109v9.653l3.76-2.164V5.528c0-.037.007-.072.012-.109a.377.377 0 01.042-.117c.01-.016.018-.033.03-.05.015-.014.032-.025.048-.038l4.51-2.738a.375.375 0 01.376 0l4.51 2.738c.017.011.03.026.044.038.016.013.032.024.048.039a.377.377 0 01.063.116c.005.016.006.033.009.051z" />
             </svg>
         ),
     },
     {
         name: "React",
+        color: "text-[#61DAFB]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38a2.167 2.167 0 0 0-1.092-.278z" />
             </svg>
         ),
     },
     {
         name: "Flutter",
+        color: "text-[#54C5F8]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M14.314 0L2.3 12 6 15.7 21.684.013h-7.37zm.159 11.871l-5.684 5.684 5.684 5.685 7.527-5.685z" />
             </svg>
         ),
     },
     {
         name: "Python",
+        color: "text-[#3776AB]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.912S0 5.789 0 11.969c0 6.18 3.403 5.963 3.403 5.963h2.03v-2.868s-.109-3.403 3.345-3.403h5.77s3.234.052 3.234-3.127V3.107S18.28 0 11.914 0zM8.708 1.798a1.068 1.068 0 110 2.137 1.068 1.068 0 010-2.137z" />
                 <path d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752H12v-.826h8.109S24 18.211 24 12.031c0-6.18-3.403-5.963-3.403-5.963h-2.03v2.868s.109 3.403-3.345 3.403h-5.77S6.218 12.287 6.218 15.466v5.427S5.72 24 12.086 24zm3.206-1.798a1.068 1.068 0 110-2.137 1.068 1.068 0 010 2.137z" />
             </svg>
@@ -174,33 +158,37 @@ const techStack = [
     },
     {
         name: "Java",
+        color: "text-[#007396]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8.851 18.56s-.917.534.653.714c1.902.218 2.874.187 4.969-.211 0 0 .552.346 1.321.646-4.699 2.013-10.633-.118-6.943-1.149M8.276 15.933s-1.028.761.542.924c2.032.209 3.636.227 6.413-.308 0 0 .384.389.987.602-5.679 1.661-12.007.13-7.942-1.218M13.116 11.475c1.158 1.333-.304 2.533-.304 2.533s2.939-1.518 1.589-3.418c-1.261-1.772-2.228-2.652 3.007-5.688 0 0-8.216 2.051-4.292 6.573" />
             </svg>
         ),
     },
     {
         name: "TailwindCSS",
+        color: "text-[#06B6D4]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z" />
             </svg>
         ),
     },
     {
-        name: "MySQL",
+        name: "Firebase",
+        color: "text-[#FFCA28]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16.405 5.501c-.115 0-.193.014-.274.033v.013h.014c.054.104.146.18.214.273.054.107.1.214.154.32l.014-.015c.094-.066.14-.172.14-.333-.04-.047-.046-.094-.08-.14-.04-.067-.126-.1-.18-.153z" />
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.89 15.672L6.255.461A.542.542 0 017.27.288l2.543 4.771zm16.794 3.692l-2.25-14a.54.54 0 00-.919-.295L3.316 19.365l7.856 4.427a1.621 1.621 0 001.588 0zM14.3 7.147l-1.82-3.482a.542.542 0 00-.96 0L3.53 17.984z" />
             </svg>
         ),
     },
     {
-        name: "Firebase",
+        name: "Inertia.js",
+        color: "text-[#9553E9]",
         icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3.89 15.672L6.255.461A.542.542 0 017.27.288l2.543 4.771zm16.794 3.692l-2.25-14a.54.54 0 00-.919-.295L3.316 19.365l7.856 4.427a1.621 1.621 0 001.588 0zM14.3 7.147l-1.82-3.482a.542.542 0 00-.96 0L3.53 17.984z" />
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6.527 12L0 8.701V15.3L6.527 12zm10.946 0L24 8.701V15.3L17.473 12zm-5.473 3.112L5.473 12 12 8.888 18.527 12l-6.527 3.112z" />
             </svg>
         ),
     },
@@ -242,180 +230,93 @@ const ArrowIcon = () => (
     </svg>
 );
 
-// ─── Tech Marquee ────────────────────────────────────────────────────────────
-function TechMarquee({ isMobile }: { isMobile: boolean }) {
-    const doubled = useMemo(() => [...techStack, ...techStack], []);
-    return (
-        <div className="overflow-hidden border-y border-slate-200/60 bg-white/50 py-6 backdrop-blur-sm">
-            <div
-                className="marquee-track flex w-max items-center gap-8 sm:gap-10"
-                style={{ animationDuration: isMobile ? "18s" : "28s" }}
-            >
-                {doubled.map((tech, i) => (
-                    <div key={i} className="flex shrink-0 items-center gap-2.5">
-                        <span className="text-slate-400">{tech.icon}</span>
-                        <span className="whitespace-nowrap text-sm font-medium text-slate-500">{tech.name}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// ─── Stats data ──────────────────────────────────────────────────────────────
-const stats = [
-    { value: 3, suffix: "+", label: "Années d'expérience" },
-    { value: 20, suffix: "+", label: "Projets livrés" },
-    { value: 10, suffix: "+", label: "Clients satisfaits" },
-    { value: 8, suffix: "", label: "Technologies maîtrisées" },
-];
 
 // ─── Blog Card ───────────────────────────────────────────────────────────────
 function BlogCard({ p, i, isMobile }: { p: any; i: number; isMobile: boolean }) {
-    const [hovered, setHovered] = useState(false);
     const tags: string[] = p.tags ?? (p.tag ? [p.tag] : []);
+    const firstTag = tags[0];
 
     return (
-        <BlurFade delay={isMobile ? 0 : i * 0.1}>
-            <Link href={`/blog/${p.slug}`} className="group block">
-                <div
-                    className="flex flex-col gap-5 rounded-[20px] border border-slate-100 bg-white p-4 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-slate-200 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.06)] sm:flex-row sm:gap-6 sm:p-5"
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                >
-                    <div className="relative h-40 w-full flex-shrink-0 overflow-hidden rounded-2xl bg-slate-100 sm:h-36 sm:w-48 md:w-56">
-                        <motion.img
+        <BlurFade delay={isMobile ? 0 : i * 0.1} className="h-full">
+            <SpotlightCard className="h-full">
+                {/* Nav link */}
+                <Link href={`/blog/${p.slug}`} aria-label={p.title} className="absolute inset-0 z-10 rounded-[19px]" />
+
+                {/* Image */}
+                <div className="relative overflow-hidden bg-slate-50 flex-shrink-0" style={{ aspectRatio: '16/9' }}>
+                    {(p.cover_image_url ?? p.image) ? (
+                        <img
                             src={p.cover_image_url ?? p.image}
                             alt={p.title}
-                            className="h-full w-full object-cover"
-                            animate={{ scale: hovered ? 1.04 : 1 }}
-                            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.06]"
                         />
-                    </div>
-
-                    <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
-                        <div className="mb-2 flex items-center gap-3">
-                            {tags.slice(0, 2).map((tag) => (
-                                <span key={tag} className="text-[10px] font-bold uppercase tracking-[0.12em] text-teal-600">
-                                    {tag}
-                                </span>
-                            ))}
-                            {p.reading_time && <span className="text-[11px] font-medium text-slate-400">{p.reading_time}</span>}
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-50 to-slate-50">
+                            <svg className="w-10 h-10 text-teal-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
                         </div>
+                    )}
 
-                        <h3 className="mb-2 line-clamp-2 text-[16px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-teal-600">
-                            {p.title}
-                        </h3>
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-                        {(p.excerpt ?? p.desc) && (
-                            <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-slate-500">
-                                {p.excerpt ?? p.desc}
-                            </p>
-                        )}
-
-                        <div className="mt-auto flex items-center justify-between">
-                            <span className="text-[12px] font-medium text-slate-400">
-                                {p.published_at ?? p.date ?? "—"}
-                            </span>
-
-                            <motion.span
-                                className="flex items-center gap-1.5 text-[12px] font-semibold text-teal-600"
-                                animate={{ x: hovered ? 4 : 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Lire
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </motion.span>
+                    {/* Tag + reading time overlays */}
+                    {firstTag && (
+                        <div className="absolute top-3 left-3 z-10 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm">
+                            {firstTag}
                         </div>
+                    )}
+                    {p.reading_time && (
+                        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {p.reading_time}
+                        </div>
+                    )}
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col flex-1 p-5 gap-2.5">
+                    {/* Category label */}
+                    {tags.length > 0 && (
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-600">
+                            {tags.slice(0, 2).join(' · ')}
+                        </p>
+                    )}
+
+                    {/* Title */}
+                    <h3 className="font-display font-semibold text-[16px] leading-snug text-slate-900 line-clamp-2 group-hover:text-teal-600 transition-colors duration-300">
+                        {p.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    {(p.excerpt ?? p.desc) && (
+                        <p className="text-[13px] leading-relaxed text-slate-500 line-clamp-2 flex-1">
+                            {p.excerpt ?? p.desc}
+                        </p>
+                    )}
+
+                    {/* Footer */}
+                    <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-[12px] font-medium text-slate-400">
+                            {p.published_at ?? p.date ?? "—"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-teal-600 transition-[gap] duration-200 group-hover:gap-2.5">
+                            Lire l'article
+                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+                                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </span>
                     </div>
                 </div>
-            </Link>
+            </SpotlightCard>
         </BlurFade>
     );
 }
 
-// ─── Formation Card ──────────────────────────────────────────────────────────
-function FormationCard({ f, i, isMobile }: { f: any; i: number; isMobile: boolean }) {
-    const [hovered, setHovered] = useState(false);
-    const isFree = f.is_free ?? f.free ?? false;
-    const price = f.price_formatted ?? f.price ?? (isFree ? "Gratuit" : null);
-    const category = f.category ?? f.cat ?? "Formation";
-
-    return (
-        <BlurFade delay={isMobile ? 0 : i * 0.08} className="h-full">
-            <Link href={`/formations/${f.slug}`} className="group block h-full">
-                <div
-                    className="relative h-full overflow-hidden rounded-[20px] border border-slate-100 bg-white transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-slate-200 hover:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.08)]"
-                    onMouseEnter={() => setHovered(true)}
-                    onMouseLeave={() => setHovered(false)}
-                >
-                    <div className="relative h-44 overflow-hidden">
-                        <motion.img
-                            src={f.cover_image_url ?? f.image}
-                            alt={f.title}
-                            className="h-full w-full object-cover"
-                            animate={{ scale: hovered ? 1.04 : 1 }}
-                            transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
-                        />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-50" />
-
-                        {price && (
-                            <div
-                                className={cn(
-                                    "absolute top-4 right-4 z-10 rounded-full px-3 py-1 text-[11px] font-bold shadow-sm",
-                                    isFree
-                                        ? "border border-teal-200/60 bg-teal-50 text-teal-700"
-                                        : "border border-slate-200/60 bg-white/90 text-slate-700"
-                                )}
-                            >
-                                {price}
-                            </div>
-                        )}
-
-                        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-white/90 px-2.5 py-1 backdrop-blur-sm">
-                            <span className="text-[11px] font-semibold text-slate-600">{category}</span>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3 p-5">
-                        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-teal-600">
-                            {f.title}
-                        </h3>
-
-                        {(f.excerpt ?? f.description ?? f.desc) && (
-                            <p className="line-clamp-2 text-[13px] leading-relaxed text-slate-500">
-                                {f.excerpt ?? f.description ?? f.desc}
-                            </p>
-                        )}
-
-                        <div className="flex items-center justify-between pt-2">
-                            <div className="flex items-center gap-3 text-[12px] text-slate-400">
-                                {(f.duration_hours || f.duration_formatted) && (
-                                    <span>{f.duration_formatted ?? `${f.duration_hours}h`}</span>
-                                )}
-                                {f.lessons_count && <span>{f.lessons_count} leçons</span>}
-                            </div>
-
-                            <motion.span
-                                className="flex items-center gap-1.5 text-[12px] font-semibold text-teal-600"
-                                animate={{ x: hovered ? 4 : 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Voir
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </motion.span>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </BlurFade>
-    );
-}
 
 // ─── Section Title ───────────────────────────────────────────────────────────
 function SectionTitle({ label, title, href }: { label: string; title: string; href: string }) {
@@ -466,10 +367,12 @@ export default function Home({
     projects = [],
     posts = [],
     formations = [],
+    projectsCount = 0,
 }: {
     projects?: any[];
     posts?: any[];
     formations?: any[];
+    projectsCount?: number;
 }) {
     const isMobile = useIsMobile();
 
@@ -478,177 +381,216 @@ export default function Home({
             <Head title="Accueil — Sergio Junior Chebeu" />
 
             {/* ══ HERO ═══════════════════════════════════════════════ */}
-            <section className="relative flex min-h-[92vh] items-center overflow-hidden">
-                {!isMobile && (
-                    <AnimatedGridPattern
-                        numSquares={28}
-                        maxOpacity={0.03}
-                        duration={5}
-                        repeatDelay={1.2}
-                        className={cn(
-                            "absolute inset-0 h-full w-full text-teal-600",
-                            "[mask-image:radial-gradient(800px_circle_at_65%_45%,white,transparent)]"
-                        )}
-                    />
-                )}
+            <section className="relative flex min-h-screen items-center overflow-hidden bg-white">
 
-                <div className="pointer-events-none absolute top-1/4 right-1/3 h-[420px] w-[420px] rounded-full bg-teal-500/5 blur-3xl sm:h-[520px] sm:w-[520px]" />
-                <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-teal-400/4 blur-2xl sm:h-80 sm:w-80" />
+                {/* GridPattern — teal subtil, fondu bas */}
+                <AnimatedGridPattern
+                    numSquares={isMobile ? 10 : 28}
+                    maxOpacity={0.08}
+                    duration={4}
+                    repeatDelay={1}
+                    width={32}
+                    height={32}
+                    className={cn(
+                        "absolute inset-0 h-full w-full",
+                        "fill-transparent stroke-teal-500/[0.12] text-teal-500",
+                        "[mask-image:linear-gradient(to_bottom,white_0%,white_55%,transparent_95%)]",
+                    )}
+                />
 
-                <div className="container-main relative z-10 w-full py-12 sm:py-16 lg:py-24">
+                {/* Watermark — "MR SERGIO" très subtil */}
+                <div
+                    aria-hidden
+                    className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden"
+                >
+                    <span
+                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] text-slate-900/[0.030] whitespace-nowrap"
+                        style={{ fontSize: "clamp(72px, 14vw, 180px)" }}
+                    >
+                        Mr Sergio
+                    </span>
+                </div>
+
+                {/* pt-[88px] = nav pill (58px) + padding top (12px) + marge */}
+                <div className="container-main relative z-10 w-full pt-[88px] pb-16 sm:pb-20 lg:pb-24">
                     <motion.div
                         variants={stagger}
                         initial="hidden"
                         animate="visible"
-                        className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16 xl:gap-24"
+                        className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 xl:gap-20"
                     >
-                        <div className="order-1 space-y-6 sm:space-y-8">
+                        {/* ── Texte ───────────────────────────────── */}
+                        <div className="order-2 lg:order-1 flex flex-col gap-7">
+
+                            {/* Label */}
                             <motion.div variants={fadeUp}>
-                                <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-white px-4 py-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
+                                <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700 shadow-[0_1px_3px_rgba(26,163,137,0.08)]">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                                    Fullstack Developer
+                                </span>
+                            </motion.div>
+
+                            {/* Nom — Poppins 700 */}
+                            <motion.div variants={fadeUp} className="-mt-1">
+                                <h1 className="font-display font-bold leading-[1.1] tracking-[-0.02em] text-[#1a1916]">
+                                    <span className="block text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px]">
+                                        Sergio Junior
+                                    </span>
+                                    <span className="block text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] text-teal-600">
+                                        Chebeu.
+                                    </span>
+                                </h1>
+                            </motion.div>
+
+                            {/* Description */}
+                            <motion.p variants={fadeUp} className="max-w-[420px] text-[17px] leading-[1.75] text-slate-700">
+                                Je construis des produits web qui allient{" "}
+                                <span className="font-semibold text-slate-800">performance technique</span>{" "}
+                                et expérience utilisateur soignée. Laravel, React, Flutterdu backend à l'app mobile.
+                            </motion.p>
+
+                            {/* Status */}
+                            <motion.div variants={fadeUp} className="-mt-1">
+                                <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                                    <span className="relative flex h-2 w-2 shrink-0">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-60" />
                                         <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-500" />
                                     </span>
-                                    <span className="text-[12px] font-medium text-slate-500">
+                                    <span className="text-[14px] font-medium text-slate-700">
                                         Disponible pour de nouveaux projets
                                     </span>
                                 </div>
                             </motion.div>
 
-                            <motion.div variants={fadeUp}>
-                                <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-ink-muted">
-                                    Développeur Full Stack
-                                </p>
-
-                                <h1 className="leading-[1.06] tracking-tight">
-                                    <RevealText
-                                        text="Sergio Junior"
-                                        className="block text-4xl text-ink-primary sm:text-5xl lg:text-6xl xl:text-7xl"
-                                        delay={0.1}
-                                    />
-                                    <span className="mt-1 block text-4xl sm:text-5xl lg:text-6xl xl:text-7xl">
-                                        {isMobile ? (
-                                            <span className="gradient-text-hero font-display font-bold">Chebeu</span>
-                                        ) : (
-                                            <TypingAnimation
-                                                duration={80}
-                                                delay={500}
-                                                className="gradient-text-hero font-display font-bold"
-                                            >
-                                                Chebeu
-                                            </TypingAnimation>
-                                        )}
-                                    </span>
-                                </h1>
+                            {/* CTAs */}
+                            <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
+                                <Link
+                                    href="/projects"
+                                    className="inline-flex items-center rounded-lg bg-teal-600 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-teal-700"
+                                >
+                                    Voir mes projets
+                                </Link>
+                                <Link
+                                    href="/contact"
+                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50"
+                                >
+                                    Me contacter
+                                </Link>
                             </motion.div>
 
-                            <motion.p variants={fadeUp} className="max-w-md text-base leading-relaxed text-ink-secondary sm:text-lg">
-                                Je construis des produits web qui combinent{" "}
-                                <span className="font-medium text-teal-600">performance technique</span>{" "}
-                                et expérience utilisateur soignée. Laravel, React, Flutter — du backend à l'app mobile.
-                            </motion.p>
-
-                            <motion.div variants={fadeUp} className="space-y-4">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <Link href="/projects" className="shrink-0">
-                                        <ShinyButton variant="primary" size="lg" icon={<ArrowIcon />}>
-                                            Voir mes projets
-                                        </ShinyButton>
-                                    </Link>
-
-                                    <Link href="/contact" className="shrink-0">
-                                        <ShinyButton
-                                            variant="ghost"
-                                            size="lg"
-                                            noShimmer
-                                            icon={
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                </svg>
-                                            }
-                                        >
-                                            Me contacter
-                                        </ShinyButton>
-                                    </Link>
-                                </div>
-
-                                <div className="flex items-center gap-2 pt-1">
-                                    {socials.map((s) => (
-                                        <a
-                                            key={s.label}
-                                            href={s.href}
-                                            target={s.href.startsWith("mailto") ? undefined : "_blank"}
-                                            rel="noreferrer"
-                                            aria-label={s.label}
-                                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-surface-card text-ink-muted shadow-sm transition-colors duration-200 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
-                                        >
-                                            {s.icon}
-                                        </a>
-                                    ))}
-                                </div>
+                            {/* Socials */}
+                            <motion.div variants={fadeUp} className="-mt-1 flex items-center gap-2">
+                                {socials.map((s) => (
+                                    <a
+                                        key={s.label}
+                                        href={s.href}
+                                        target={s.href.startsWith("mailto") ? undefined : "_blank"}
+                                        rel="noreferrer"
+                                        aria-label={s.label}
+                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all duration-200 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600"
+                                    >
+                                        {s.icon}
+                                    </a>
+                                ))}
                             </motion.div>
                         </div>
 
-                        <motion.div variants={fadeUp} className="order-2 flex justify-center lg:justify-end">
-                            {isMobile ? (
-                                <AvatarGlow src="/images/profile_avatar.jpg" alt="Sergio Junior Chebeu" />
-                            ) : (
-                                <motion.div
-                                    animate={{ y: [0, -8, 0] }}
-                                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                    <AvatarGlow src="/images/profile_avatar.jpg" alt="Sergio Junior Chebeu" />
-                                </motion.div>
-                            )}
+                        {/* ── Photo ────────────────────────────────── */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="order-1 lg:order-2 flex justify-center lg:justify-end"
+                        >
+                            <AvatarGlow src="/images/profile_avatar.jpg" alt="Sergio Junior Chebeu" />
                         </motion.div>
                     </motion.div>
                 </div>
-
-                {!isMobile && (
-                    <motion.div
-                        className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1.5"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1.2, duration: 0.6 }}
-                    >
-                        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-muted">
-                            Scroll
-                        </span>
-                        <motion.div
-                            className="h-6 w-px bg-gradient-to-b from-slate-400 to-transparent"
-                            animate={{ scaleY: [1, 0.35, 1] }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                            style={{ transformOrigin: "top" }}
-                        />
-                    </motion.div>
-                )}
             </section>
 
-            {/* ══ TECH MARQUEE ════════════════════════════════════════ */}
-            <TechMarquee isMobile={isMobile} />
+            {/* ══ STATS + STACK ════════════════════════════════════════ */}
+            <section className="relative overflow-hidden border-y border-slate-100 bg-white py-16 sm:py-20">
+                {/* Subtle top glow */}
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-200/60 to-transparent" />
 
-            {/* ══ STATS ══════════════════════════════════════════════ */}
-            <section className="bg-surface py-16 sm:py-20">
                 <div className="container-main">
-                    <div className="grid grid-cols-2 gap-8 lg:grid-cols-4 lg:gap-4">
-                        {stats.map((stat, i) => (
-                            <BlurFade key={i} delay={i * 0.1}>
-                                <div className="text-center">
-                                    <p className="gradient-text font-display text-4xl font-bold tracking-tight sm:text-5xl">
-                                        <NumberTicker value={stat.value} suffix={stat.suffix} />
-                                    </p>
-                                    <p className="mt-2 text-sm font-medium text-ink-muted">{stat.label}</p>
+                    {/* ── Stats ─────────────────────────────────────────────── */}
+                    <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 sm:grid-cols-4 sm:divide-y-0">
+                        {[
+                            { value: 3, suffix: "+", label: "Années d'exp." },
+                            {
+                                value: projectsCount > 10 ? 10 : projectsCount,
+                                suffix: "+",
+                                label: "Projets livrés",
+                            },
+                            { value: 10, suffix: "+", label: "Clients satisfaits" },
+                            { value: techStack.length, suffix: "", label: "Technologies" },
+                        ].map((stat, i) => (
+                            <BlurFade key={i} delay={i * 0.08}>
+                                <div className="px-4 py-6 sm:py-0">
+                                    <AnimatedStat
+                                        value={stat.value}
+                                        suffix={stat.suffix}
+                                        label={stat.label}
+                                    />
                                 </div>
                             </BlurFade>
                         ))}
                     </div>
+
+                    {/* ── Separator ─────────────────────────────────────────── */}
+                    <div className="my-12 flex items-center gap-4">
+                        <div className="h-px flex-1 bg-slate-100" />
+                        <div className="flex items-center gap-2">
+                            <div className="h-px w-6 bg-teal-400/60" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                                Stack technique
+                            </span>
+                            <div className="h-px w-6 bg-teal-400/60" />
+                        </div>
+                        <div className="h-px flex-1 bg-slate-100" />
+                    </div>
+
+                    {/* ── Tech pills ────────────────────────────────────────── */}
+                    <BlurFade delay={0.1}>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {techStack.map((tech) => (
+                                <div
+                                    key={tech.name}
+                                    className="group inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50/70 px-3.5 py-1.5 text-[12px] font-medium text-slate-500 transition-all duration-200 hover:border-slate-200 hover:bg-white hover:shadow-sm"
+                                >
+                                    <span className={cn("transition-colors duration-200 group-hover:opacity-100 opacity-70", tech.color)}>
+                                        {tech.icon}
+                                    </span>
+                                    {tech.name}
+                                </div>
+                            ))}
+                        </div>
+                    </BlurFade>
                 </div>
+
+                {/* Subtle bottom glow */}
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-teal-200/60 to-transparent" />
             </section>
 
             {/* ══ PROJETS ════════════════════════════════════════════ */}
-            <section className="relative overflow-hidden py-20 sm:py-28">
-                <div className="absolute inset-0 bg-gradient-to-b from-surface via-white to-surface" />
-                <DotPattern className="text-slate-300/30 [mask-image:radial-gradient(800px_circle_at_50%_50%,white,transparent)]" />
+            <section className="relative overflow-hidden bg-white py-20 sm:py-28">
+
+                <HexagonPattern
+                    radius={26}
+                    gap={3}
+                    className={cn(
+                        "absolute inset-0 h-full w-full fill-transparent stroke-teal-500/[0.10]",
+                        "[mask-image:linear-gradient(to_bottom,transparent_0%,white_8%,white_92%,transparent_100%)]",
+                    )}
+                />
+
+                <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <span
+                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] whitespace-nowrap text-slate-900/[0.04]"
+                        style={{ fontSize: "clamp(64px, 13vw, 168px)" }}
+                    >
+                        Projets
+                    </span>
+                </div>
 
                 <div className="container-main relative z-10">
                     <SectionTitle label="Portfolio" title="Projets récents" href="/projects" />
@@ -656,7 +598,7 @@ export default function Home({
                     {projects.length === 0 ? (
                         <EmptyState message="Aucun projet publié pour l'instant." />
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {projects.map((project, i) => (
                                 <ProjectCard
                                     key={project.id ?? project.slug ?? i}
@@ -677,8 +619,24 @@ export default function Home({
 
             {/* ══ BLOG ═══════════════════════════════════════════════ */}
             <section className="relative overflow-hidden bg-white py-20 sm:py-28">
-                <div className="pointer-events-none absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-teal-50/40 blur-[120px]" />
-                <div className="pointer-events-none absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-slate-100/50 blur-[100px]" />
+
+                <HexagonPattern
+                    radius={26}
+                    gap={3}
+                    className={cn(
+                        "absolute inset-0 h-full w-full fill-transparent stroke-teal-500/[0.10]",
+                        "[mask-image:linear-gradient(to_bottom,transparent_0%,white_8%,white_92%,transparent_100%)]",
+                    )}
+                />
+
+                <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <span
+                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] whitespace-nowrap text-slate-900/[0.04]"
+                        style={{ fontSize: "clamp(64px, 13vw, 168px)" }}
+                    >
+                        Articles
+                    </span>
+                </div>
 
                 <div className="container-main relative z-10">
                     <SectionTitle label="Blog" title="Articles récents" href="/blog" />
@@ -686,7 +644,7 @@ export default function Home({
                     {posts.length === 0 ? (
                         <EmptyState message="Aucun article publié pour l'instant." />
                     ) : (
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {posts.map((p, i) => (
                                 <BlogCard key={p.slug ?? i} p={p} i={i} isMobile={isMobile} />
                             ))}
@@ -702,9 +660,25 @@ export default function Home({
             </section>
 
             {/* ══ FORMATIONS ═════════════════════════════════════════ */}
-            <section className="relative overflow-hidden py-20 sm:py-28">
-                <div className="absolute inset-0 bg-gradient-to-b from-white via-teal-50/20 to-white" />
-                <DotPattern className="text-teal-400/10 [mask-image:radial-gradient(600px_circle_at_50%_50%,white,transparent)]" />
+            <section className="relative overflow-hidden bg-white py-20 sm:py-28">
+
+                <HexagonPattern
+                    radius={26}
+                    gap={3}
+                    className={cn(
+                        "absolute inset-0 h-full w-full fill-transparent stroke-teal-500/[0.10]",
+                        "[mask-image:linear-gradient(to_bottom,transparent_0%,white_8%,white_92%,transparent_100%)]",
+                    )}
+                />
+
+                <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden">
+                    <span
+                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] whitespace-nowrap text-slate-900/[0.04]"
+                        style={{ fontSize: "clamp(64px, 13vw, 168px)" }}
+                    >
+                        Formations
+                    </span>
+                </div>
 
                 <div className="container-main relative z-10">
                     <SectionTitle label="Formations" title="Apprendre avec moi" href="/formations" />
@@ -712,9 +686,9 @@ export default function Home({
                     {formations.length === 0 ? (
                         <EmptyState message="Aucune formation publiée pour l'instant." />
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {formations.map((f, i) => (
-                                <FormationCard key={f.slug ?? i} f={f} i={i} isMobile={isMobile} />
+                                <FormationCard key={f.slug ?? i} formation={f} index={i} />
                             ))}
                         </div>
                     )}
@@ -728,45 +702,36 @@ export default function Home({
             </section>
 
             {/* ══ CTA ════════════════════════════════════════════════ */}
-            <section className="relative overflow-hidden bg-[#0F1A17] py-20 sm:py-28">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-teal-500/[0.03] to-transparent" />
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-                        backgroundSize: "128px 128px",
-                    }}
-                />
-
-                <div className="container-main relative z-10">
+            <section className="bg-[#1a1916] py-20 sm:py-28">
+                <div className="container-main">
                     <BlurFade>
                         <div className="mx-auto max-w-2xl text-center">
-                            <p className="mb-6 text-[11px] font-mono uppercase tracking-[0.3em] text-teal-400/60">
+                            <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/25">
                                 Collaborons ensemble
                             </p>
 
-                            <h2 className="font-display text-3xl font-bold leading-[1.1] tracking-tight text-white/90 sm:text-4xl lg:text-5xl">
+                            <h2 className="font-display text-3xl font-bold leading-[1.1] tracking-tight text-white/85 sm:text-4xl lg:text-5xl">
                                 Un projet en tête ?
                             </h2>
 
-                            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-white/35">
-                                Discutons de votre idée et transformons-la en un produit digital d'exception.
+                            <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-white/30">
+                                Discutons de votre idée et construisons quelque chose de solide ensemble.
                             </p>
 
-                            <div className="mt-10 flex flex-wrap justify-center gap-4">
+                            <div className="mt-10 flex flex-wrap justify-center gap-3">
                                 <Link
                                     href="/contact"
-                                    className="group inline-flex items-center gap-2.5 rounded-2xl bg-teal-500 px-8 py-4 text-sm font-bold text-[#0F1A17] transition-all duration-300 hover:bg-teal-400 hover:shadow-[0_0_40px_rgba(26,163,137,0.3)]"
+                                    className="group inline-flex items-center gap-2 rounded-xl bg-teal-500 px-7 py-3.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-teal-400"
                                 >
                                     Démarrer un projet
-                                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                     </svg>
                                 </Link>
 
                                 <a
                                     href="mailto:contact@mrsergio.dev"
-                                    className="inline-flex items-center gap-2 px-8 py-4 font-mono text-sm font-medium text-white/35 transition-colors hover:text-white/60"
+                                    className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-7 py-3.5 font-mono text-sm text-white/35 transition-colors duration-200 hover:border-white/20 hover:text-white/55"
                                 >
                                     contact@mrsergio.dev
                                 </a>

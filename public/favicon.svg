@@ -1,13 +1,5 @@
-<svg width="166" height="166" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Hexagone fond centré -->
-  <polygon points="80,6 108,22 108,54 80,70 52,54 52,22" fill="#1D9E75" opacity="0.12"/>
-  <polygon points="80,6 108,22 108,54 80,70 52,54 52,22" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
-  <!-- S stylisé -->
-  <path d="M66 29 Q66 23 72 23 L88 23 Q94 23 94 29 Q94 35 80 38 Q66 42 66 48 Q66 54 72 54 L88 54 Q94 54 94 48" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <!-- Point accent -->
-  <circle cx="104" cy="22" r="4.5" fill="#1D9E75"/>
-  <!-- Wordmark centré -->
-  <text x="80" y="92" font-family="'Syne', 'Arial Black', sans-serif" font-weight="800" font-size="22" fill="#111111" letter-spacing="-0.5" text-anchor="middle">mrsergio</text>
-  <!-- Domain -->
-  <text x="80" y="112" font-family="'Space Mono', 'Courier New', monospace" font-size="12" fill="#888888" letter-spacing="2" text-anchor="middle">.dev</text>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="#1aa389" fill-opacity="0.14" stroke="#1aa389" stroke-width="1.2"/>
+  <path d="M11 12.5Q11 9.5 14 9.5H18Q21 9.5 21 12.5Q21 15.5 16 17Q11 18.5 11 21.5Q11 24.5 14 24.5H18Q21 24.5 21 21.5" stroke="#1aa389" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <circle cx="26" cy="9" r="3" fill="#1aa389"/>
 </svg>
