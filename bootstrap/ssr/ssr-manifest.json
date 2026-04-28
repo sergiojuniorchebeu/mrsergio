@@ -1,0 +1,121 @@
+{
+  "node_modules/laravel-vite-plugin/inertia-helpers/index.js": [],
+  "resources/js/components/admin/shared.tsx": [
+    "/build/assets/shared-Cru1ch58.js"
+  ],
+  "resources/js/components/ui/AvatarGlow.tsx": [
+    "/build/assets/Home-DKz2EQDS.js"
+  ],
+  "resources/js/components/ui/BlogCard.tsx": [
+    "/build/assets/Index-CIqTMPYu.js"
+  ],
+  "resources/js/components/ui/BrowserWindow.tsx": [
+    "/build/assets/Show-BjRcG9S2.js"
+  ],
+  "resources/js/components/ui/DesktopWindow.tsx": [
+    "/build/assets/Show-BjRcG9S2.js"
+  ],
+  "resources/js/components/ui/FormationCard.tsx": [
+    "/build/assets/FormationCard-DcE083g9.js"
+  ],
+  "resources/js/components/ui/ProjectCard.tsx": [
+    "/build/assets/ProjectCard-DdafTY6j.js"
+  ],
+  "resources/js/components/ui/ProjectScreenshotsGallery.tsx": [
+    "/build/assets/Show-BjRcG9S2.js"
+  ],
+  "resources/js/components/ui/SpotlightCard.tsx": [
+    "/build/assets/SpotlightCard-COP1lLJh.js"
+  ],
+  "resources/js/components/ui/animated-grid-pattern.tsx": [
+    "/build/assets/FormationCard-DcE083g9.js"
+  ],
+  "resources/js/components/ui/button.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/components/ui/dotted-map.tsx": [
+    "/build/assets/Contact-BhayBXLm.js"
+  ],
+  "resources/js/components/ui/hexagon-pattern.tsx": [
+    "/build/assets/hexagon-pattern-ChGP_1Zf.js"
+  ],
+  "resources/js/components/ui/iphone.tsx": [
+    "/build/assets/Show-BjRcG9S2.js"
+  ],
+  "resources/js/components/ui/separator.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/components/ui/sheet.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/components/ui/sidebar.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/components/ui/tooltip.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/hooks/use-mobile.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/layouts/AdminLayout.tsx": [
+    "/build/assets/AdminLayout-B2uDO5Pc.js"
+  ],
+  "resources/js/layouts/MainLayout.tsx": [
+    "/build/assets/MainLayout-Cbh7ilul.js"
+  ],
+  "resources/js/lib/utils.ts": [
+    "/build/assets/utils-DsUdfzPs.js"
+  ],
+  "resources/js/pages/Admin/Blog/Form.tsx": [
+    "/build/assets/Form-DHo-u1Ku.js"
+  ],
+  "resources/js/pages/Admin/Blog/Index.tsx": [
+    "/build/assets/Index-HNbYBGo4.js"
+  ],
+  "resources/js/pages/Admin/Dashboard.tsx": [
+    "/build/assets/Dashboard-BquufIxM.js"
+  ],
+  "resources/js/pages/Admin/Formations/Form.tsx": [
+    "/build/assets/Form-DQCYo2iS.js"
+  ],
+  "resources/js/pages/Admin/Formations/Index.tsx": [
+    "/build/assets/Index-B5PnS9RI.js"
+  ],
+  "resources/js/pages/Admin/Messages/Index.tsx": [
+    "/build/assets/Index-D-pUj6WO.js"
+  ],
+  "resources/js/pages/Admin/Projects/Form.tsx": [
+    "/build/assets/Form-Dcidhyai.js"
+  ],
+  "resources/js/pages/Admin/Projects/Index.tsx": [
+    "/build/assets/Index-4L88_qMU.js"
+  ],
+  "resources/js/pages/Auth/Login.tsx": [
+    "/build/assets/Login-BAL6Q8kM.js"
+  ],
+  "resources/js/pages/Blog/Index.tsx": [
+    "/build/assets/Index-CIqTMPYu.js"
+  ],
+  "resources/js/pages/Blog/Show.tsx": [
+    "/build/assets/Show-TV-aMjot.js"
+  ],
+  "resources/js/pages/Contact.tsx": [
+    "/build/assets/Contact-BhayBXLm.js"
+  ],
+  "resources/js/pages/Home.tsx": [
+    "/build/assets/Home-DKz2EQDS.js"
+  ],
+  "resources/js/pages/Projects/Index.tsx": [
+    "/build/assets/Index-FSiLIwma.js"
+  ],
+  "resources/js/pages/Projects/Show.tsx": [
+    "/build/assets/Show-BjRcG9S2.js"
+  ],
+  "resources/js/pages/formations/FormationsIndex.tsx": [
+    "/build/assets/FormationsIndex-BIuAUvNq.js"
+  ],
+  "resources/js/pages/formations/FormationsShow.tsx": [
+    "/build/assets/FormationsShow-ByBOVbfb.js"
+  ],
+  "resources/js/ssr.tsx": []
+}
