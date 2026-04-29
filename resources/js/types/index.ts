@@ -1,5 +1,9 @@
 // resources/js/types/index.ts
 
+export * from './auth';
+export * from './navigation';
+export * from './ui';
+
 export type ProjectType = 'web' | 'mobile' | 'desktop' | 'api';
 
 export interface ProjectStoreLinks {
@@ -61,6 +65,7 @@ export interface BlogPost {
     tags: string[];
     featured: boolean;
     published_at: string | null;
+    reading_time?: string;
 }
 
 export interface BlogIndexProps {
@@ -104,6 +109,10 @@ export interface FormationShowProps {
     formation: Formation;
     related: Omit<
         Formation,
-        'content' | 'preview_video_url' | 'language' | 'students_count' | 'published_at'
+        | 'content'
+        | 'preview_video_url'
+        | 'language'
+        | 'students_count'
+        | 'published_at'
     >[];
 }

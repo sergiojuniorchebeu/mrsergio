@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { destroy } from '@/routes/profile';
 
 export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
@@ -55,7 +55,7 @@ export default function DeleteUser() {
                         </DialogDescription>
 
                         <Form
-                            {...ProfileController.destroy.form()}
+                            {...destroy.form()}
                             options={{
                                 preserveScroll: true,
                             }}
@@ -98,16 +98,12 @@ export default function DeleteUser() {
                                         </DialogClose>
 
                                         <Button
+                                            type="submit"
                                             variant="destructive"
                                             disabled={processing}
-                                            asChild
+                                            data-test="confirm-delete-user-button"
                                         >
-                                            <button
-                                                type="submit"
-                                                data-test="confirm-delete-user-button"
-                                            >
-                                                Delete account
-                                            </button>
+                                            Delete account
                                         </Button>
                                     </DialogFooter>
                                 </>

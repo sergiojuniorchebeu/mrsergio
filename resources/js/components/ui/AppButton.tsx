@@ -27,7 +27,7 @@ export interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children">
 // ─── Base ─────────────────────────────────────────────────────────────────────
 const base = cn(
     "relative inline-flex items-center justify-center gap-2",
-    "font-medium tracking-[-0.01em] rounded-xl select-none",
+    "font-medium tracking-[-0.01em] rounded-md select-none",
     "transition-all duration-200 ease-out",
     "disabled:opacity-40 disabled:cursor-not-allowed",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:ring-offset-2",

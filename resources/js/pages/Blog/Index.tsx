@@ -1,136 +1,401 @@
 // resources/js/pages/Blog/Index.tsx
+// ─── 2026 Redesign — Editorial Studio Aesthetic ──────────────────────────────
 
 import { Head, Link } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useMemo, useState } from 'react';
-import { HexagonPattern } from '@/components/ui/hexagon-pattern';
-import { BlogCard } from '@/components/ui/BlogCard';
-import { SpotlightCard } from '@/components/ui/SpotlightCard';
+import {
+    motion,
+    AnimatePresence,
+    useScroll,
+    useTransform,
+} from 'framer-motion';
+import { useMemo, useState, useRef } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { cn } from '@/lib/utils';
 import type { BlogIndexProps, BlogPost } from '@/types';
 
-// ─── Filter Chip ──────────────────────────────────────────────────────────────
-function Chip({
+// ─── Easing Tokens ────────────────────────────────────────────────────────────
+const expo = [0.16, 1, 0.3, 1] as const;
+const smooth = [0.25, 0.46, 0.45, 0.94] as const;
+
+// ─── Tag Pill ─────────────────────────────────────────────────────────────────
+function TagPill({
+    label,
     active,
     onClick,
-    children,
     count,
 }: {
+    label: string;
     active: boolean;
     onClick: () => void;
-    children: React.ReactNode;
     count?: number;
 }) {
     return (
-        <button
+        <motion.button
             onClick={onClick}
+            whileTap={{ scale: 0.96 }}
             className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40',
+                'relative inline-flex items-center gap-2 border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase transition-all duration-300',
                 active
-                    ? 'border-teal-600 bg-teal-600 text-white shadow-sm shadow-teal-500/20'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50/60 hover:text-teal-700',
+                    ? 'border-[#1a1916] bg-[#1a1916] text-[#f4f0e8]'
+                    : 'border-[#e2e0da] bg-transparent text-[#8a8479] hover:border-[#1a1916] hover:text-[#1a1916]',
             )}
         >
-            {children}
+            {label}
             {count !== undefined && (
-                <span className={cn(
-                    'flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold',
-                    active ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500',
-                )}>
+                <span
+                    className={cn(
+                        'text-[10px] font-bold tabular-nums',
+                        active ? 'text-[#8a8479]' : 'text-[#cac7be]',
+                    )}
+                >
                     {count}
                 </span>
             )}
-        </button>
+        </motion.button>
     );
 }
 
-// ─── Featured Article ─────────────────────────────────────────────────────────
-function FeaturedCard({ post }: { post: BlogPost }) {
+// ─── Featured Article — Full Bleed ───────────────────────────────────────────
+function FeaturedHero({ post }: { post: BlogPost }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ['start start', 'end start'],
+    });
+    const y = useTransform(scrollYProgress, [0, 1], ['0%', '18%']);
+    const opacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.23, 1, 0.32, 1] }}
+            ref={ref}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, ease: expo }}
+            className="group relative overflow-hidden bg-[#0f1a17]"
+            style={{ minHeight: 540 }}
         >
-            <SpotlightCard className="w-full">
-                <Link
-                    href={`/blog/${post.slug}`}
-                    aria-label={`Lire : ${post.title}`}
-                    className="absolute inset-0 z-10 rounded-[19px]"
-                />
-                <div className="grid md:grid-cols-2">
-                    {/* Image */}
-                    <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 to-teal-50/20" style={{ minHeight: '220px' }}>
-                        {post.cover_image_url ? (
-                            <img
-                                src={post.cover_image_url}
-                                alt={post.title}
-                                className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04]"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-12 h-12 text-teal-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                </svg>
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Parallax image */}
+            {post.cover_image_url && (
+                <motion.div
+                    style={{ y }}
+                    className="absolute inset-0 scale-110"
+                >
+                    <img
+                        src={post.cover_image_url}
+                        alt={post.title}
+                        className="h-full w-full object-cover opacity-40"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                                'none';
+                        }}
+                    />
+                </motion.div>
+            )}
 
-                        {/* À la une badge */}
-                        <div className="absolute top-4 left-4 z-20 inline-flex items-center gap-1.5 rounded-full border border-teal-300/30 bg-teal-500/85 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-sm">
-                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
+            {/* Grain overlay */}
+            <div
+                className="pointer-events-none absolute inset-0 opacity-[0.035]"
+                style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundSize: '200px',
+                }}
+            />
+
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f1a17] via-[#0f1a17]/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0f1a17]/70 via-transparent to-transparent" />
+
+            {/* Content */}
+            <motion.div
+                className="container-main relative z-10 flex h-full flex-col justify-end py-14 sm:py-20"
+                style={{ opacity, minHeight: 540 }}
+            >
+                <div className="max-w-2xl">
+                    {/* À la une label */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.6, ease: expo }}
+                        className="mb-5 inline-flex items-center gap-3"
+                    >
+                        <span className="h-px w-8 bg-[#1aa389]" />
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#1aa389] uppercase">
                             À la une
-                        </div>
-                    </div>
+                        </span>
+                    </motion.div>
 
-                    {/* Content */}
-                    <div className="flex flex-col justify-center p-7 sm:p-10 gap-4">
-                        {post.tags && post.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                                {post.tags.slice(0, 3).map((tag) => (
-                                    <span key={tag} className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border bg-teal-50 text-teal-700 border-teal-100">
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
+                    {/* Title */}
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.7, ease: expo }}
+                        className="mb-5 font-display text-3xl leading-[1.08] font-bold tracking-[-0.025em] text-white sm:text-4xl lg:text-5xl"
+                    >
+                        {post.title}
+                    </motion.h2>
 
-                        <h2 className="font-display text-2xl sm:text-3xl font-bold leading-snug text-slate-900 group-hover:text-teal-600 transition-colors duration-300">
-                            {post.title}
-                        </h2>
+                    {/* Excerpt */}
+                    {post.excerpt && (
+                        <motion.p
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                                delay: 0.4,
+                                duration: 0.6,
+                                ease: expo,
+                            }}
+                            className="mb-8 max-w-lg text-[15px] leading-relaxed text-white/60"
+                        >
+                            {post.excerpt}
+                        </motion.p>
+                    )}
 
-                        {post.excerpt && (
-                            <p className="text-[14px] leading-relaxed text-slate-500 line-clamp-3">
-                                {post.excerpt}
-                            </p>
-                        )}
-
-                        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                            <span className="text-[12px] font-medium text-slate-400">{post.published_at ?? '—'}</span>
-                            <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-600 transition-[gap] duration-200 group-hover:gap-2.5">
-                                Lire l'article
-                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
-                                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
+                    {/* Meta + CTA */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5, duration: 0.6, ease: expo }}
+                        className="flex items-center gap-6"
+                    >
+                        <Link
+                            href={`/blog/${post.slug}`}
+                            className="group/btn inline-flex items-center gap-3 bg-[#1aa389] px-6 py-3 text-[13px] font-bold tracking-[0.08em] text-white uppercase transition-all duration-300 hover:bg-[#138770]"
+                        >
+                            Lire l'article
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                className="transition-transform duration-300 group-hover/btn:translate-x-1"
+                            >
+                                <path
+                                    d="M3 8h10M9 4l4 4-4 4"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                        <span className="text-[12px] font-medium text-white/35">
+                            {post.published_at}
+                        </span>
+                    </motion.div>
                 </div>
-            </SpotlightCard>
+
+                {/* Tags — bottom right */}
+                {post.tags?.length > 0 && (
+                    <div className="absolute right-6 bottom-8 hidden max-w-xs flex-wrap justify-end gap-2 lg:flex">
+                        {post.tags.slice(0, 3).map((tag) => (
+                            <span
+                                key={tag}
+                                className="border border-white/15 px-2.5 py-1 text-[10px] font-bold tracking-[0.15em] text-white/40 uppercase"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+            </motion.div>
         </motion.div>
     );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
+// ─── Blog Card — Grid Item ─────────────────────────────────────────────────────
+function ArticleCard({ post, index }: { post: BlogPost; index: number }) {
+    return (
+        <motion.article
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{
+                duration: 0.6,
+                ease: expo,
+                delay: (index % 3) * 0.07,
+            }}
+            className="group relative flex flex-col border border-[#e2e0da] bg-[#fafaf8] transition-all duration-300 hover:border-[#1a1916]/20"
+        >
+            {/* Image */}
+            <div
+                className="relative overflow-hidden bg-[#f0efec]"
+                style={{ aspectRatio: '16/9' }}
+            >
+                {post.cover_image_url ? (
+                    <img
+                        src={post.cover_image_url}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                                'none';
+                        }}
+                    />
+                ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                        <svg
+                            className="h-8 w-8 text-[#cac7be]"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={1.2}
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            />
+                        </svg>
+                    </div>
+                )}
+
+                {/* Number overlay */}
+                <div className="absolute top-3 right-3 bg-black/20 px-2 py-0.5 font-display text-[11px] font-bold text-white/50 tabular-nums backdrop-blur-sm">
+                    {String(index + 1).padStart(2, '0')}
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-1 flex-col gap-3 p-5">
+                {/* Tags */}
+                {post.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {post.tags.slice(0, 2).map((tag) => (
+                            <span
+                                key={tag}
+                                className="border border-[#e2e0da] px-2 py-0.5 text-[10px] font-bold tracking-[0.15em] text-[#8a8479] uppercase"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Title */}
+                <h3 className="font-display text-[16px] leading-[1.3] font-bold tracking-[-0.01em] text-[#1a1916] transition-colors duration-300 group-hover:text-[#138770]">
+                    {post.title}
+                </h3>
+
+                {/* Excerpt */}
+                {post.excerpt && (
+                    <p className="line-clamp-2 flex-1 text-[13px] leading-[1.65] text-[#706a5f]">
+                        {post.excerpt}
+                    </p>
+                )}
+
+                {/* Footer */}
+                <div className="mt-auto flex items-center justify-between border-t border-[#e2e0da] pt-3">
+                    <span className="text-[11px] font-medium text-[#aaa69e]">
+                        {post.published_at}
+                    </span>
+                    <span className="text-[11px] font-medium text-[#aaa69e]">
+                        {post.reading_time ?? '3 min'} lecture
+                    </span>
+                </div>
+            </div>
+
+            {/* Invisible full-card link */}
+            <Link
+                href={`/blog/${post.slug}`}
+                className="absolute inset-0"
+                aria-label={`Lire : ${post.title}`}
+            />
+        </motion.article>
+    );
+}
+
+// ─── Large Text Card — for breaking the grid ─────────────────────────────────
+function LargeTextCard({ post, index }: { post: BlogPost; index: number }) {
+    return (
+        <motion.article
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.65, ease: expo }}
+            className="group relative col-span-full flex gap-8 border border-[#e2e0da] bg-[#fafaf8] p-6 transition-all duration-300 hover:border-[#1a1916]/20 sm:p-8 lg:col-span-2"
+        >
+            {/* Index number — decorative */}
+            <div className="hidden items-start pt-1 sm:flex">
+                <span className="font-display text-[48px] leading-none font-bold text-[#e2e0da] tabular-nums select-none">
+                    {String(index + 1).padStart(2, '0')}
+                </span>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-1 flex-col gap-3">
+                {post.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {post.tags.slice(0, 3).map((tag) => (
+                            <span
+                                key={tag}
+                                className="border border-[#a8ebd8] bg-[#effcf8] px-2 py-0.5 text-[10px] font-bold tracking-[0.15em] text-[#138770] uppercase"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                <h3 className="font-display text-xl leading-[1.2] font-bold tracking-[-0.02em] text-[#1a1916] transition-colors duration-300 group-hover:text-[#138770] sm:text-2xl">
+                    {post.title}
+                </h3>
+                {post.excerpt && (
+                    <p className="line-clamp-2 max-w-xl text-[14px] leading-relaxed text-[#706a5f]">
+                        {post.excerpt}
+                    </p>
+                )}
+                <div className="mt-1 flex items-center gap-4">
+                    <span className="text-[11px] font-medium text-[#aaa69e]">
+                        {post.published_at}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-[12px] font-bold tracking-[0.1em] text-[#1a1916] uppercase">
+                        Lire
+                        <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            className="transition-transform duration-300 group-hover:translate-x-1"
+                        >
+                            <path
+                                d="M3 8h10M9 4l4 4-4 4"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            {/* Image — thumbnail right */}
+            {post.cover_image_url && (
+                <div className="relative hidden h-28 w-36 shrink-0 overflow-hidden bg-[#f0efec] md:block">
+                    <img
+                        src={post.cover_image_url}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                                'none';
+                        }}
+                    />
+                </div>
+            )}
+
+            <Link
+                href={`/blog/${post.slug}`}
+                className="absolute inset-0"
+                aria-label={`Lire : ${post.title}`}
+            />
+        </motion.article>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Index({ posts }: BlogIndexProps) {
     const [activeTag, setActiveTag] = useState<string | null>(null);
 
-    // Derive all tags
     const allTags = useMemo(() => {
         const s = new Set<string>();
         posts.forEach((p) => (p.tags ?? []).forEach((t) => s.add(t)));
@@ -140,141 +405,190 @@ export default function Index({ posts }: BlogIndexProps) {
     const countForTag = (tag: string) =>
         posts.filter((p) => p.tags.includes(tag)).length;
 
-    // Filtered posts
-    const filtered = useMemo(() =>
-        activeTag ? posts.filter((p) => p.tags.includes(activeTag)) : posts,
-    [posts, activeTag]);
+    const filtered = useMemo(
+        () =>
+            activeTag ? posts.filter((p) => p.tags.includes(activeTag)) : posts,
+        [posts, activeTag],
+    );
 
-    // Featured = first featured post (only shown when no filter active)
     const featured = !activeTag ? filtered.find((p) => p.featured) : undefined;
     const rest = filtered.filter((p) => p.id !== featured?.id);
 
-    const hasFilter = !!activeTag;
+    // Mixed layout: every 5th card is "large"
+    const renderGrid = () => {
+        const elements: React.ReactNode[] = [];
+        let regularCount = 0;
+
+        rest.forEach((post, i) => {
+            const isLarge = i % 5 === 2; // Every 3rd article within cycle of 5
+            if (isLarge) {
+                elements.push(
+                    <LargeTextCard key={post.id} post={post} index={i} />,
+                );
+            } else {
+                elements.push(
+                    <ArticleCard
+                        key={post.id}
+                        post={post}
+                        index={regularCount++}
+                    />,
+                );
+            }
+        });
+
+        return elements;
+    };
 
     return (
         <MainLayout>
             <Head title="Blog — Sergio Junior Chebeu" />
 
-            {/* ── Hero ────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden bg-white pt-[88px] pb-14 sm:pb-18">
-
-                <HexagonPattern
-                    radius={28}
-                    gap={4}
-                    className={cn(
-                        'absolute inset-0 h-full w-full fill-transparent stroke-teal-600/[0.06]',
-                        '[mask-image:radial-gradient(ellipse_85%_90%_at_50%_50%,white_30%,transparent_100%)]',
-                    )}
-                />
-
-                {/* Watermark */}
-                <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden">
+            {/* ── Hero Section ─────────────────────────────────────── */}
+            <section className="relative overflow-hidden bg-[#f4f3ef] pt-[88px]">
+                {/* Background typography — oversized */}
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 flex items-end justify-end overflow-hidden pr-4 pb-4 select-none sm:pr-8"
+                >
                     <span
-                        className="font-display font-extrabold uppercase leading-none tracking-[-0.04em] whitespace-nowrap text-slate-900/[0.028]"
-                        style={{ fontSize: 'clamp(56px, 11vw, 150px)' }}
+                        className="font-display leading-none font-extrabold tracking-[-0.04em] text-[#1a1916]/[0.03] uppercase"
+                        style={{ fontSize: 'clamp(80px, 18vw, 220px)' }}
                     >
-                        Articles
+                        Blog
                     </span>
                 </div>
 
-                <div className="container-main relative z-10">
-                    {/* Breadcrumb */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                        className="mb-8 flex items-center gap-2 text-[12px] font-medium text-slate-400"
-                    >
-                        <Link href="/" className="transition-colors hover:text-teal-600">Accueil</Link>
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="text-slate-600">Blog</span>
-                    </motion.div>
+                <div className="container-main relative z-10 py-14 sm:py-20">
+                    <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                        {/* Left — Title block */}
+                        <div className="max-w-xl">
+                            {/* Breadcrumb */}
+                            <motion.nav
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, ease: expo }}
+                                className="mb-8 flex items-center gap-2 text-[11px] font-bold tracking-[0.18em] text-[#aaa69e] uppercase"
+                            >
+                                <Link
+                                    href="/"
+                                    className="transition-colors hover:text-[#138770]"
+                                >
+                                    Accueil
+                                </Link>
+                                <span className="text-[#cac7be]">/</span>
+                                <span className="text-[#1a1916]">Blog</span>
+                            </motion.nav>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.05, ease: [0.23, 1, 0.32, 1] }}
-                        className="max-w-2xl"
-                    >
-                        {/* Label */}
-                        <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                            Notes & articles
-                        </span>
+                            <motion.div
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    duration: 0.7,
+                                    ease: expo,
+                                    delay: 0.1,
+                                }}
+                            >
+                                <h1 className="font-display text-5xl leading-[0.95] font-bold tracking-[-0.03em] text-[#1a1916] sm:text-6xl lg:text-7xl">
+                                    Notes &<br />
+                                    <em className="text-[#138770] not-italic">
+                                        articles
+                                    </em>
+                                </h1>
+                                <p className="mt-6 max-w-sm text-[16px] leading-[1.7] text-[#706a5f]">
+                                    Retours d'expérience, architecture,
+                                    productivité et notes de build — ce que
+                                    j'apprends en construisant.
+                                </p>
+                            </motion.div>
+                        </div>
 
-                        {/* Title */}
-                        <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-[#1a1916] sm:text-5xl lg:text-[52px]">
-                            Le{' '}
-                            <span className="text-teal-600">blog</span>
-                        </h1>
-
-                        {/* Description */}
-                        <p className="mt-5 text-[17px] leading-[1.75] text-slate-600 max-w-lg">
-                            Retours d'expérience, architecture, productivité et notes de build —
-                            ce que j'apprends en construisant.
-                        </p>
-
-                        {/* Count */}
-                        <motion.div className="mt-7 flex items-center gap-3" animate={{ opacity: 1 }}>
-                            <span className="font-display text-3xl font-bold tracking-tight text-[#1a1916]">
+                        {/* Right — Counter */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                                duration: 0.6,
+                                ease: expo,
+                                delay: 0.3,
+                            }}
+                            className="flex items-baseline gap-3 lg:pb-2"
+                        >
+                            <span className="font-display text-[72px] leading-none font-bold tracking-[-0.04em] text-[#1a1916] tabular-nums sm:text-[96px]">
                                 {filtered.length}
                             </span>
-                            <span className="text-[14px] font-medium text-slate-400">
-                                article{filtered.length !== 1 ? 's' : ''}
-                                {hasFilter ? (
-                                    <span className="ml-1 text-teal-600">filtrés</span>
-                                ) : (
-                                    <span className="ml-1">publié{filtered.length !== 1 ? 's' : ''}</span>
+                            <div className="flex flex-col gap-0.5 pb-2">
+                                <span className="text-[13px] font-bold tracking-[0.15em] text-[#8a8479] uppercase">
+                                    article{filtered.length !== 1 ? 's' : ''}
+                                </span>
+                                {activeTag && (
+                                    <span className="text-[11px] font-bold tracking-[0.1em] text-[#138770]">
+                                        filtrés
+                                    </span>
                                 )}
-                            </span>
+                            </div>
                         </motion.div>
-                    </motion.div>
+                    </div>
+                </div>
+
+                {/* Bottom border line */}
+                <div className="container-main">
+                    <div className="h-px bg-[#e2e0da]" />
                 </div>
             </section>
 
-            {/* ── Filters ─────────────────────────────────────────────── */}
+            {/* ── Filters ──────────────────────────────────────────── */}
             {allTags.length > 0 && (
-                <div className="border-y border-slate-100 bg-[#fafaf8]">
-                    <div className="container-main py-5">
+                <div className="sticky top-[72px] z-20 border-b border-[#e2e0da] bg-[#f4f3ef]/90 backdrop-blur-sm">
+                    <div className="container-main py-4">
                         <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                            className="space-y-3"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="flex flex-wrap items-center gap-2"
                         >
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="mr-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 shrink-0">
-                                    Thème
-                                </span>
-                                <Chip active={activeTag === null} onClick={() => setActiveTag(null)}>
-                                    Tous
-                                </Chip>
-                                {allTags.map((tag) => (
-                                    <Chip
-                                        key={tag}
-                                        active={activeTag === tag}
-                                        onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                                        count={countForTag(tag)}
-                                    >
-                                        {tag}
-                                    </Chip>
-                                ))}
-                            </div>
+                            <span className="mr-2 shrink-0 text-[10px] font-bold tracking-[0.22em] text-[#cac7be] uppercase">
+                                Thème
+                            </span>
+                            <TagPill
+                                label="Tous"
+                                active={activeTag === null}
+                                onClick={() => setActiveTag(null)}
+                            />
+                            {allTags.map((tag) => (
+                                <TagPill
+                                    key={tag}
+                                    label={tag}
+                                    active={activeTag === tag}
+                                    onClick={() =>
+                                        setActiveTag(
+                                            activeTag === tag ? null : tag,
+                                        )
+                                    }
+                                    count={countForTag(tag)}
+                                />
+                            ))}
 
-                            {/* Clear filter */}
-                            {hasFilter && (
+                            {activeTag && (
                                 <motion.button
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
                                     onClick={() => setActiveTag(null)}
-                                    className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 transition-colors hover:text-red-500"
+                                    className="ml-auto flex items-center gap-1.5 text-[11px] font-bold tracking-[0.1em] text-[#e05c4a] uppercase transition-opacity hover:opacity-70"
                                 >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    <svg
+                                        className="h-3 w-3"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2.5}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
                                     </svg>
-                                    Effacer le filtre
+                                    Effacer
                                 </motion.button>
                             )}
                         </motion.div>
@@ -282,40 +596,40 @@ export default function Index({ posts }: BlogIndexProps) {
                 </div>
             )}
 
-            {/* ── Content ─────────────────────────────────────────────── */}
-            <section className="bg-white py-14 sm:py-18">
-                <div className="container-main space-y-12">
+            {/* ── Featured Hero ─────────────────────────────────────── */}
+            {featured && <FeaturedHero post={featured} />}
 
-                    {/* Featured */}
-                    {featured && (
-                        <div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 shrink-0">À la une</span>
-                                <div className="h-px flex-1 bg-slate-100" />
-                            </div>
-                            <FeaturedCard post={featured} />
+            {/* ── Articles Grid ─────────────────────────────────────── */}
+            <section className="bg-[#f4f3ef] py-14 sm:py-20">
+                <div className="container-main">
+                    {/* Section header */}
+                    {rest.length > 0 && (
+                        <div className="mb-10 flex items-center gap-4">
+                            <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">
+                                {featured ? 'Tous les articles' : 'Articles'}
+                            </span>
+                            <div className="h-px flex-1 bg-[#e2e0da]" />
                         </div>
                     )}
 
-                    {/* Grid */}
                     <AnimatePresence mode="wait">
                         {filtered.length === 0 ? (
                             <motion.div
                                 key="empty"
-                                initial={{ opacity: 0, y: 16 }}
+                                initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
-                                className="py-24 text-center"
+                                className="py-28 text-center"
                             >
-                                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-300">
-                                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                    </svg>
+                                <div className="mb-6 font-display text-[80px] leading-none font-bold text-[#e2e0da]">
+                                    ∅
                                 </div>
-                                <p className="text-[15px] font-semibold text-slate-500">Aucun article pour ce filtre</p>
+                                <p className="mb-4 text-[15px] font-bold text-[#8a8479]">
+                                    Aucun article pour ce filtre
+                                </p>
                                 <button
                                     onClick={() => setActiveTag(null)}
-                                    className="mt-3 text-[13px] font-semibold text-teal-600 hover:underline"
+                                    className="text-[12px] font-bold tracking-[0.15em] text-[#138770] uppercase transition-opacity hover:opacity-70"
                                 >
                                     Réinitialiser
                                 </button>
@@ -326,33 +640,26 @@ export default function Index({ posts }: BlogIndexProps) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.25 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                {featured && (
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 shrink-0">Tous les articles</span>
-                                        <div className="h-px flex-1 bg-slate-100" />
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                                    {rest.map((post, i) => (
-                                        <BlogCard key={post.id} post={post} index={i} />
-                                    ))}
+                                <div className="grid grid-cols-1 gap-px bg-[#e2e0da] sm:grid-cols-2 lg:grid-cols-3">
+                                    {renderGrid()}
                                 </div>
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
 
-                    {/* Empty state — no posts at all */}
                     {posts.length === 0 && (
-                        <div className="py-24 text-center">
-                            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-300">
-                                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                </svg>
+                        <div className="py-28 text-center">
+                            <div className="mb-6 font-display text-[80px] leading-none font-bold text-[#e2e0da]">
+                                —
                             </div>
-                            <p className="text-[15px] font-semibold text-slate-500">Aucun article pour le moment</p>
-                            <p className="text-[13px] text-slate-400 mt-1">Les premiers articles arrivent bientôt !</p>
+                            <p className="text-[15px] font-bold text-[#8a8479]">
+                                Aucun article pour le moment
+                            </p>
+                            <p className="mt-2 text-[13px] text-[#aaa69e]">
+                                Les premiers articles arrivent bientôt !
+                            </p>
                         </div>
                     )}
 
@@ -362,19 +669,31 @@ export default function Index({ posts }: BlogIndexProps) {
                             initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            className="mt-4 flex flex-col items-center gap-4 text-center"
+                            transition={{ duration: 0.5, ease: smooth }}
+                            className="mt-20 flex flex-col items-center justify-between gap-6 border-t border-[#e2e0da] pt-12 sm:flex-row"
                         >
-                            <p className="text-[14px] font-medium text-slate-400">
+                            <p className="text-[14px] text-[#8a8479]">
                                 Un sujet vous intéresse ?
                             </p>
                             <Link
                                 href="/contact"
-                                className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+                                className="group/cta inline-flex items-center gap-3 border border-[#1a1916] bg-[#1a1916] px-8 py-3.5 text-[12px] font-bold tracking-[0.12em] text-white uppercase transition-all duration-300 hover:bg-transparent hover:text-[#1a1916]"
                             >
                                 Suggérer un sujet
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    className="transition-transform duration-300 group-hover/cta:translate-x-1"
+                                >
+                                    <path
+                                        d="M3 8h10M9 4l4 4-4 4"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
                                 </svg>
                             </Link>
                         </motion.div>

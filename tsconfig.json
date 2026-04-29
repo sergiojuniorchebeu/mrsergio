@@ -109,6 +109,16 @@
         "skipLibCheck": true /* Skip type checking all .d.ts files. */,
         "baseUrl": ".",
         "paths": {
+            "@/routes/profile": ["./resources/js/route-helpers/profile.ts"],
+            "@/routes/appearance": [
+                "./resources/js/route-helpers/appearance.ts"
+            ],
+            "@/routes/user-password": [
+                "./resources/js/route-helpers/user-password.ts"
+            ],
+            "@/routes/two-factor": [
+                "./resources/js/route-helpers/two-factor.ts"
+            ],
             "@/*": ["./resources/js/*"]
         },
         "jsx": "react-jsx"
@@ -117,5 +127,10 @@
         "resources/js/**/*.ts",
         "resources/js/**/*.d.ts",
         "resources/js/**/*.tsx"
+    ],
+    "exclude": [
+        "resources/js/**/* 03-*.ts",
+        "resources/js/**/* 03-*.tsx",
+        "resources/js/components/ui/apple-cards-carousel.tsx"
     ]
 }
