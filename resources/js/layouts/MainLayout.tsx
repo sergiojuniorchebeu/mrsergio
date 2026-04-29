@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import { RevealText } from '@/components/ui/AnimatedText';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -18,7 +19,6 @@ const footerLinks = [
     { href: '/projects', label: 'Projets' },
     { href: '/blog', label: 'Blog' },
     { href: '/formations', label: 'Formations' },
-    { href: '/contact', label: 'Contact' },
 ];
 
 const footerNotes = [
@@ -298,10 +298,21 @@ export default function MainLayout({ children }: Props) {
             <main>{children}</main>
 
             {/* ══ FOOTER ════════════════════════════════════════════════════ */}
-            <footer className="border-t border-white/[0.04] bg-[#171511]">
+            <footer className="relative overflow-hidden border-t border-white/[0.04] bg-[#171511]">
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 flex items-end justify-center overflow-hidden select-none"
+                >
+                    <span
+                        className="translate-y-8 font-display leading-none font-extrabold tracking-[-0.05em] whitespace-nowrap text-slate-50/[0.03] uppercase"
+                        style={{ fontSize: 'clamp(72px, 15vw, 220px)' }}
+                    >
+                        Mr Sergio
+                    </span>
+                </div>
                 <div className="container-main py-16 sm:py-20">
                     <div className="border-b border-white/[0.08] pb-12 sm:pb-14">
-                        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)] lg:items-end">
+                        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.75fr)] lg:items-end">
                             <div className="max-w-2xl">
                                 <p className="mb-4 text-[11px] font-semibold tracking-[0.22em] text-teal-400/90 uppercase">
                                     Signature
@@ -317,31 +328,16 @@ export default function MainLayout({ children }: Props) {
                                     longtemps apres le lancement.
                                 </p>
                             </div>
-
-                            <div className="border border-white/[0.08] bg-white/[0.02] p-6 sm:p-7">
-                                <p className="text-[11px] font-semibold tracking-[0.18em] text-white/35 uppercase">
+                            <div className="max-w-sm lg:justify-self-end">
+                                <p className="text-[11px] font-semibold tracking-[0.18em] text-white/26 uppercase">
                                     Contact
                                 </p>
-                                <p className="mt-3 text-[15px] leading-7 text-white/52">
-                                    Disponible pour missions, collaborations
-                                    selectives et refontes qui demandent autant
-                                    de clarte que d&apos;execution.
-                                </p>
-                                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                                    <Link
-                                        href="/contact"
-                                        onClick={closeMenu}
-                                        className="inline-flex items-center justify-center rounded-md border border-teal-500/30 bg-teal-500 px-4 py-2.5 text-[13px] font-semibold text-[#0e1614] transition-colors duration-200 hover:bg-teal-400"
-                                    >
-                                        Demarrer une discussion
-                                    </Link>
-                                    <a
-                                        href="mailto:contact@mrsergio.dev"
-                                        className="inline-flex items-center justify-center rounded-md border border-white/[0.1] px-4 py-2.5 text-[13px] font-medium text-white/72 transition-colors duration-200 hover:border-white/[0.16] hover:text-white"
-                                    >
-                                        contact@mrsergio.dev
-                                    </a>
-                                </div>
+                                <a
+                                    href="mailto:contact@mrsergio.dev"
+                                    className="mt-4 inline-flex text-[15px] text-white/68 transition-colors duration-200 hover:text-white"
+                                >
+                                    contact@mrsergio.dev
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -431,17 +427,18 @@ export default function MainLayout({ children }: Props) {
                             <span>
                                 Base au Cameroun • Disponible a distance
                             </span>
-                            <span>
-                                Heberge chez{' '}
-                                <a
-                                    href="https://www.kennhosting.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="transition-colors duration-200 hover:text-white/42"
-                                >
-                                    KennHosting
-                                </a>
-                            </span>
+                            <a
+                                href="https://www.kennhosting.com"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center font-medium text-white transition-colors duration-200 hover:text-teal-100"
+                            >
+                                <RevealText
+                                    text="Heberge chez KennHosting"
+                                    duration={0.65}
+                                    className="inline-block"
+                                />
+                            </a>
                         </div>
                     </div>
                 </div>

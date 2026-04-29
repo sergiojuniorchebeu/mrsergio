@@ -1,6 +1,6 @@
 'use client';
 
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import NumberFlow from '@number-flow/react';
 import { motion, useInView } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -10,6 +10,7 @@ import { AvatarGlow } from '@/components/ui/AvatarGlow';
 import { FormationCard } from '@/components/ui/FormationCard';
 import { HexagonPattern } from '@/components/ui/hexagon-pattern';
 import { ProjectCard } from '@/components/ui/ProjectCard';
+import { ShinyButton } from '@/components/ui/shiny-button';
 import { SpotlightCard } from '@/components/ui/SpotlightCard';
 
 import MainLayout from '@/layouts/MainLayout';
@@ -516,10 +517,9 @@ export default function Home({
                         <div className="order-2 flex flex-col gap-7 lg:order-1">
                             {/* Label */}
                             <motion.div variants={fadeUp}>
-                                <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-[11px] font-semibold tracking-[0.2em] text-teal-700 uppercase shadow-[0_1px_3px_rgba(26,163,137,0.08)]">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                                    Fullstack Developer
-                                </span>
+                                <div className="text-[12px] font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                                    Full Stack Dev
+                                </div>
                             </motion.div>
 
                             {/* Nom — Poppins 700 */}
@@ -537,28 +537,16 @@ export default function Home({
                             {/* Description */}
                             <motion.p
                                 variants={fadeUp}
-                                className="max-w-[420px] text-[17px] leading-[1.75] text-slate-700"
+                                className="max-w-[560px] text-[17px] leading-[1.8] text-slate-700"
                             >
-                                Je construis des produits web qui allient{' '}
-                                <span className="font-semibold text-slate-800">
-                                    performance technique
-                                </span>{' '}
-                                et expérience utilisateur soignée. Laravel,
-                                React, Flutterdu backend à l'app mobile.
+                                Je développe des solutions utiles et bien
+                                pensées pour les entreprises, les porteurs de
+                                projet et les équipes qui veulent avancer sans
+                                perdre de temps.
+                                <br className="hidden sm:block" /> Je conçois
+                                des applications web et Android claires, fiables
+                                et agréables à utiliser.
                             </motion.p>
-
-                            {/* Status */}
-                            <motion.div variants={fadeUp} className="-mt-1">
-                                <div className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                                    <span className="relative flex h-2 w-2 shrink-0">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-60" />
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-500" />
-                                    </span>
-                                    <span className="text-[14px] font-medium text-slate-700">
-                                        Disponible pour de nouveaux projets
-                                    </span>
-                                </div>
-                            </motion.div>
 
                             {/* CTAs */}
                             <motion.div
@@ -658,13 +646,12 @@ export default function Home({
                         ))}
                     </div>
 
-                    {/* ── Separator ─────────────────────────────────────────── */}
-                    <div className="my-12 flex items-center gap-4">
+                    <div className="my-10 flex items-center gap-4">
                         <div className="h-px flex-1 bg-slate-100" />
                         <div className="flex items-center gap-2">
                             <div className="h-px w-6 bg-teal-400/60" />
                             <span className="text-[10px] font-bold tracking-[0.22em] text-slate-400 uppercase">
-                                Stack technique
+                                Outils de travail
                             </span>
                             <div className="h-px w-6 bg-teal-400/60" />
                         </div>
@@ -672,12 +659,12 @@ export default function Home({
                     </div>
 
                     {/* ── Tech pills ────────────────────────────────────────── */}
-                    <BlurFade delay={0.1}>
+                    <BlurFade delay={0.14}>
                         <div className="flex flex-wrap justify-center gap-2">
                             {techStack.map((tech) => (
                                 <div
                                     key={tech.name}
-                                    className="group inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50/70 px-3.5 py-1.5 text-[12px] font-medium text-slate-500 transition-all duration-200 hover:border-slate-200 hover:bg-white hover:shadow-sm"
+                                    className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[12px] font-medium text-slate-500 transition-all duration-200 hover:border-slate-300 hover:shadow-sm"
                                 >
                                     <span
                                         className={cn(
@@ -886,25 +873,15 @@ export default function Home({
                             </p>
 
                             <div className="mt-10 flex flex-wrap justify-center gap-3">
-                                <Link
-                                    href="/contact"
-                                    className="group inline-flex items-center gap-2 rounded-md bg-teal-500 px-7 py-3.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-teal-400"
+                                <ShinyButton
+                                    onClick={() => router.visit('/contact')}
+                                    className="rounded-md border-teal-400/20 bg-teal-500 px-8 py-3.5 text-white shadow-[0_12px_28px_rgba(26,163,137,0.24),inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-teal-400 [&>span]:font-display [&>span]:tracking-[0.02em] [&>span]:text-white [&>span]:normal-case"
+                                    style={{
+                                        ['--primary' as string]: '#d5fff3',
+                                    }}
                                 >
                                     Démarrer un projet
-                                    <svg
-                                        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M17 8l4 4m0 0l-4 4m4-4H3"
-                                        />
-                                    </svg>
-                                </Link>
+                                </ShinyButton>
 
                                 <a
                                     href="mailto:contact@mrsergio.dev"

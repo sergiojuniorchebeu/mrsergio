@@ -7,7 +7,7 @@ use Inertia\Inertia;
 
 class HomeController extends Controller
 {
-    private const HOME_PROJECTS_CACHE_KEY = 'home.projects.v2';
+    private const HOME_PROJECTS_CACHE_KEY = 'home.projects.v3';
 
     public function index()
     {
@@ -15,7 +15,7 @@ class HomeController extends Controller
             return \App\Models\Project::published()
                 ->featured()
                 ->ordered()
-                ->take(3)
+                ->take(6)
                 ->get()
                 ->map(fn ($p) => [
                     'id' => $p->id,

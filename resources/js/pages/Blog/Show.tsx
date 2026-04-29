@@ -5,6 +5,7 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
 import MainLayout from '@/layouts/MainLayout';
 import { cn } from '@/lib/utils';
 import type { BlogShowProps } from '@/types';
@@ -92,6 +93,7 @@ const TAG_COLORS: Record<string, string> = {
     Productivité: 'text-amber-700 border-amber-200 bg-amber-50',
 };
 const defaultTag = 'text-[#706a5f] border-[#e2e0da] bg-[#f4f3ef]';
+const profileImageSrc = '/images/profile_avatar.jpg';
 
 // ─── Share Button ─────────────────────────────────────────────────────────────
 function ShareButton({ url }: { url: string }) {
@@ -273,7 +275,17 @@ export default function Show({ post, related }: BlogShowProps) {
             <ReadingProgress />
 
             {/* ── Hero ──────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden bg-[#f4f3ef] pt-[96px]">
+            <section className="relative overflow-hidden border-b border-slate-200/60 bg-white pt-[96px]">
+                <AnimatedGridPattern
+                    numSquares={22}
+                    maxOpacity={0.035}
+                    duration={4.5}
+                    repeatDelay={0.8}
+                    className={cn(
+                        'absolute inset-0 h-full w-full text-teal-600/70',
+                        '[mask-image:radial-gradient(720px_circle_at_50%_10%,white,transparent)]',
+                    )}
+                />
                 <div
                     className="pointer-events-none absolute inset-0 opacity-[0.03]"
                     style={{
@@ -284,6 +296,7 @@ export default function Show({ post, related }: BlogShowProps) {
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[280px] [background-image:linear-gradient(to_right,rgba(148,163,184,0.16)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,white,transparent)] [background-size:34px_34px] opacity-[0.14]" />
                 <div className="pointer-events-none absolute top-24 left-[8%] h-20 w-20 rounded-full border border-teal-200/40" />
                 <div className="pointer-events-none absolute top-28 right-[10%] h-px w-16 bg-teal-300/50" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(255,255,255,0.94))]" />
 
                 <div className="container-main relative z-10 pb-16 sm:pb-20">
                     {/* Back */}
@@ -314,97 +327,129 @@ export default function Show({ post, related }: BlogShowProps) {
                         </Link>
                     </motion.div>
 
-                    <div className="max-w-3xl">
-                        {/* Tags */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.5,
-                                ease: expo,
-                                delay: 0.1,
-                            }}
-                            className="mb-6 flex flex-wrap gap-2"
-                        >
-                            {post.tags.map((tag: string) => (
-                                <span
-                                    key={tag}
-                                    className="border border-[#ddd8cf] bg-white/60 px-3 py-1 text-[10px] font-bold tracking-[0.18em] text-[#8a8479] uppercase"
+                    <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_400px]">
+                        <div className="max-w-3xl">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: expo,
+                                    delay: 0.1,
+                                }}
+                                className="mb-6 flex flex-wrap gap-2"
+                            >
+                                {post.tags.map((tag: string) => (
+                                    <span
+                                        key={tag}
+                                        className="border border-[#ddd8cf] bg-white/60 px-3 py-1 text-[10px] font-bold tracking-[0.18em] text-[#8a8479] uppercase"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </motion.div>
+
+                            <motion.h1
+                                initial={{ opacity: 0, y: 24 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    duration: 0.7,
+                                    ease: expo,
+                                    delay: 0.15,
+                                }}
+                                className="mb-5 font-display text-3xl leading-[1.08] font-bold tracking-[-0.025em] text-[#1a1916] sm:text-4xl lg:text-5xl"
+                            >
+                                {post.title}
+                            </motion.h1>
+
+                            {post.excerpt && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: 16 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{
+                                        duration: 0.6,
+                                        ease: expo,
+                                        delay: 0.22,
+                                    }}
+                                    className="mb-8 max-w-2xl text-[16px] leading-[1.75] text-[#706a5f]"
                                 >
-                                    {tag}
+                                    {post.excerpt}
+                                </motion.p>
+                            )}
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    duration: 0.55,
+                                    ease: expo,
+                                    delay: 0.28,
+                                }}
+                                className="flex items-center gap-5 border-t border-slate-200/70 pt-6"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 overflow-hidden rounded-full border border-white/80 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-2 ring-teal-50">
+                                        <img
+                                            src={profileImageSrc}
+                                            alt="Sergio Junior Chebeu"
+                                            className="h-full w-full object-cover object-top"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-[12px] font-bold text-[#1a1916]">
+                                            Sergio Junior Chebeu
+                                        </p>
+                                        <p className="text-[11px] text-[#aaa69e]">
+                                            {post.published_at}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="h-5 w-px bg-[#e2e0da]" />
+                                <span className="text-[11px] font-medium text-[#8a8479]">
+                                    {post.reading_time ?? '~5 min de lecture'}
                                 </span>
-                            ))}
-                        </motion.div>
+                            </motion.div>
+                        </div>
 
-                        {/* Title */}
-                        <motion.h1
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.7,
-                                ease: expo,
-                                delay: 0.15,
-                            }}
-                            className="mb-5 font-display text-3xl leading-[1.08] font-bold tracking-[-0.025em] text-[#1a1916] sm:text-4xl lg:text-5xl"
-                        >
-                            {post.title}
-                        </motion.h1>
-
-                        {/* Excerpt */}
-                        {post.excerpt && (
-                            <motion.p
-                                initial={{ opacity: 0, y: 16 }}
+                        {post.cover_image_url && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{
                                     duration: 0.6,
                                     ease: expo,
-                                    delay: 0.22,
+                                    delay: 0.2,
                                 }}
-                                className="mb-8 max-w-2xl text-[16px] leading-[1.75] text-[#706a5f]"
+                                className="overflow-hidden rounded-lg border border-slate-200/90 bg-white/80 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm"
                             >
-                                {post.excerpt}
-                            </motion.p>
+                                <div className="relative aspect-[5/3.8] overflow-hidden rounded-md bg-[#f0efec] lg:aspect-[5/3.9]">
+                                    <ImageWithFallback
+                                        src={post.cover_image_url}
+                                        alt={post.title}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                            </motion.div>
                         )}
-
-                        {/* Meta row */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.55,
-                                ease: expo,
-                                delay: 0.28,
-                            }}
-                            className="flex items-center gap-5"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1aa389]">
-                                    <span className="font-display text-[11px] font-bold text-white">
-                                        S
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-[12px] font-bold text-[#1a1916]">
-                                        Sergio Junior Chebeu
-                                    </p>
-                                    <p className="text-[11px] text-[#aaa69e]">
-                                        {post.published_at}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="h-5 w-px bg-[#e2e0da]" />
-                            <span className="text-[11px] font-medium text-[#8a8479]">
-                                {post.reading_time ?? '~5 min de lecture'}
-                            </span>
-                        </motion.div>
                     </div>
                 </div>
             </section>
 
             {/* ── Article Body ──────────────────────────────────────── */}
             {post.content && (
-                <section className="bg-[#fafaf8] py-14 sm:py-20">
-                    <div className="container-main">
+                <section className="relative overflow-hidden bg-white py-14 sm:py-20">
+                    <AnimatedGridPattern
+                        numSquares={38}
+                        maxOpacity={0.04}
+                        duration={4}
+                        repeatDelay={0.6}
+                        className={cn(
+                            'absolute inset-0 h-full w-full text-teal-600/70',
+                            '[mask-image:radial-gradient(900px_circle_at_50%_20%,white,transparent)]',
+                        )}
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />
+                    <div className="container-main relative z-10">
                         <div className="flex gap-16 lg:gap-20">
                             {/* Sidebar TOC */}
                             <aside className="hidden w-48 shrink-0 pt-1 xl:block">
@@ -427,18 +472,6 @@ export default function Show({ post, related }: BlogShowProps) {
                                         </span>
                                         <div className="h-px flex-1 bg-[#e2e0da]" />
                                     </div>
-
-                                    {post.cover_image_url && (
-                                        <div className="mb-12 overflow-hidden rounded-lg border border-[#e2e0da] bg-[#f0efec]">
-                                            <div className="relative aspect-[16/9]">
-                                                <ImageWithFallback
-                                                    src={post.cover_image_url}
-                                                    alt={post.title}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* Prose */}
                                     <div className="prose max-w-none prose-slate prose-headings:font-display prose-headings:tracking-[-0.02em] prose-headings:text-[#1a1916] prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-[#e2e0da] prose-h2:pb-3 prose-h2:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[18px] prose-p:text-[15px] prose-p:leading-[1.85] prose-p:text-[#4a4740] prose-a:text-[#138770] prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-2 prose-blockquote:border-[#1aa389] prose-blockquote:bg-[#f4f3ef] prose-blockquote:py-1 prose-blockquote:pl-5 prose-blockquote:text-[#706a5f] prose-blockquote:not-italic prose-strong:font-bold prose-strong:text-[#1a1916] prose-code:rounded-none prose-code:border prose-code:border-[#a8ebd8] prose-code:bg-[#effcf8] prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-[13px] prose-code:font-normal prose-code:text-[#138770] prose-pre:rounded-none prose-pre:border prose-pre:border-[#433e37] prose-pre:bg-[#1a1916] prose-ol:text-[#4a4740] prose-ul:text-[#4a4740] prose-li:text-[15px] prose-li:leading-[1.8] prose-hr:border-[#e2e0da]">
@@ -482,22 +515,23 @@ export default function Show({ post, related }: BlogShowProps) {
                                     </div>
 
                                     {/* Author card */}
-                                    <div className="mt-10 flex items-start gap-5 border border-[#e2e0da] bg-[#f4f3ef] p-6">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0f1a17]">
-                                            <span className="font-display text-[14px] font-bold text-white">
-                                                SJ
-                                            </span>
+                                    <div className="mt-10 flex items-start gap-5 border border-[#e2e0da] bg-[#f8f7f3] p-6">
+                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-2 ring-teal-50">
+                                            <img
+                                                src={profileImageSrc}
+                                                alt="Sergio Junior Chebeu"
+                                                className="h-full w-full object-cover object-top"
+                                            />
                                         </div>
                                         <div>
                                             <p className="mb-1 text-[13px] font-bold text-[#1a1916]">
                                                 Sergio Junior Chebeu
                                             </p>
                                             <p className="text-[13px] leading-relaxed text-[#706a5f]">
-                                                Développeur fullstack passionné
-                                                par l'architecture logicielle,
-                                                la performance et les
-                                                expériences utilisateur
-                                                mémorables.
+                                                Je conçois des produits web
+                                                clairs, robustes et agréables à
+                                                utiliser, avec une attention
+                                                particulière portée au détail.
                                             </p>
                                         </div>
                                     </div>
@@ -510,8 +544,18 @@ export default function Show({ post, related }: BlogShowProps) {
 
             {/* ── Related Articles ──────────────────────────────────── */}
             {related.length > 0 && (
-                <section className="border-t border-[#e2e0da] bg-[#f4f3ef] py-14 sm:py-20">
-                    <div className="container-main">
+                <section className="relative overflow-hidden border-t border-[#e2e0da] bg-white py-14 sm:py-20">
+                    <AnimatedGridPattern
+                        numSquares={24}
+                        maxOpacity={0.03}
+                        duration={4.5}
+                        repeatDelay={0.8}
+                        className={cn(
+                            'absolute inset-0 h-full w-full text-teal-600/60',
+                            '[mask-image:radial-gradient(900px_circle_at_50%_0%,white,transparent)]',
+                        )}
+                    />
+                    <div className="container-main relative z-10">
                         <div className="mb-10 flex items-center gap-4">
                             <div className="h-px w-12 bg-[#1aa389]" />
                             <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">

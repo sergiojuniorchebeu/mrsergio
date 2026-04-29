@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
 import { ProjectCard } from '@/components/ui/ProjectCard';
 import { ProjectScreenshotsGallery } from '@/components/ui/ProjectScreenshotsGallery';
 import MainLayout from '@/layouts/MainLayout';
@@ -160,30 +161,6 @@ function getPrimaryLabel(p: ProjectShowProps['project']) {
     return 'Voir la démo';
 }
 
-// ─── Glass surface — Liquid Glass 2026 ────────────────────────────────────────
-function Glass({
-    children,
-    className,
-}: {
-    children: React.ReactNode;
-    className?: string;
-}) {
-    return (
-        <div
-            className={cn(
-                'relative overflow-hidden rounded-lg',
-                'bg-white/[0.62] backdrop-blur-xl',
-                'border border-white/70',
-                'shadow-[0_8px_32px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.9)]',
-                className,
-            )}
-        >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
-            {children}
-        </div>
-    );
-}
-
 // ─── Eyebrow ──────────────────────────────────────────────────────────────────
 function Eyebrow({ children }: { children: React.ReactNode }) {
     return (
@@ -264,11 +241,21 @@ export default function Show({ project, related }: ProjectShowProps) {
         <MainLayout>
             <Head title={`${project.title} — Sergio Junior Chebeu`} />
 
-            <section className="relative overflow-hidden border-b border-slate-200/60 bg-[#f4f0e7] pt-[104px]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(26,163,137,0.10),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(15,23,42,0.06),transparent_22%)]" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.18)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,white,transparent)] [background-size:34px_34px] opacity-[0.16]" />
-                <div className="pointer-events-none absolute top-24 left-[8%] h-24 w-24 rounded-full border border-teal-200/40" />
-                <div className="pointer-events-none absolute right-[10%] bottom-12 h-px w-16 bg-teal-300/60" />
+            <section className="relative overflow-hidden border-b border-slate-200/60 bg-white pt-[104px]">
+                <AnimatedGridPattern
+                    numSquares={22}
+                    maxOpacity={0.035}
+                    duration={4.5}
+                    repeatDelay={0.8}
+                    className={cn(
+                        'absolute inset-0 h-full w-full text-teal-600/70',
+                        '[mask-image:radial-gradient(720px_circle_at_50%_10%,white,transparent)]',
+                    )}
+                />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(26,163,137,0.08),transparent_26%),radial-gradient(circle_at_88%_12%,rgba(15,23,42,0.05),transparent_22%)]" />
+                <div className="pointer-events-none absolute top-24 left-[8%] h-24 w-24 rounded-full border border-teal-200/35" />
+                <div className="pointer-events-none absolute right-[10%] bottom-12 h-px w-16 bg-teal-300/50" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(255,255,255,0.92))]" />
 
                 <div className="container-main relative z-10 py-14 sm:py-16">
                     <motion.div
@@ -309,22 +296,22 @@ export default function Show({ project, related }: ProjectShowProps) {
                             {project.platforms?.slice(0, 3).map((p) => (
                                 <span
                                     key={p}
-                                    className="rounded-sm border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/55 backdrop-blur-sm"
+                                    className="rounded-sm border border-slate-200 bg-white/75 px-2.5 py-1 text-[10px] font-semibold text-slate-600"
                                 >
                                     {p}
                                 </span>
                             ))}
                         </div>
 
-                        <h1 className="font-display text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] font-black tracking-[-0.04em] text-slate-950">
+                        <h1 className="max-w-4xl font-display text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] font-black tracking-[-0.045em] text-slate-950">
                             {project.title}
                         </h1>
 
-                        <p className="mt-5 max-w-2xl text-[15px] leading-[1.85] text-slate-600 sm:text-[17px]">
+                        <p className="mt-5 max-w-2xl text-[15px] leading-[1.9] text-slate-600 sm:text-[17px]">
                             {project.description}
                         </p>
 
-                        <div className="mt-8 flex flex-wrap items-center gap-3">
+                        <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-200/70 pt-6">
                             {primaryLink && (
                                 <a
                                     href={primaryLink}
@@ -389,114 +376,113 @@ export default function Show({ project, related }: ProjectShowProps) {
                 </motion.div>
             )}
 
-            {/* ══════════════════════════════════════════════════════════
-                BODY — Soft Spatial mesh background
-            ══════════════════════════════════════════════════════════ */}
-            <div
-                className="relative"
-                style={{
-                    background: `
-                        radial-gradient(ellipse 70% 50% at 10% 15%, rgba(20,184,166,0.07) 0%, transparent 60%),
-                        radial-gradient(ellipse 55% 45% at 88% 80%, rgba(99,102,241,0.06) 0%, transparent 55%),
-                        radial-gradient(ellipse 40% 35% at 60% 40%, rgba(248,250,252,0.5) 0%, transparent 50%),
-                        linear-gradient(155deg, #e8f4f1 0%, #eef0f8 30%, #faf9f6 58%, #edf5f1 100%)
-                    `,
-                }}
-            >
-                {/* Dot grid — masked top-only */}
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-[0.20]"
-                    style={{
-                        backgroundImage:
-                            'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
-                        backgroundSize: '28px 28px',
-                        maskImage:
-                            'radial-gradient(ellipse 100% 60% at 50% 0%, white 30%, transparent 100%)',
-                    }}
+            <div className="relative overflow-hidden bg-white">
+                <AnimatedGridPattern
+                    numSquares={40}
+                    maxOpacity={0.04}
+                    duration={4}
+                    repeatDelay={0.6}
+                    className={cn(
+                        'absolute inset-0 h-full w-full text-teal-600/70',
+                        '[mask-image:radial-gradient(900px_circle_at_50%_20%,white,transparent)]',
+                    )}
                 />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />
 
-                <div className="container-main relative z-10 py-14 lg:py-20">
-                    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_310px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_340px]">
-                        {/* ── LEFT ─────────────────────────────────── */}
+                <div className="container-main relative z-10 py-14 lg:py-18">
+                    {project.screenshots?.length > 0 && (
+                        <motion.section
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                                duration: 0.55,
+                                delay: 0.14,
+                                ease: easings.smooth,
+                            }}
+                            className="mb-14"
+                        >
+                            <div className="mb-6 flex items-end justify-between gap-4">
+                                <div>
+                                    <Eyebrow>Lecture visuelle</Eyebrow>
+                                    <h2 className="font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
+                                        Quelques écrans pour situer le projet.
+                                    </h2>
+                                </div>
+                                <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                                    {screenshots} capture
+                                    {screenshots > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <ProjectScreenshotsGallery
+                                projectType={project.project_type}
+                                screenshots={project.screenshots}
+                                title={project.title}
+                                demoUrl={project.demo_url}
+                            />
+                        </motion.section>
+                    )}
+
+                    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-14">
                         <motion.div
                             initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
                                 duration: 0.55,
-                                delay: 0.15,
+                                delay: 0.18,
                                 ease: easings.smooth,
                             }}
-                            className="min-w-0 space-y-10"
+                            className="min-w-0 space-y-12"
                         >
-                            {/* Bento stats */}
-                            <div className="grid grid-cols-3 gap-3">
-                                {[
-                                    {
-                                        label: 'Format',
-                                        value:
-                                            project.project_type_label ??
-                                            project.project_type,
-                                    },
-                                    {
-                                        label: 'Plateformes',
-                                        value:
-                                            project.platforms?.length > 0
-                                                ? project.platforms.join(' · ')
-                                                : 'Digital',
-                                    },
-                                    {
-                                        label: 'Captures',
-                                        value:
-                                            screenshots > 0
-                                                ? `${screenshots} écran${screenshots > 1 ? 's' : ''}`
-                                                : '—',
-                                    },
-                                ].map((s, i) => (
-                                    <motion.div
-                                        key={s.label}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.18 + i * 0.07 }}
-                                    >
-                                        <Glass className="flex flex-col gap-1.5 p-4 sm:p-5">
-                                            <span className="text-[9px] font-black tracking-[0.22em] text-slate-400/80 uppercase">
-                                                {s.label}
-                                            </span>
-                                            <span className="text-[13px] leading-snug font-bold text-slate-800 sm:text-[14px]">
-                                                {s.value}
-                                            </span>
-                                        </Glass>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            {project.image_url && (
-                                <section className="lg:hidden">
-                                    <Eyebrow>Visuel</Eyebrow>
-                                    <Glass className="p-3">
-                                        <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-[#ebe7de]">
-                                            <img
-                                                src={project.image_url}
-                                                alt={project.title}
-                                                className="h-full w-full object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/12 to-transparent" />
+                            <section className="border-t border-slate-200/80 pt-8">
+                                <div className="mb-8 grid gap-5 border-b border-slate-200/75 pb-6 sm:grid-cols-3">
+                                    {[
+                                        {
+                                            label: 'Format',
+                                            value:
+                                                project.project_type_label ??
+                                                project.project_type,
+                                        },
+                                        {
+                                            label: 'Plateformes',
+                                            value:
+                                                project.platforms?.length > 0
+                                                    ? project.platforms.join(
+                                                          ' · ',
+                                                      )
+                                                    : 'Digital',
+                                        },
+                                        {
+                                            label: 'Captures',
+                                            value:
+                                                screenshots > 0
+                                                    ? `${screenshots} écran${screenshots > 1 ? 's' : ''}`
+                                                    : '—',
+                                        },
+                                    ].map((item) => (
+                                        <div
+                                            key={item.label}
+                                            className="space-y-2"
+                                        >
+                                            <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                                                {item.label}
+                                            </p>
+                                            <p className="text-[14px] leading-7 font-semibold text-slate-800">
+                                                {item.value}
+                                            </p>
                                         </div>
-                                    </Glass>
-                                </section>
-                            )}
+                                    ))}
+                                </div>
 
-                            {/* Overview */}
-                            <section>
                                 <Eyebrow>Vue d'ensemble</Eyebrow>
-                                <h2 className="mb-6 font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                    Ce que ce projet accomplit.
+                                <h2 className="mb-5 font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
+                                    Le projet, son contexte et les choix qui ont
+                                    compté.
                                 </h2>
+
                                 {contentBlocks.length > 0 ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-6">
                                         {contentBlocks.map((para, i) => (
-                                            <motion.div
+                                            <motion.p
                                                 key={i}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 whileInView={{
@@ -505,336 +491,174 @@ export default function Show({ project, related }: ProjectShowProps) {
                                                 }}
                                                 viewport={{
                                                     once: true,
-                                                    amount: 0.25,
+                                                    amount: 0.2,
                                                 }}
                                                 transition={{
                                                     duration: 0.4,
                                                     delay: i * 0.05,
                                                 }}
+                                                className="max-w-3xl text-[15px] leading-[1.95] text-slate-600 sm:text-[16px]"
                                             >
-                                                <Glass className="px-6 py-5">
-                                                    <div
-                                                        className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
-                                                        style={{
-                                                            background: `linear-gradient(to bottom, ${brandTeal}90, ${brandTeal}15)`,
-                                                        }}
-                                                    />
-                                                    <p className="pl-3 text-[15px] leading-[1.9] text-slate-600 sm:text-[16px]">
-                                                        {para}
-                                                    </p>
-                                                </Glass>
-                                            </motion.div>
+                                                {para}
+                                            </motion.p>
                                         ))}
                                     </div>
                                 ) : (
-                                    <Glass className="px-6 py-10 text-center">
-                                        <p className="text-[14px] text-slate-400">
-                                            Pas de description disponible.
-                                        </p>
-                                    </Glass>
+                                    <p className="text-[15px] leading-8 text-slate-400">
+                                        Pas de description disponible.
+                                    </p>
                                 )}
                             </section>
 
-                            {/* Key points */}
-                            <section>
-                                <Eyebrow>Points clés</Eyebrow>
-                                <h2 className="mb-6 font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                    Décisions et exigences.
-                                </h2>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {[
-                                        {
-                                            n: '01',
-                                            title: 'Qualité de finition',
-                                            body: 'Une exécution concentrée sur la lisibilité, la vitesse et une base technique propre — suffisamment solide pour évoluer sans accumuler de dette.',
-                                        },
-                                        {
-                                            n: '02',
-                                            title: 'Stack moderne',
-                                            body: 'Surfaces cohérentes, distribution adaptée au type de produit — site, application mobile, logiciel desktop ou API.',
-                                        },
-                                    ].map((card) => (
-                                        <Glass
-                                            key={card.n}
-                                            className="group p-6 transition-shadow hover:shadow-[0_12px_40px_rgba(15,23,42,0.10)]"
-                                        >
-                                            <span
-                                                className="pointer-events-none absolute top-2 right-4 font-display text-7xl leading-none font-black opacity-[0.04] select-none"
-                                                style={{
-                                                    color: typeAccent.color,
-                                                }}
-                                            >
-                                                {card.n}
-                                            </span>
-                                            <div
-                                                className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-25"
-                                                style={{
-                                                    background: typeAccent.glow,
-                                                }}
-                                            />
-                                            <p className="mb-3 text-[12px] font-black tracking-[0.1em] text-slate-800 uppercase">
-                                                {card.title}
-                                            </p>
-                                            <p className="text-[14px] leading-[1.8] text-slate-500">
-                                                {card.body}
-                                            </p>
-                                        </Glass>
-                                    ))}
+                            <section className="border-t border-slate-200/80 pt-8">
+                                <Eyebrow>Ce qu'il faut retenir</Eyebrow>
+                                <div className="grid gap-8 sm:grid-cols-2">
+                                    <div>
+                                        <h3 className="mb-3 text-[12px] font-black tracking-[0.14em] text-slate-800 uppercase">
+                                            Ce qu'on retient
+                                        </h3>
+                                        <p className="text-[14px] leading-[1.85] text-slate-600">
+                                            Le travail a surtout porté sur la
+                                            lisibilité, la fluidité et une base
+                                            assez propre pour faire évoluer le
+                                            produit sans le compliquer.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h3 className="mb-3 text-[12px] font-black tracking-[0.14em] text-slate-800 uppercase">
+                                            Côté technique
+                                        </h3>
+                                        <p className="text-[14px] leading-[1.85] text-slate-600">
+                                            La stack et la structure ont été
+                                            choisies pour rester cohérentes avec
+                                            le produit, sans surcouche inutile.
+                                        </p>
+                                    </div>
                                 </div>
                             </section>
-
-                            {/* Screenshots */}
-                            {project.screenshots?.length > 0 && (
-                                <section>
-                                    <Eyebrow>Galerie</Eyebrow>
-                                    <h2 className="mb-6 font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                        Lecture visuelle du produit.
-                                    </h2>
-                                    <Glass className="p-4 sm:p-6">
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <span className="text-[10px] font-black tracking-[0.22em] text-slate-400 uppercase">
-                                                {screenshots} capture
-                                                {screenshots > 1 ? 's' : ''}
-                                            </span>
-                                            <div className="flex gap-1.5">
-                                                {[
-                                                    ...Array(
-                                                        Math.min(
-                                                            screenshots,
-                                                            5,
-                                                        ),
-                                                    ),
-                                                ].map((_, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="h-1.5 w-1.5 rounded-full"
-                                                        style={{
-                                                            background:
-                                                                i === 0
-                                                                    ? brandTeal
-                                                                    : `${brandTeal}40`,
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <ProjectScreenshotsGallery
-                                            projectType={project.project_type}
-                                            screenshots={project.screenshots}
-                                            title={project.title}
-                                            demoUrl={project.demo_url}
-                                        />
-                                    </Glass>
-                                </section>
-                            )}
                         </motion.div>
 
-                        {/* ── RIGHT sidebar ─────────────────────────── */}
                         <motion.aside
                             initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
                                 duration: 0.55,
-                                delay: 0.25,
+                                delay: 0.24,
                                 ease: easings.smooth,
                             }}
-                            className="hidden lg:block"
+                            className="space-y-8 lg:sticky lg:top-28 lg:self-start"
                         >
-                            <div className="sticky top-28 space-y-4">
-                                {/* CTA card */}
-                                <Glass>
-                                    {project.image_url && (
-                                        <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
-                                            <img
-                                                src={project.image_url}
-                                                alt={project.title}
-                                                className="h-full w-full object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                                            <div className="absolute inset-0 ring-1 ring-white/10 ring-inset" />
-                                            <div className="absolute bottom-3 left-3">
-                                                <span
-                                                    className={cn(
-                                                        'rounded-sm border px-2.5 py-0.5 text-[10px] font-black tracking-[0.18em] uppercase backdrop-blur-sm',
-                                                        typeAccent.label_cls,
-                                                    )}
-                                                >
-                                                    {project.project_type_label ??
-                                                        project.project_type}
-                                                </span>
-                                            </div>
+                            {project.image_url && (
+                                <div className="overflow-hidden rounded-lg border border-slate-200/85 bg-white/70 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.05)] backdrop-blur-sm">
+                                    <div className="relative aspect-[16/11] overflow-hidden rounded-md bg-[#ebe7de]">
+                                        <img
+                                            src={project.image_url}
+                                            alt={project.title}
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/12 to-transparent" />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="border-t border-slate-200/80 pt-6">
+                                <Eyebrow>Actions</Eyebrow>
+                                <div className="space-y-2.5">
+                                    {primaryLink && (
+                                        <a
+                                            href={primaryLink}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={primaryButtonClass}
+                                            style={{
+                                                background: brandTeal,
+                                                boxShadow: `0 4px 20px ${brandTealGlow}`,
+                                            }}
+                                        >
+                                            {getPrimaryLabel(project)}
+                                        </a>
+                                    )}
+                                    {!repoDisabled ? (
+                                        <a
+                                            href={project.github_url!}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={secondaryButtonClass}
+                                        >
+                                            <GithubIcon />
+                                            Voir le code
+                                        </a>
+                                    ) : (
+                                        <div className="flex items-center justify-center gap-2 rounded-sm border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-400">
+                                            <GithubIcon />
+                                            {project.private_repo
+                                                ? 'Dépôt privé'
+                                                : 'Non disponible'}
                                         </div>
                                     )}
-                                    <div className="p-5">
-                                        <Eyebrow>Actions</Eyebrow>
-                                        <div className="flex flex-col gap-2.5">
-                                            {primaryLink && (
-                                                <a
-                                                    href={primaryLink}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className={
-                                                        primaryButtonClass
-                                                    }
-                                                    style={{
-                                                        background: brandTeal,
-                                                        boxShadow: `0 4px 20px ${brandTealGlow}`,
-                                                    }}
-                                                >
-                                                    {getPrimaryLabel(project)}
-                                                </a>
-                                            )}
-                                            {!repoDisabled ? (
-                                                <a
-                                                    href={project.github_url!}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className={
-                                                        secondaryButtonClass
-                                                    }
-                                                >
-                                                    <GithubIcon />
-                                                    Voir le code
-                                                </a>
-                                            ) : (
-                                                <div className="flex items-center justify-center gap-2 rounded-sm border border-slate-100 bg-slate-50/80 px-4 py-3 text-[13px] font-semibold text-slate-400 select-none">
-                                                    <GithubIcon />
-                                                    {project.private_repo
-                                                        ? 'Dépôt privé'
-                                                        : 'Non disponible'}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Glass>
+                                </div>
+                            </div>
 
-                                {/* Stack */}
-                                <Glass className="p-5">
-                                    <Eyebrow>Stack</Eyebrow>
+                            <div className="border-t border-slate-200/80 pt-6">
+                                <Eyebrow>Stack</Eyebrow>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {project.tags.map((t) => (
+                                        <span
+                                            key={t}
+                                            className={cn(
+                                                'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
+                                                TAG_COLORS[t] ?? defaultTag,
+                                            )}
+                                        >
+                                            {t}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {project.platforms?.length > 0 && (
+                                <div className="border-t border-slate-200/80 pt-6">
+                                    <Eyebrow>Distribution</Eyebrow>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {project.tags.map((t) => (
+                                        {project.platforms.map((p) => (
                                             <span
-                                                key={t}
+                                                key={p}
                                                 className={cn(
                                                     'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                                    TAG_COLORS[t] ?? defaultTag,
+                                                    PLATFORM_COLORS[p] ??
+                                                        defaultPlatform,
                                                 )}
                                             >
-                                                {t}
+                                                {p}
                                             </span>
                                         ))}
                                     </div>
-                                    {project.platforms?.length > 0 && (
-                                        <>
-                                            <div className="my-4 h-px bg-slate-100/80" />
-                                            <Eyebrow>Distribution</Eyebrow>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {project.platforms.map((p) => (
-                                                    <span
-                                                        key={p}
-                                                        className={cn(
-                                                            'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                                            PLATFORM_COLORS[
-                                                                p
-                                                            ] ??
-                                                                defaultPlatform,
-                                                        )}
-                                                    >
-                                                        {p}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </Glass>
+                                </div>
+                            )}
 
-                                {/* Links */}
-                                {allLinks.length > 0 && (
-                                    <Glass className="p-5">
-                                        <Eyebrow>Liens utiles</Eyebrow>
-                                        <div className="flex flex-col gap-1.5">
-                                            {allLinks.map((l) => (
-                                                <a
-                                                    key={l.label}
-                                                    href={l.href}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="group flex items-center justify-between rounded-sm border border-transparent px-3 py-2.5 text-[13px] font-medium text-slate-600 transition-all hover:border-slate-200/80 hover:bg-white/80 hover:text-slate-900"
-                                                >
-                                                    {l.label}
-                                                    <span className="text-slate-300 transition-colors group-hover:text-teal-600">
-                                                        {l.icon}
-                                                    </span>
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </Glass>
-                                )}
-                            </div>
+                            {allLinks.length > 0 && (
+                                <div className="border-t border-slate-200/80 pt-6">
+                                    <Eyebrow>Liens utiles</Eyebrow>
+                                    <div className="space-y-2">
+                                        {allLinks.map((l) => (
+                                            <a
+                                                key={l.label}
+                                                href={l.href}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="group flex items-center justify-between border-b border-slate-200/70 py-2.5 text-[13px] font-medium text-slate-600 transition-colors hover:text-slate-950"
+                                            >
+                                                {l.label}
+                                                <span className="text-slate-300 transition-colors group-hover:text-teal-600">
+                                                    {l.icon}
+                                                </span>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </motion.aside>
                     </div>
-                </div>
-            </div>
-
-            {/* Mobile sidebar content */}
-            <div className="border-t border-slate-200/60 bg-white/80 backdrop-blur-sm lg:hidden">
-                <div className="container-main space-y-6 py-10">
-                    <div>
-                        <Eyebrow>Stack</Eyebrow>
-                        <div className="flex flex-wrap gap-2">
-                            {project.tags.map((t) => (
-                                <span
-                                    key={t}
-                                    className={cn(
-                                        'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                        TAG_COLORS[t] ?? defaultTag,
-                                    )}
-                                >
-                                    {t}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                    {project.platforms?.length > 0 && (
-                        <div>
-                            <Eyebrow>Distribution</Eyebrow>
-                            <div className="flex flex-wrap gap-2">
-                                {project.platforms.map((p) => (
-                                    <span
-                                        key={p}
-                                        className={cn(
-                                            'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                            PLATFORM_COLORS[p] ??
-                                                defaultPlatform,
-                                        )}
-                                    >
-                                        {p}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {allLinks.length > 0 && (
-                        <div>
-                            <Eyebrow>Liens utiles</Eyebrow>
-                            <div className="flex flex-col gap-2">
-                                {allLinks.map((l) => (
-                                    <a
-                                        key={l.label}
-                                        href={l.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-center justify-between rounded-sm border border-slate-200 bg-white px-4 py-3 text-[13px] font-medium text-slate-700 transition-all hover:border-teal-200 hover:bg-teal-50/60 hover:text-teal-700"
-                                    >
-                                        {l.label}
-                                        <span className="text-slate-300">
-                                            {l.icon}
-                                        </span>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -895,54 +719,6 @@ export default function Show({ project, related }: ProjectShowProps) {
                     </div>
                 </section>
             )}
-
-            {/* ══════════════════════════════════════════════════════════
-                BOTTOM CTA — dark, with ambient glow
-            ══════════════════════════════════════════════════════════ */}
-            <section className="relative overflow-hidden border-t border-slate-200/60 bg-[#070d0a] py-20 text-center">
-                <div
-                    className="pointer-events-none absolute top-0 left-1/2 h-72 w-[500px] -translate-x-1/2 -translate-y-1/2 opacity-25 blur-[90px]"
-                    style={{ background: typeAccent.glow }}
-                />
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-[0.10]"
-                    style={{
-                        backgroundImage:
-                            'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)',
-                        backgroundSize: '32px 32px',
-                        maskImage:
-                            'radial-gradient(ellipse 70% 80% at 50% 50%, white, transparent)',
-                    }}
-                />
-
-                <div className="container-main relative z-10 max-w-lg">
-                    <span
-                        className="mb-4 inline-block text-[10px] font-black tracking-[0.28em] uppercase"
-                        style={{ color: typeAccent.color }}
-                    >
-                        Collaboration
-                    </span>
-                    <h3 className="mb-4 font-display text-3xl font-black tracking-[-0.04em] text-white sm:text-[2.6rem]">
-                        Un projet similaire
-                        <br className="hidden sm:block" /> en tête ?
-                    </h3>
-                    <p className="mb-8 text-[15px] leading-[1.8] text-white/40">
-                        Discutons ensemble de vos idées, contraintes et
-                        ambitions produit.
-                    </p>
-                    <Link
-                        href="/contact"
-                        className="inline-flex items-center gap-3 rounded-sm px-8 py-4 text-[14px] font-bold text-white transition-all"
-                        style={{
-                            background: brandTeal,
-                            boxShadow: `0 0 40px ${brandTealGlow}, 0 4px 16px rgba(0,0,0,0.3)`,
-                        }}
-                    >
-                        Discutons-en
-                    </Link>
-                </div>
-            </section>
         </MainLayout>
     );
 }
