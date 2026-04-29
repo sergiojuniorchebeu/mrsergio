@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ProjectCard } from '@/components/ui/ProjectCard';
 import { ProjectScreenshotsGallery } from '@/components/ui/ProjectScreenshotsGallery';
 import MainLayout from '@/layouts/MainLayout';
@@ -197,14 +196,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Show({ project, related }: ProjectShowProps) {
-    const heroRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: heroRef,
-        offset: ['start start', 'end start'],
-    });
-    const imgY = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
-    const heroFade = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
-
     const repoDisabled = project.private_repo || !project.github_url;
     const primaryLink = getPrimaryLink(project);
     const contentBlocks = splitContent(project.content);
@@ -273,57 +264,13 @@ export default function Show({ project, related }: ProjectShowProps) {
         <MainLayout>
             <Head title={`${project.title} — Sergio Junior Chebeu`} />
 
-            {/* ══════════════════════════════════════════════════════════
-                HERO — cinematic full-bleed parallax
-            ══════════════════════════════════════════════════════════ */}
-            <section
-                ref={heroRef}
-                className="relative h-[75vh] max-h-[740px] min-h-[500px] overflow-hidden pt-[88px]"
-            >
-                <motion.div
-                    style={{ y: imgY }}
-                    className="absolute inset-0 will-change-transform"
-                >
-                    {project.image_url ? (
-                        <img
-                            src={project.image_url}
-                            alt={project.title}
-                            className="h-[116%] w-full scale-[1.02] object-cover"
-                        />
-                    ) : (
-                        <div
-                            className="h-full w-full"
-                            style={{
-                                background: `linear-gradient(135deg, #0a1628 0%, ${brandTeal}24 50%, #0f2018 100%)`,
-                            }}
-                        />
-                    )}
-                </motion.div>
+            <section className="relative overflow-hidden border-b border-slate-200/60 bg-[#f4f0e7] pt-[104px]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(26,163,137,0.10),transparent_30%),radial-gradient(circle_at_88%_12%,rgba(15,23,42,0.06),transparent_22%)]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.18)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,white,transparent)] [background-size:34px_34px] opacity-[0.16]" />
+                <div className="pointer-events-none absolute top-24 left-[8%] h-24 w-24 rounded-full border border-teal-200/40" />
+                <div className="pointer-events-none absolute right-[10%] bottom-12 h-px w-16 bg-teal-300/60" />
 
-                {/* Multi-layer cinematic overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070d0a]/98 via-[#070d0a]/54 to-[#070d0a]/14" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#070d0a]/62 via-[#070d0a]/14 to-transparent" />
-                <div className="absolute inset-x-[5%] top-[108px] bottom-10 hidden rounded-[28px] border border-white/10 bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] lg:block" />
-                <div className="absolute inset-x-[7%] top-[132px] bottom-20 hidden border border-white/8 lg:block" />
-                <div
-                    className="absolute bottom-0 left-0 h-64 w-64 opacity-40 blur-[80px]"
-                    style={{ background: brandTealGlow }}
-                />
-                {/* Grain */}
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-[0.035]"
-                    style={{
-                        backgroundImage:
-                            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-                        backgroundSize: '256px',
-                    }}
-                />
-
-                <motion.div
-                    style={{ opacity: heroFade }}
-                    className="container-main absolute inset-x-0 bottom-0 pb-12 sm:pb-16"
-                >
+                <div className="container-main relative z-10 py-14 sm:py-16">
                     <motion.div
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -332,7 +279,7 @@ export default function Show({ project, related }: ProjectShowProps) {
                     >
                         <Link
                             href="/projects"
-                            className="group inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.18em] text-white/40 uppercase transition-colors hover:text-white"
+                            className="group inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.18em] text-slate-500 uppercase transition-colors hover:text-teal-700"
                         >
                             <ArrowL cls="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
                             Tous les projets
@@ -369,16 +316,16 @@ export default function Show({ project, related }: ProjectShowProps) {
                             ))}
                         </div>
 
-                        <h1 className="font-display text-[clamp(2.2rem,6vw,5rem)] leading-[0.95] font-black tracking-[-0.04em] text-white">
+                        <h1 className="font-display text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] font-black tracking-[-0.04em] text-slate-950">
                             {project.title}
                         </h1>
 
-                        <p className="mt-5 max-w-lg text-[15px] leading-[1.8] text-white/55 sm:text-[17px]">
+                        <p className="mt-5 max-w-2xl text-[15px] leading-[1.85] text-slate-600 sm:text-[17px]">
                             {project.description}
                         </p>
 
-                        {primaryLink && (
-                            <div className="mt-7 flex flex-wrap items-center gap-3">
+                        <div className="mt-8 flex flex-wrap items-center gap-3">
+                            {primaryLink && (
                                 <a
                                     href={primaryLink}
                                     target="_blank"
@@ -391,20 +338,21 @@ export default function Show({ project, related }: ProjectShowProps) {
                                 >
                                     {getPrimaryLabel(project)}
                                 </a>
-                                {!repoDisabled && (
-                                    <a
-                                        href={project.github_url!}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center gap-2 rounded-sm border border-teal-300/28 bg-white/10 px-5 py-2.5 text-[13px] font-semibold text-white/86 backdrop-blur-sm transition-all hover:border-teal-300/44 hover:bg-white/16 hover:text-white"
-                                    >
-                                        <GithubIcon cls="h-4 w-4" /> Code
-                                    </a>
-                                )}
-                            </div>
-                        )}
+                            )}
+                            {!repoDisabled && (
+                                <a
+                                    href={project.github_url!}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={secondaryButtonClass}
+                                >
+                                    <GithubIcon cls="h-4 w-4" />
+                                    Voir le code
+                                </a>
+                            )}
+                        </div>
                     </motion.div>
-                </motion.div>
+                </div>
             </section>
 
             {/* Mobile sticky bar */}
@@ -522,6 +470,22 @@ export default function Show({ project, related }: ProjectShowProps) {
                                     </motion.div>
                                 ))}
                             </div>
+
+                            {project.image_url && (
+                                <section className="lg:hidden">
+                                    <Eyebrow>Visuel</Eyebrow>
+                                    <Glass className="p-3">
+                                        <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-[#ebe7de]">
+                                            <img
+                                                src={project.image_url}
+                                                alt={project.title}
+                                                className="h-full w-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/12 to-transparent" />
+                                        </div>
+                                    </Glass>
+                                </section>
+                            )}
 
                             {/* Overview */}
                             <section>
