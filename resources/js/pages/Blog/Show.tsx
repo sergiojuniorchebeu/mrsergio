@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
 import MainLayout from '@/layouts/MainLayout';
 import { cn } from '@/lib/utils';
-import type { BlogShowProps } from '@/types';
+import type { BlogComment, BlogShowProps } from '@/types';
 
 // ─── Easing ───────────────────────────────────────────────────────────────────
 const expo = [0.16, 1, 0.3, 1] as const;
@@ -327,8 +327,175 @@ function RelatedCard({ post, index }: { post: any; index: number }) {
     );
 }
 
+// ─── Comments Section ─────────────────────────────────────────────────────────
+function CommentsSection({ slug, initial }: { slug: string; initial: BlogComment[] }) {
+    const [comments, setComments] = useState<BlogComment[]>(initial);
+    const [name, setName]         = useState('');
+    const [content, setContent]   = useState('');
+    const [error, setError]       = useState<string | null>(null);
+    const [sending, setSending]   = useState(false);
+    const [sent, setSent]         = useState(false);
+
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!content.trim() || sending) return;
+        setSending(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`/blog/${slug}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ author_name: name.trim() || null, content: content.trim() }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error ?? 'Une erreur est survenue.');
+            } else {
+                setComments((prev) => [data.comment, ...prev]);
+                setContent('');
+                setName('');
+                setSent(true);
+                setTimeout(() => setSent(false), 3000);
+            }
+        } catch {
+            setError('Impossible d\'envoyer le commentaire.');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    return (
+        <section className="relative overflow-hidden border-t border-[#e2e0da] bg-white py-14 sm:py-20">
+            <AnimatedGridPattern
+                numSquares={24}
+                maxOpacity={0.04}
+                duration={4.5}
+                repeatDelay={0.8}
+                className={cn(
+                    'absolute inset-0 h-full w-full text-teal-600/70',
+                    '[mask-image:radial-gradient(900px_circle_at_50%_0%,white,transparent)]',
+                )}
+            />
+            <div className="container-main relative z-10">
+                <div className="max-w-2xl">
+                    {/* Header */}
+                    <div className="mb-10 flex items-center gap-4">
+                        <div className="h-px w-12 bg-[#1aa389]" />
+                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">
+                            Discussion
+                        </span>
+                        <div className="h-px flex-1 bg-[#e2e0da]" />
+                        {comments.length > 0 && (
+                            <span className="text-[11px] font-bold tabular-nums text-[#cac7be]">
+                                {comments.length}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={submit} className="mb-12 space-y-3">
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Votre nom (facultatif)"
+                            maxLength={80}
+                            className="w-full border border-[#e2e0da] bg-white px-4 py-2.5 text-[13px] text-[#1a1916] placeholder-[#cac7be] outline-none transition-colors focus:border-[#1aa389]"
+                        />
+                        <textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder="Votre commentaire…"
+                            required
+                            maxLength={1000}
+                            rows={4}
+                            className="w-full resize-none border border-[#e2e0da] bg-white px-4 py-3 text-[13px] leading-relaxed text-[#1a1916] placeholder-[#cac7be] outline-none transition-colors focus:border-[#1aa389]"
+                        />
+
+                        {error && (
+                            <motion.p
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-[12px] font-medium text-[#e05c4a]"
+                            >
+                                {error}
+                            </motion.p>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-[#cac7be]">
+                                {content.length}/1000
+                            </span>
+                            <button
+                                type="submit"
+                                disabled={sending || !content.trim()}
+                                className={cn(
+                                    'inline-flex items-center gap-2 px-5 py-2.5 text-[12px] font-bold tracking-[0.1em] uppercase transition-all duration-200',
+                                    sending || !content.trim()
+                                        ? 'cursor-not-allowed bg-[#e2e0da] text-[#cac7be]'
+                                        : sent
+                                          ? 'bg-[#1aa389] text-white'
+                                          : 'bg-[#1a1916] text-white hover:bg-[#138770]',
+                                )}
+                            >
+                                {sent ? (
+                                    <>
+                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Envoyé
+                                    </>
+                                ) : sending ? 'Envoi…' : 'Commenter'}
+                            </button>
+                        </div>
+                    </form>
+
+                    {/* List */}
+                    {comments.length === 0 ? (
+                        <p className="text-[13px] text-[#aaa69e]">
+                            Aucun commentaire pour l'instant. Soyez le premier.
+                        </p>
+                    ) : (
+                        <div className="space-y-6">
+                            {comments.map((c) => (
+                                <motion.div
+                                    key={c.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35 }}
+                                    className="border-b border-[#e2e0da] pb-6 last:border-0"
+                                >
+                                    <div className="mb-2 flex items-center gap-3">
+                                        <div className="flex h-7 w-7 items-center justify-center bg-[#1a1916] text-[11px] font-bold text-white uppercase">
+                                            {(c.author_name ?? 'A')[0]}
+                                        </div>
+                                        <span className="text-[13px] font-bold text-[#1a1916]">
+                                            {c.author_name ?? 'Anonyme'}
+                                        </span>
+                                        <span className="text-[11px] text-[#cac7be]">{c.created_at}</span>
+                                    </div>
+                                    <p className="pl-10 text-[14px] leading-relaxed text-[#706a5f]">
+                                        {c.content}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function Show({ post, related }: BlogShowProps) {
+export default function Show({ post, related, comments }: BlogShowProps) {
     return (
         <MainLayout>
             <Head title={`${post.title} — Blog`}>
@@ -617,6 +784,9 @@ export default function Show({ post, related }: BlogShowProps) {
                     </div>
                 </section>
             )}
+
+            {/* ── Comments ──────────────────────────────────────────── */}
+            <CommentsSection slug={post.slug} initial={comments} />
 
             {/* ── Related Articles ──────────────────────────────────── */}
             {related.length > 0 && (

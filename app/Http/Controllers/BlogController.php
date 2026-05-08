@@ -70,6 +70,15 @@ class BlogController extends Controller
                 'liked' => $post->likes()->where('ip_address', request()->ip())->exists(),
             ],
             'related' => $related,
+            'comments' => $post->comments()
+                ->latest()
+                ->get()
+                ->map(fn ($c) => [
+                    'id'          => $c->id,
+                    'author_name' => $c->author_name,
+                    'content'     => $c->content,
+                    'created_at'  => $c->created_at->diffForHumans(),
+                ]),
         ]);
     }
 }

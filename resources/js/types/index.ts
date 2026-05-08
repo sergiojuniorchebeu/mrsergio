@@ -74,9 +74,17 @@ export interface BlogIndexProps {
     posts: BlogPost[];
 }
 
+export interface BlogComment {
+    id: number;
+    author_name: string | null;
+    content: string;
+    created_at: string;
+}
+
 export interface BlogShowProps {
     post: BlogPost;
     related: Omit<BlogPost, 'content' | 'featured'>[];
+    comments: BlogComment[];
 }
 
 // ── Formation ─────────────────────────────────────────────────────────────────

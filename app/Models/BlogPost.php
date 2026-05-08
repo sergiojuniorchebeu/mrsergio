@@ -52,6 +52,11 @@ class BlogPost extends Model
         return $this->hasMany(BlogPostLike::class, 'post_id');
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(BlogPostComment::class, 'post_id');
+    }
+
     // ── Scopes (même style que Project) ─────────────────────────────
     public function scopePublished(Builder $query): Builder
     {

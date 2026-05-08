@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\FormationController;
+use App\Http\Controllers\BlogCommentController;
 use App\Http\Controllers\BlogLikeController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -31,7 +32,8 @@ Route::get('/projects',                    [ProjectController::class,  'index'])
 Route::get('/projects/{project:slug}',     [ProjectController::class,  'show'])->name('projects.show');
 Route::get('/blog',                        [BlogController::class,     'index'])->name('blog.index');
 Route::get('/blog/{post:slug}',            [BlogController::class,     'show'])->name('blog.show');
-Route::post('/blog/{post:slug}/like',      [BlogLikeController::class, 'toggle'])->name('blog.like');
+Route::post('/blog/{post:slug}/like',      [BlogLikeController::class,    'toggle'])->name('blog.like');
+Route::post('/blog/{post:slug}/comments',  [BlogCommentController::class, 'store'])->name('blog.comments.store');
 Route::get('/formations',                  [FormationController::class,'index'])->name('formations.index');
 Route::get('/formations/{formation:slug}', [FormationController::class,'show'])->name('formations.show');
 Route::get('/contact',                     [ContactController::class,  'index'])->name('contact');
