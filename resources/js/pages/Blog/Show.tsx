@@ -1,7 +1,7 @@
 // resources/js/Pages/Blog/Show.tsx
 // ─── 2026 Redesign — Editorial Studio Aesthetic ──────────────────────────────
 
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -94,6 +94,68 @@ const TAG_COLORS: Record<string, string> = {
 };
 const defaultTag = 'text-[#706a5f] border-[#e2e0da] bg-[#f4f3ef]';
 const profileImageSrc = '/images/profile_avatar.jpg';
+
+// ─── Like Button ──────────────────────────────────────────────────────────────
+function LikeButton({ slug, initialCount, initialLiked }: { slug: string; initialCount: number; initialLiked: boolean }) {
+    const [liked, setLiked] = useState(initialLiked);
+    const [count, setCount] = useState(initialCount);
+    const [loading, setLoading] = useState(false);
+
+    const toggle = () => {
+        if (loading) return;
+        setLoading(true);
+        const next = !liked;
+        setLiked(next);
+        setCount((c) => (next ? c + 1 : c - 1));
+
+        fetch(`/blog/${slug}/like`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                'Accept': 'application/json',
+            },
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                setLiked(data.liked);
+                setCount(data.likes_count);
+            })
+            .catch(() => {
+                setLiked(!next);
+                setCount((c) => (next ? c - 1 : c + 1));
+            })
+            .finally(() => setLoading(false));
+    };
+
+    return (
+        <button
+            onClick={toggle}
+            disabled={loading}
+            className={cn(
+                'inline-flex items-center gap-2 border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase transition-all duration-200',
+                liked
+                    ? 'border-[#e05c4a]/30 bg-[#fef2f0] text-[#e05c4a]'
+                    : 'border-[#e2e0da] text-[#8a8479] hover:border-[#e05c4a]/40 hover:text-[#e05c4a]',
+            )}
+        >
+            <svg
+                className={cn('h-3.5 w-3.5 transition-transform duration-200', liked && 'scale-110')}
+                fill={liked ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+            >
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+            </svg>
+            {count > 0 ? count : ''}
+            {count > 0 ? ' ' : ''}J'aime
+        </button>
+    );
+}
 
 // ─── Share Button ─────────────────────────────────────────────────────────────
 function ShareButton({ url }: { url: string }) {
@@ -269,7 +331,14 @@ function RelatedCard({ post, index }: { post: any; index: number }) {
 export default function Show({ post, related }: BlogShowProps) {
     return (
         <MainLayout>
-            <Head title={`${post.title} — Blog`} />
+            <Head title={`${post.title} — Blog`}>
+                <meta property="og:title" content={`${post.title} — Blog`} />
+                <meta property="og:description" content={post.excerpt ?? ''} />
+                <meta property="og:image" content={post.cover_image_url} />
+                <meta property="og:type" content="article" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content={post.cover_image_url} />
+            </Head>
 
             {/* Reading progress */}
             <ReadingProgress />
@@ -480,7 +549,7 @@ export default function Show({ post, related }: BlogShowProps) {
                                         </ReactMarkdown>
                                     </div>
 
-                                    {/* Footer — tags + share */}
+                                    {/* Footer — tags + like + share */}
                                     <div className="mt-16 border-t border-[#e2e0da] pt-10">
                                         <div className="flex flex-wrap items-center justify-between gap-4">
                                             <div className="flex flex-wrap items-center gap-2">
@@ -503,14 +572,21 @@ export default function Show({ post, related }: BlogShowProps) {
                                                     ),
                                                 )}
                                             </div>
-                                            <ShareButton
-                                                url={
-                                                    typeof window !==
-                                                    'undefined'
-                                                        ? window.location.href
-                                                        : ''
-                                                }
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <LikeButton
+                                                    slug={post.slug}
+                                                    initialCount={post.likes_count ?? 0}
+                                                    initialLiked={post.liked ?? false}
+                                                />
+                                                <ShareButton
+                                                    url={
+                                                        typeof window !==
+                                                        'undefined'
+                                                            ? window.location.href
+                                                            : ''
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

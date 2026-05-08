@@ -66,6 +66,8 @@ export interface BlogPost {
     featured: boolean;
     published_at: string | null;
     reading_time?: string;
+    likes_count?: number;
+    liked?: boolean;
 }
 
 export interface BlogIndexProps {

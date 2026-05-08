@@ -30,14 +30,21 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'mrsergio.dev') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="Sergio Junior Chebeu — Développeur Full Stack. Laravel, React, Flutter.">
         <meta property="og:site_name" content="mrsergio.dev">
+        <meta property="og:title" content="mrsergio.dev — Sergio Junior Chebeu">
+        <meta property="og:description" content="Sergio Junior Chebeu — Développeur Full Stack. Laravel, React, Flutter.">
+        <meta property="og:image" content="{{ asset('apple-touch-icon.png') }}">
+        <meta property="og:type" content="website">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:image" content="{{ asset('apple-touch-icon.png') }}">
 
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

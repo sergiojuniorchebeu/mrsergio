@@ -66,6 +66,8 @@ class BlogController extends Controller
                 'featured' => (bool) $post->featured,
                 'published_at' => $post->published_at?->format('d M Y'),
                 'reading_time' => $post->reading_time,
+                'likes_count' => $post->likes()->count(),
+                'liked' => $post->likes()->where('ip_address', request()->ip())->exists(),
             ],
             'related' => $related,
         ]);

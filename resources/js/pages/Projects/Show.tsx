@@ -239,7 +239,14 @@ export default function Show({ project, related }: ProjectShowProps) {
 
     return (
         <MainLayout>
-            <Head title={`${project.title} — Sergio Junior Chebeu`} />
+            <Head title={`${project.title} — Sergio Junior Chebeu`}>
+                <meta property="og:title" content={`${project.title} — Sergio Junior Chebeu`} />
+                <meta property="og:description" content={project.description} />
+                <meta property="og:image" content={project.image_url} />
+                <meta property="og:type" content="website" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content={project.image_url} />
+            </Head>
 
             <section className="relative overflow-hidden border-b border-slate-200/60 bg-white pt-[104px]">
                 <AnimatedGridPattern

@@ -16,6 +16,8 @@ class Project extends Model
         $invalidate = function (Project $project): void {
             Cache::forget('home.projects');
             Cache::forget('home.projects.v2');
+            Cache::forget('home.projects.v3');
+            Cache::forget('home.projects_count');
             Cache::forget('projects.index');
             Cache::forget("projects.related.{$project->id}");
         };

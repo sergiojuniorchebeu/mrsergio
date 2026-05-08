@@ -538,7 +538,7 @@ export default function Index({ posts }: BlogIndexProps) {
 
             {/* ── Filters ──────────────────────────────────────────── */}
             {allTags.length > 0 && (
-                <div className="sticky top-[72px] z-20 border-b border-[#e2e0da] bg-[#f4f3ef]/90 backdrop-blur-sm">
+                <div className="border-b border-[#e2e0da] bg-[#f4f3ef]">
                     <div className="container-main py-4">
                         <motion.div
                             initial={{ opacity: 0 }}
