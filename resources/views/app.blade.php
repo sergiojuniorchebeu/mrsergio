@@ -30,6 +30,23 @@
             }
         </style>
 
+        {{-- Résolution des meta OG depuis les props Inertia (server-side, visible aux crawlers) --}}
+        @php
+            $props      = $page['props'] ?? [];
+            $ogImage    = $props['post']['cover_image_url']
+                       ?? $props['project']['image_url']
+                       ?? $props['formation']['cover_image_url']
+                       ?? asset('images/profile_avatar.jpg');
+            $ogTitle    = $props['post']['title']
+                       ?? $props['project']['title']
+                       ?? $props['formation']['title']
+                       ?? 'mrsergio.dev — Sergio Junior Chebeu';
+            $ogDesc     = $props['post']['excerpt']
+                       ?? $props['project']['description']
+                       ?? $props['formation']['excerpt']
+                       ?? 'Développeur Full Stack — Laravel, React, Flutter.';
+        @endphp
+
         <title inertia>{{ config('app.name', 'mrsergio.dev') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
@@ -37,14 +54,14 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="description" content="Sergio Junior Chebeu — Développeur Full Stack. Laravel, React, Flutter.">
+        <meta name="description" content="{{ $ogDesc }}">
         <meta property="og:site_name" content="mrsergio.dev">
-        <meta property="og:title" content="mrsergio.dev — Sergio Junior Chebeu">
-        <meta property="og:description" content="Sergio Junior Chebeu — Développeur Full Stack. Laravel, React, Flutter.">
-        <meta property="og:image" content="{{ asset('apple-touch-icon.png') }}">
+        <meta property="og:title" content="{{ $ogTitle }}">
+        <meta property="og:description" content="{{ $ogDesc }}">
+        <meta property="og:image" content="{{ $ogImage }}">
         <meta property="og:type" content="website">
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="{{ asset('apple-touch-icon.png') }}">
+        <meta name="twitter:image" content="{{ $ogImage }}">
 
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
