@@ -539,13 +539,21 @@ export default function Home({
                                 variants={fadeUp}
                                 className="max-w-[560px] text-[17px] leading-[1.8] text-slate-700"
                             >
-                                Je développe des solutions utiles et bien
-                                pensées pour les entreprises, les porteurs de
-                                projet et les équipes qui veulent avancer sans
-                                perdre de temps.
-                                <br className="hidden sm:block" /> Je conçois
-                                des applications web et Android claires, fiables
-                                et agréables à utiliser.
+                                Je suis Sergio Junior Chebeu, développeur full
+                                stack. J&apos;aide les entreprises, les porteurs
+                                de projet et les équipes à concevoir des
+                                applications web et Android claires, fiables et
+                                agréables à utiliser.
+                            </motion.p>
+
+                            <motion.p
+                                variants={fadeUp}
+                                className="-mt-2 max-w-[560px] text-[15px] leading-[1.75] text-slate-500"
+                            >
+                                Basé au Cameroun, je transforme des idées, des
+                                besoins métier et des produits à améliorer en
+                                solutions concrètes, solides et prêtes à être
+                                utilisées.
                             </motion.p>
 
                             {/* CTAs */}
