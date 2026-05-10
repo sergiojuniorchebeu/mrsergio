@@ -32,19 +32,31 @@
 
         {{-- Résolution des meta OG depuis les props Inertia (server-side, visible aux crawlers) --}}
         @php
-            $props      = $page['props'] ?? [];
-            $ogImage    = $props['post']['cover_image_url']
-                       ?? $props['project']['image_url']
-                       ?? $props['formation']['cover_image_url']
-                       ?? asset('images/profile_avatar.jpg');
-            $ogTitle    = $props['post']['title']
-                       ?? $props['project']['title']
-                       ?? $props['formation']['title']
-                       ?? 'mrsergio.dev — Sergio Junior Chebeu';
-            $ogDesc     = $props['post']['excerpt']
-                       ?? $props['project']['description']
-                       ?? $props['formation']['excerpt']
-                       ?? 'Développeur Full Stack — Laravel, React, Flutter.';
+            $props = $page['props'] ?? [];
+            $seo = $props['seo'] ?? [];
+            $siteName = 'mrsergio.dev';
+            $defaultTitle = 'Sergio Junior Chebeu | Développement web et Android';
+            $defaultDescription = 'Développeur full stack, je conçois des applications web et Android claires, fiables et utiles.';
+            $defaultImage = asset('images/profile_avatar.jpg');
+            $seoTitle = $seo['title']
+                ?? $props['post']['title']
+                ?? $props['project']['title']
+                ?? $props['formation']['title']
+                ?? $defaultTitle;
+            $seoDescription = $seo['description']
+                ?? $props['post']['excerpt']
+                ?? $props['project']['description']
+                ?? $props['formation']['excerpt']
+                ?? $defaultDescription;
+            $seoImage = $seo['image']
+                ?? $props['post']['cover_image_url']
+                ?? $props['project']['image_url']
+                ?? $props['formation']['cover_image_url']
+                ?? $defaultImage;
+            $seoType = $seo['type'] ?? 'website';
+            $canonical = $seo['canonical'] ?? url()->current();
+            $publishedTime = $seo['published_time'] ?? null;
+            $jsonLd = $seo['json_ld'] ?? null;
         @endphp
 
         <title inertia>{{ config('app.name', 'mrsergio.dev') }}</title>
@@ -52,16 +64,27 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="canonical" href="{{ $canonical }}">
 
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="description" content="{{ $ogDesc }}">
-        <meta property="og:site_name" content="mrsergio.dev">
-        <meta property="og:title" content="{{ $ogTitle }}">
-        <meta property="og:description" content="{{ $ogDesc }}">
-        <meta property="og:image" content="{{ $ogImage }}">
-        <meta property="og:type" content="website">
+        <meta name="description" content="{{ $seoDescription }}">
+        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+        <meta property="og:site_name" content="{{ $siteName }}">
+        <meta property="og:title" content="{{ $seoTitle }}">
+        <meta property="og:description" content="{{ $seoDescription }}">
+        <meta property="og:image" content="{{ $seoImage }}">
+        <meta property="og:url" content="{{ $canonical }}">
+        <meta property="og:type" content="{{ $seoType }}">
+        <meta name="twitter:title" content="{{ $seoTitle }}">
+        <meta name="twitter:description" content="{{ $seoDescription }}">
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="{{ $ogImage }}">
+        <meta name="twitter:image" content="{{ $seoImage }}">
+        @if ($publishedTime)
+        <meta property="article:published_time" content="{{ $publishedTime }}">
+        @endif
+        @if ($jsonLd)
+        <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        @endif
 
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

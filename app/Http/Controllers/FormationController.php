@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/FormationController.php
 
 namespace App\Http\Controllers;
@@ -16,12 +17,28 @@ class FormationController extends Controller
             return Formation::published()
                 ->ordered()
                 ->get()
-                ->map(fn($f) => $this->formatFormation($f));
+                ->map(fn ($f) => $this->formatFormation($f));
         });
 
         $categories = $formations->pluck('category')->unique()->values()->toArray();
 
-        return Inertia::render('formations/FormationsIndex', compact('formations', 'categories'));
+        return Inertia::render('formations/FormationsIndex', [
+            'formations' => $formations,
+            'categories' => $categories,
+            'seo' => [
+                'title' => 'Formations | Sergio Junior Chebeu',
+                'description' => 'Des formations pratiques en développement web et mobile pour apprendre Laravel, Flutter, Python et Java avec une approche orientée résultat.',
+                'image' => asset('images/profile_avatar.jpg'),
+                'type' => 'website',
+                'canonical' => route('formations.index'),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'ItemList',
+                    'name' => 'Formations de Sergio Junior Chebeu',
+                    'url' => route('formations.index'),
+                ],
+            ],
+        ]);
     }
 
     public function show(Formation $formation): Response
@@ -38,7 +55,7 @@ class FormationController extends Controller
 
             // Compléter si pas assez
             if ($related->count() < 3) {
-                $ids  = $related->pluck('id')->push($formation->id);
+                $ids = $related->pluck('id')->push($formation->id);
                 $more = Formation::published()
                     ->whereNotIn('id', $ids)
                     ->take(3 - $related->count())
@@ -46,34 +63,53 @@ class FormationController extends Controller
                 $related = $related->merge($more);
             }
 
-            return $related->map(fn($f) => $this->formatFormation($f));
+            return $related->map(fn ($f) => $this->formatFormation($f));
         });
 
         return Inertia::render('formations/FormationsShow', [
             'formation' => $this->formatFormation($formation, true),
-            'related'   => $related,
+            'related' => $related,
+            'seo' => [
+                'title' => $formation->title.' | Formation',
+                'description' => $formation->excerpt,
+                'image' => $formation->cover_image_url,
+                'type' => 'article',
+                'canonical' => route('formations.show', $formation),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Course',
+                    'name' => $formation->title,
+                    'description' => $formation->excerpt,
+                    'provider' => [
+                        '@type' => 'Person',
+                        'name' => 'Sergio Junior Chebeu',
+                    ],
+                    'image' => [$formation->cover_image_url],
+                    'url' => route('formations.show', $formation),
+                ],
+            ],
         ]);
     }
 
     private function formatFormation(Formation $f, bool $withContent = false): array
     {
         $data = [
-            'id'                 => $f->id,
-            'title'              => $f->title,
-            'slug'               => $f->slug,
-            'excerpt'            => $f->excerpt,
-            'category'           => $f->category,
-            'tags'               => $f->tags ?? [],
-            'level'              => $f->level,
-            'level_color'        => $f->level_color,
-            'language'           => $f->language,
-            'duration_hours'     => $f->duration_hours,
+            'id' => $f->id,
+            'title' => $f->title,
+            'slug' => $f->slug,
+            'excerpt' => $f->excerpt,
+            'category' => $f->category,
+            'tags' => $f->tags ?? [],
+            'level' => $f->level,
+            'level_color' => $f->level_color,
+            'language' => $f->language,
+            'duration_hours' => $f->duration_hours,
             'duration_formatted' => $f->duration_formatted,
-            'lessons_count'      => $f->lessons_count,
-            'is_free'            => $f->is_free,
-            'price_formatted'    => $f->price_formatted,
-            'featured'           => $f->featured,
-            'cover_image_url'    => $f->cover_image_url,
+            'lessons_count' => $f->lessons_count,
+            'is_free' => $f->is_free,
+            'price_formatted' => $f->price_formatted,
+            'featured' => $f->featured,
+            'cover_image_url' => $f->cover_image_url,
         ];
 
         if ($withContent) {

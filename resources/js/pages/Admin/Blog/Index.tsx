@@ -8,16 +8,17 @@ import { cn }                 from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Post {
-    id:           number;
-    title:        string;
-    slug:         string;
-    excerpt:      string;
-    tags:         string[];
-    featured:     boolean;
-    published:    boolean;
-    cover_image:  string | null;
-    published_at: string | null;
-    created_at:   string;
+    id:             number;
+    title:          string;
+    slug:           string;
+    excerpt:        string;
+    tags:           string[];
+    featured:       boolean;
+    published:      boolean;
+    cover_image:    string | null;
+    published_at:   string | null;
+    created_at:     string;
+    comments_count: number;
 }
 
 // ─── Icônes inline ────────────────────────────────────────────────────────────
@@ -53,6 +54,11 @@ const Ico = {
     Star: () => (
         <svg width="11" height="11" viewBox="0 0 11 11" fill="currentColor" aria-hidden>
             <path d="M5.5 1l1.26 2.55 2.82.41-2.04 1.99.48 2.8L5.5 7.47 2.98 8.75l.48-2.8L1.42 3.96l2.82-.41z"/>
+        </svg>
+    ),
+    Chat: () => (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden>
+            <path d="M2 2.5h10a.5.5 0 01.5.5v6a.5.5 0 01-.5.5H4.5L2 11.5V3a.5.5 0 01.5-.5z" strokeLinejoin="round"/>
         </svg>
     ),
 }
@@ -271,21 +277,34 @@ export default function BlogIndex({ posts }: { posts: Post[] }) {
 
                                         {/* Actions */}
                                         <td className="px-4 py-3.5">
-                                            <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                            <div className="flex items-center gap-1 justify-end">
+                                                {/* Badge commentaires */}
                                                 <Link
-                                                    href={`/admin/blog/${p.id}/edit`}
-                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all duration-150"
-                                                    title="Modifier"
+                                                    href={`/admin/blog/${p.id}/comments`}
+                                                    className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
+                                                    title="Voir les commentaires"
                                                 >
-                                                    <Ico.Edit/>
+                                                    <Ico.Chat/>
+                                                    {p.comments_count > 0 && (
+                                                        <span>{p.comments_count}</span>
+                                                    )}
                                                 </Link>
-                                                <button
-                                                    onClick={() => setDeleteTarget(p)}
-                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
-                                                    title="Supprimer"
-                                                >
-                                                    <Ico.Trash/>
-                                                </button>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                    <Link
+                                                        href={`/admin/blog/${p.id}/edit`}
+                                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all duration-150"
+                                                        title="Modifier"
+                                                    >
+                                                        <Ico.Edit/>
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => setDeleteTarget(p)}
+                                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+                                                        title="Supprimer"
+                                                    >
+                                                        <Ico.Trash/>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     </motion.tr>

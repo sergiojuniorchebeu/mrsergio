@@ -37,6 +37,20 @@ class ProjectController extends Controller
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
+            'seo' => [
+                'title' => 'Projets | Sergio Junior Chebeu',
+                'description' => 'Une sélection de projets web, mobile et produit pensés pour être utiles, performants et agréables à utiliser.',
+                'image' => asset('images/profile_avatar.jpg'),
+                'type' => 'website',
+                'canonical' => route('projects.index'),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'CollectionPage',
+                    'name' => 'Projets de Sergio Junior Chebeu',
+                    'url' => route('projects.index'),
+                    'description' => 'Études de cas, applications web et produits digitaux réalisés par Sergio Junior Chebeu.',
+                ],
+            ],
         ]);
     }
 
@@ -92,6 +106,25 @@ class ProjectController extends Controller
                 'created_at' => $project->created_at->format('d/m/Y'),
             ],
             'related' => $related,
+            'seo' => [
+                'title' => $project->title.' | Projet',
+                'description' => $project->description,
+                'image' => $project->image_url,
+                'type' => 'article',
+                'canonical' => route('projects.show', $project),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'CreativeWork',
+                    'name' => $project->title,
+                    'description' => $project->description,
+                    'image' => [$project->image_url],
+                    'url' => route('projects.show', $project),
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => 'Sergio Junior Chebeu',
+                    ],
+                ],
+            ],
         ]);
     }
 }

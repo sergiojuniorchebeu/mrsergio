@@ -1,7 +1,7 @@
 // resources/js/Pages/Blog/Show.tsx
 // ─── 2026 Redesign — Editorial Studio Aesthetic ──────────────────────────────
 
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -329,12 +329,30 @@ function RelatedCard({ post, index }: { post: any; index: number }) {
 
 // ─── Comments Section ─────────────────────────────────────────────────────────
 function CommentsSection({ slug, initial }: { slug: string; initial: BlogComment[] }) {
+    const { auth } = usePage<{ auth: { user: { is_admin: boolean } | null } }>().props;
+    const isAdmin = auth?.user?.is_admin ?? false;
     const [comments, setComments] = useState<BlogComment[]>(initial);
     const [name, setName]         = useState('');
     const [content, setContent]   = useState('');
     const [error, setError]       = useState<string | null>(null);
     const [sending, setSending]   = useState(false);
     const [sent, setSent]         = useState(false);
+
+    const deleteComment = async (id: number) => {
+        if (!confirm('Supprimer ce commentaire ?')) return;
+        try {
+            await fetch(`/admin/blog-comments/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'Accept': 'application/json',
+                },
+            });
+            setComments((prev) => prev.filter((c) => c.id !== id));
+        } catch {
+            // silently fail
+        }
+    };
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -473,13 +491,24 @@ function CommentsSection({ slug, initial }: { slug: string; initial: BlogComment
                                     className="border-b border-[#e2e0da] pb-6 last:border-0"
                                 >
                                     <div className="mb-2 flex items-center gap-3">
-                                        <div className="flex h-7 w-7 items-center justify-center bg-[#1a1916] text-[11px] font-bold text-white uppercase">
+                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-[#1a1916] text-[11px] font-bold text-white uppercase">
                                             {(c.author_name ?? 'A')[0]}
                                         </div>
                                         <span className="text-[13px] font-bold text-[#1a1916]">
                                             {c.author_name ?? 'Anonyme'}
                                         </span>
                                         <span className="text-[11px] text-[#cac7be]">{c.created_at}</span>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => deleteComment(c.id)}
+                                                className="ml-auto text-[#cac7be] transition-colors hover:text-[#e05c4a]"
+                                                title="Supprimer"
+                                            >
+                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
                                     <p className="pl-10 text-[14px] leading-relaxed text-[#706a5f]">
                                         {c.content}

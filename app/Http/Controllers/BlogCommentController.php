@@ -21,7 +21,7 @@ class BlogCommentController extends Controller
 
         $request->validate([
             'author_name' => ['nullable', 'string', 'max:80'],
-            'content'     => ['required', 'string', 'min:3', 'max:1000'],
+            'content' => ['required', 'string', 'min:3', 'max:1000'],
         ]);
 
         $ip = $request->ip();
@@ -47,19 +47,26 @@ class BlogCommentController extends Controller
         }
 
         $comment = BlogPostComment::create([
-            'post_id'     => $post->id,
+            'post_id' => $post->id,
             'author_name' => $request->author_name ?: null,
-            'content'     => $request->content,
-            'ip_address'  => $ip,
+            'content' => $request->content,
+            'ip_address' => $ip,
         ]);
 
         return response()->json([
             'comment' => [
-                'id'          => $comment->id,
+                'id' => $comment->id,
                 'author_name' => $comment->author_name,
-                'content'     => $comment->content,
-                'created_at'  => 'À l\'instant',
+                'content' => $comment->content,
+                'created_at' => 'À l\'instant',
             ],
         ], 201);
+    }
+
+    public function destroy(BlogPostComment $comment): JsonResponse
+    {
+        $comment->delete();
+
+        return response()->json(['deleted' => $comment->id]);
     }
 }

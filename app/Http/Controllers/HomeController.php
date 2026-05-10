@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
     private const HOME_PROJECTS_CACHE_KEY = 'home.projects.v3';
 
-    public function index()
+    public function index(): Response
     {
         $projects = Cache::remember(self::HOME_PROJECTS_CACHE_KEY, 600, function () {
             return \App\Models\Project::published()
@@ -84,6 +85,22 @@ class HomeController extends Controller
             'posts' => $posts,
             'formations' => $formations,
             'projectsCount' => $projectsCount,
+            'seo' => [
+                'title' => 'Sergio Junior Chebeu | Développement web et Android',
+                'description' => 'Développeur full stack, je conçois des applications web et Android claires, fiables et utiles pour les entreprises, startups et porteurs de projet.',
+                'image' => asset('images/profile_avatar.jpg'),
+                'type' => 'website',
+                'canonical' => route('home'),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Person',
+                    'name' => 'Sergio Junior Chebeu',
+                    'url' => route('home'),
+                    'image' => asset('images/profile_avatar.jpg'),
+                    'jobTitle' => 'Développeur Full Stack',
+                    'knowsAbout' => ['Laravel', 'React', 'Flutter', 'Android', 'Développement web'],
+                ],
+            ],
         ]);
     }
 }

@@ -30,7 +30,23 @@ class BlogController extends Controller
                 ]);
         });
 
-        return Inertia::render('Blog/Index', compact('posts'));
+        return Inertia::render('Blog/Index', [
+            'posts' => $posts,
+            'seo' => [
+                'title' => 'Blog | Sergio Junior Chebeu',
+                'description' => 'Des articles sur le développement web, Laravel, Flutter, architecture produit et les choix qui rendent une application plus claire et plus robuste.',
+                'image' => asset('images/profile_avatar.jpg'),
+                'type' => 'website',
+                'canonical' => route('blog.index'),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Blog',
+                    'name' => 'Blog de Sergio Junior Chebeu',
+                    'url' => route('blog.index'),
+                    'description' => 'Articles sur le développement web, mobile et produit.',
+                ],
+            ],
+        ]);
     }
 
     public function show(BlogPost $post): Response
@@ -74,11 +90,37 @@ class BlogController extends Controller
                 ->latest()
                 ->get()
                 ->map(fn ($c) => [
-                    'id'          => $c->id,
+                    'id' => $c->id,
                     'author_name' => $c->author_name,
-                    'content'     => $c->content,
-                    'created_at'  => $c->created_at->diffForHumans(),
+                    'content' => $c->content,
+                    'created_at' => $c->created_at->diffForHumans(),
                 ]),
+            'seo' => [
+                'title' => $post->title.' | Blog',
+                'description' => $post->excerpt,
+                'image' => $post->cover_image_url,
+                'type' => 'article',
+                'canonical' => route('blog.show', $post),
+                'published_time' => $post->published_at?->toIso8601String(),
+                'json_ld' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'BlogPosting',
+                    'headline' => $post->title,
+                    'description' => $post->excerpt,
+                    'image' => [$post->cover_image_url],
+                    'datePublished' => $post->published_at?->toIso8601String(),
+                    'dateModified' => $post->updated_at?->toIso8601String(),
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => 'Sergio Junior Chebeu',
+                    ],
+                    'publisher' => [
+                        '@type' => 'Person',
+                        'name' => 'Sergio Junior Chebeu',
+                    ],
+                    'mainEntityOfPage' => route('blog.show', $post),
+                ],
+            ],
         ]);
     }
 }

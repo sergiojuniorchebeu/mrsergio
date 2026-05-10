@@ -12,7 +12,15 @@ class ContactController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Contact');
+        return Inertia::render('Contact', [
+            'seo' => [
+                'title' => 'Contact | Sergio Junior Chebeu',
+                'description' => 'Parlons de votre projet web, mobile ou produit digital. Je réponds aux demandes sérieuses de création, refonte et accompagnement technique.',
+                'image' => asset('images/profile_avatar.jpg'),
+                'type' => 'website',
+                'canonical' => route('contact'),
+            ],
+        ]);
     }
 
     public function send(StoreContactRequest $request): RedirectResponse

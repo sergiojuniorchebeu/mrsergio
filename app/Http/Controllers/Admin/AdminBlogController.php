@@ -1,14 +1,15 @@
 <?php
+
 // app/Http/Controllers/Admin/AdminBlogController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +18,28 @@ class AdminBlogController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Blog/Index', [
-            'posts' => BlogPost::orderByDesc('created_at')->get(),
+            'posts' => BlogPost::withCount('comments')->orderByDesc('created_at')->get(),
+        ]);
+    }
+
+    public function comments(BlogPost $blog): Response
+    {
+        return Inertia::render('Admin/Blog/Comments', [
+            'post' => [
+                'id' => $blog->id,
+                'title' => $blog->title,
+                'slug' => $blog->slug,
+            ],
+            'comments' => $blog->comments()
+                ->latest()
+                ->get()
+                ->map(fn ($c) => [
+                    'id' => $c->id,
+                    'author_name' => $c->author_name,
+                    'content' => $c->content,
+                    'ip_address' => $c->ip_address,
+                    'created_at' => $c->created_at->format('d/m/Y à H:i'),
+                ]),
         ]);
     }
 
@@ -38,7 +60,7 @@ class AdminBlogController extends Controller
 
         $data['slug'] = Str::slug($data['title']);
 
-        if (!empty($data['published']) && empty($data['published_at'])) {
+        if (! empty($data['published']) && empty($data['published_at'])) {
             $data['published_at'] = now();
         }
 
@@ -72,7 +94,7 @@ class AdminBlogController extends Controller
 
         $data['slug'] = Str::slug($data['title']);
 
-        if (!empty($data['published']) && empty($blog->published_at) && empty($data['published_at'])) {
+        if (! empty($data['published']) && empty($blog->published_at) && empty($data['published_at'])) {
             $data['published_at'] = now();
         }
 
@@ -98,21 +120,22 @@ class AdminBlogController extends Controller
     public function togglePublished(Request $request, BlogPost $blog): RedirectResponse
     {
         $blog->update(['published' => $request->boolean('published')]);
+
         return back();
     }
 
     private function validatePost(Request $request, ?int $ignoreId = null): array
     {
         return $request->validate([
-            'title'        => ['required', 'string', 'max:200'],
-            'excerpt'      => ['required', 'string', 'max:500'],
-            'content'      => ['nullable', 'string'],
-            'tags'         => ['nullable', 'array'],
-            'tags.*'       => ['string'],
-            'featured'     => ['nullable', 'boolean'],
-            'published'    => ['nullable', 'boolean'],
+            'title' => ['required', 'string', 'max:200'],
+            'excerpt' => ['required', 'string', 'max:500'],
+            'content' => ['nullable', 'string'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string'],
+            'featured' => ['nullable', 'boolean'],
+            'published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
-            'cover_image'  => ['nullable', 'image', 'max:2048'],
+            'cover_image' => ['nullable', 'image', 'max:2048'],
         ]);
     }
 }
