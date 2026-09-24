@@ -111,6 +111,7 @@ function LogoMark({ size = 26 }: { size?: number }) {
 export default function MainLayout({ children }: Props) {
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [hostingLogoFailed, setHostingLogoFailed] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const closeMenu = () => setMenuOpen(false);
 
@@ -311,37 +312,6 @@ export default function MainLayout({ children }: Props) {
                     </span>
                 </div>
                 <div className="container-main py-16 sm:py-20">
-                    <div className="border-b border-white/[0.08] pb-12 sm:pb-14">
-                        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.75fr)] lg:items-end">
-                            <div className="max-w-2xl">
-                                <p className="mb-4 text-[11px] font-semibold tracking-[0.22em] text-teal-400/90 uppercase">
-                                    Signature
-                                </p>
-                                <h2 className="max-w-xl font-display text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
-                                    J&apos;aide a transformer des idees floues
-                                    en produits solides.
-                                </h2>
-                                <p className="mt-5 max-w-lg text-[15px] leading-7 text-white/46">
-                                    Developpeur full stack, j&apos;aime les
-                                    interfaces nettes, les architectures simples
-                                    et les experiences qui restent lisibles
-                                    longtemps apres le lancement.
-                                </p>
-                            </div>
-                            <div className="max-w-sm lg:justify-self-end">
-                                <p className="text-[11px] font-semibold tracking-[0.18em] text-white/26 uppercase">
-                                    Contact
-                                </p>
-                                <a
-                                    href="mailto:contact@mrsergio.dev"
-                                    className="mt-4 inline-flex text-[15px] text-white/68 transition-colors duration-200 hover:text-white"
-                                >
-                                    contact@mrsergio.dev
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
                     <div className="grid gap-10 border-b border-white/[0.08] py-10 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] sm:py-12 lg:grid-cols-[minmax(0,1.1fr)_220px_260px]">
                         <div className="max-w-md">
                             <Link
@@ -423,7 +393,7 @@ export default function MainLayout({ children }: Props) {
                             © {new Date().getFullYear()} Sergio Junior Chebeu —
                             Tous droits reserves.
                         </p>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
                             <span>
                                 Base au Cameroun • Disponible a distance
                             </span>
@@ -431,13 +401,33 @@ export default function MainLayout({ children }: Props) {
                                 href="https://www.kennhosting.com"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center font-medium text-white transition-colors duration-200 hover:text-teal-100"
+                                aria-label="Site hébergé par KennHosting"
+                                className="group inline-flex w-fit items-center gap-2.5 border border-white/[0.12] bg-white/[0.035] px-3 py-2 text-left transition-colors duration-200 hover:border-teal-400/40 hover:bg-teal-400/[0.06]"
                             >
-                                <RevealText
-                                    text="Heberge chez KennHosting"
-                                    duration={0.65}
-                                    className="inline-block"
-                                />
+                                <span className="flex h-7 w-7 items-center justify-center overflow-hidden border border-teal-400/35 text-[10px] font-black tracking-[-0.08em] text-teal-300 transition-colors group-hover:border-teal-300 group-hover:text-teal-200">
+                                    {hostingLogoFailed ? (
+                                        'KH'
+                                    ) : (
+                                        <img
+                                            src="https://www.kennhosting.com/favicon.ico"
+                                            alt=""
+                                            className="h-full w-full object-contain p-1"
+                                            onError={() =>
+                                                setHostingLogoFailed(true)
+                                            }
+                                        />
+                                    )}
+                                </span>
+                                <span className="flex flex-col gap-0.5 leading-none">
+                                    <span className="text-[9px] font-semibold tracking-[0.16em] text-white/30 uppercase">
+                                        Hébergé par
+                                    </span>
+                                    <RevealText
+                                        text="KennHosting"
+                                        duration={0.65}
+                                        className="text-[12px] font-semibold tracking-tight text-white/75 transition-colors group-hover:text-white"
+                                    />
+                                </span>
                             </a>
                         </div>
                     </div>

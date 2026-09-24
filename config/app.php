@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'mrsergio.dev'),
+    'name' => env('APP_NAME', 'Mr Sergio'),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://mrsergio.dev'),
 
     /*
     |--------------------------------------------------------------------------

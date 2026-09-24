@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
 class Formation extends Model
@@ -29,6 +30,8 @@ class Formation extends Model
         'title', 'slug', 'excerpt', 'content',
         'cover_image', 'preview_video_url',
         'category', 'tags', 'level', 'language',
+        'format', 'target_audience', 'prerequisites', 'outcomes',
+        'cta_label', 'cta_url',
         'duration_hours', 'lessons_count', 'students_count',
         'is_free', 'price', 'currency',
         'featured', 'published', 'published_at', 'sort_order',
@@ -36,6 +39,7 @@ class Formation extends Model
 
     protected $casts = [
         'tags' => 'array',
+        'outcomes' => 'array',
         'featured' => 'boolean',
         'published' => 'boolean',
         'is_free' => 'boolean',
@@ -62,6 +66,11 @@ class Formation extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderByDesc('created_at');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(FormationEnrollment::class);
     }
 
     // ── Accessors ─────────────────────────────────────────────────────────

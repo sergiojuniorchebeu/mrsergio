@@ -118,14 +118,17 @@ const AppleIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
     </svg>
 );
 const PlayStoreIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg viewBox="0 0 24 24" className={cls} fill="currentColor" aria-hidden>
-        <path d="M4.8 3.5c-.24.24-.38.6-.38 1.07v14.86c0 .47.14.83.38 1.07l8.24-8.5L4.8 3.5Z" />
-        <path d="M15.98 9.84 6.7 4.45l7.13 7.35 2.15-1.96Z" opacity="0.82" />
+    <svg viewBox="0 0 24 24" className={cls} aria-hidden>
         <path
-            d="M18.7 11.46c.82.45.82 1.18 0 1.63l-2.57 1.42-2.3-2.38 2.3-2.1 2.57 1.43Z"
-            opacity="0.92"
+            fill="#00d7ff"
+            d="M4.8 3.5c-.24.24-.38.6-.38 1.07v14.86c0 .47.14.83.38 1.07l8.24-8.5L4.8 3.5Z"
         />
-        <path d="m6.7 19.55 9.28-5.4-2.15-1.96-7.13 7.36Z" opacity="0.72" />
+        <path fill="#00ef78" d="m6.7 4.45 9.28 5.39-2.15 1.96L6.7 4.45Z" />
+        <path fill="#ffcf3f" d="m6.7 19.55 9.28-5.4-2.15-1.96-7.13 7.36Z" />
+        <path
+            fill="#ff4b55"
+            d="M18.7 11.46c.82.45.82 1.18 0 1.63l-2.57 1.42-2.3-2.38 2.3-2.1 2.57 1.43Z"
+        />
     </svg>
 );
 
@@ -136,29 +139,75 @@ function splitContent(c?: string) {
         .map((p) => p.trim())
         .filter(Boolean);
 }
-function getPrimaryLink(p: ProjectShowProps['project']) {
-    if (p.project_type === 'mobile')
-        return (
-            p.store_links?.play_store ??
-            p.store_links?.app_store ??
-            p.demo_url ??
-            null
-        );
-    if (p.project_type === 'desktop')
-        return (
-            p.store_links?.windows ?? p.store_links?.macos ?? p.demo_url ?? null
-        );
-    if (p.project_type === 'api')
-        return (
-            p.store_links?.docs ?? p.store_links?.base_url ?? p.demo_url ?? null
-        );
-    return p.demo_url ?? null;
-}
-function getPrimaryLabel(p: ProjectShowProps['project']) {
-    if (p.project_type === 'mobile') return 'Ouvrir le produit';
-    if (p.project_type === 'desktop') return 'Voir le logiciel';
-    if (p.project_type === 'api') return 'Explorer la base';
-    return 'Voir la démo';
+type ProjectAction = {
+    href: string;
+    label: string;
+    icon: React.ReactNode;
+};
+
+function getProjectActions(p: ProjectShowProps['project']): ProjectAction[] {
+    const links = p.store_links ?? {};
+
+    if (p.project_type === 'mobile') {
+        return [
+            links.app_store && {
+                href: links.app_store,
+                label: 'App Store',
+                icon: <AppleIcon />,
+            },
+            links.play_store && {
+                href: links.play_store,
+                label: 'Google Play',
+                icon: <PlayStoreIcon />,
+            },
+        ].filter(Boolean) as ProjectAction[];
+    }
+
+    if (p.project_type === 'desktop') {
+        const downloads = [
+            links.windows && {
+                href: links.windows,
+                label: 'Télécharger Windows',
+                icon: <ExtIcon />,
+            },
+            links.macos && {
+                href: links.macos,
+                label: 'Télécharger macOS',
+                icon: <AppleIcon />,
+            },
+            links.linux && {
+                href: links.linux,
+                label: 'Télécharger Linux',
+                icon: <ExtIcon />,
+            },
+        ].filter(Boolean) as ProjectAction[];
+
+        return downloads.length > 0
+            ? downloads
+            : p.demo_url
+              ? [
+                    {
+                        href: p.demo_url,
+                        label: "Télécharger l'application",
+                        icon: <ExtIcon />,
+                    },
+                ]
+              : [];
+    }
+
+    if (p.project_type === 'api') {
+        return [
+            (links.docs ?? p.demo_url) && {
+                href: links.docs ?? p.demo_url!,
+                label: 'Ouvrir la documentation',
+                icon: <ExtIcon />,
+            },
+        ].filter(Boolean) as ProjectAction[];
+    }
+
+    return p.demo_url
+        ? [{ href: p.demo_url, label: 'Ouvrir le site web', icon: <ExtIcon /> }]
+        : [];
 }
 
 // ─── Eyebrow ──────────────────────────────────────────────────────────────────
@@ -174,7 +223,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Show({ project, related }: ProjectShowProps) {
     const repoDisabled = project.private_repo || !project.github_url;
-    const primaryLink = getPrimaryLink(project);
+    const projectActions = getProjectActions(project);
     const contentBlocks = splitContent(project.content);
     const screenshots = project.screenshots?.length ?? 0;
     const brandTeal = '#1aa389';
@@ -231,16 +280,15 @@ export default function Show({ project, related }: ProjectShowProps) {
             label: 'Base URL',
             icon: <ExtIcon />,
         },
-    ].filter(Boolean) as {
-        href: string;
-        label: string;
-        icon: React.ReactNode;
-    }[];
+    ].filter(Boolean) as ProjectAction[];
 
     return (
         <MainLayout>
             <Head title={`${project.title} — Sergio Junior Chebeu`}>
-                <meta property="og:title" content={`${project.title} — Sergio Junior Chebeu`} />
+                <meta
+                    property="og:title"
+                    content={`${project.title} — Sergio Junior Chebeu`}
+                />
                 <meta property="og:description" content={project.description} />
                 <meta property="og:image" content={project.image_url} />
                 <meta property="og:type" content="website" />
@@ -319,20 +367,30 @@ export default function Show({ project, related }: ProjectShowProps) {
                         </p>
 
                         <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-200/70 pt-6">
-                            {primaryLink && (
+                            {projectActions.map((action, index) => (
                                 <a
-                                    href={primaryLink}
+                                    key={action.label}
+                                    href={action.href}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={primaryButtonClass}
-                                    style={{
-                                        background: brandTeal,
-                                        boxShadow: `0 0 24px ${brandTealGlow}`,
-                                    }}
+                                    className={
+                                        index === 0
+                                            ? primaryButtonClass
+                                            : secondaryButtonClass
+                                    }
+                                    style={
+                                        index === 0
+                                            ? {
+                                                  background: brandTeal,
+                                                  boxShadow: `0 0 24px ${brandTealGlow}`,
+                                              }
+                                            : undefined
+                                    }
                                 >
-                                    {getPrimaryLabel(project)}
+                                    {action.icon}
+                                    {action.label}
                                 </a>
-                            )}
+                            ))}
                             {!repoDisabled && (
                                 <a
                                     href={project.github_url!}
@@ -350,25 +408,35 @@ export default function Show({ project, related }: ProjectShowProps) {
             </section>
 
             {/* Mobile sticky bar */}
-            {(primaryLink || !repoDisabled) && (
+            {(projectActions.length > 0 || !repoDisabled) && (
                 <motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="sticky top-[56px] z-30 border-b border-white/40 bg-white/80 backdrop-blur-lg lg:hidden"
                 >
-                    <div className="container-main flex gap-3 py-3">
-                        {primaryLink && (
+                    <div className="container-main flex flex-wrap gap-3 py-3">
+                        {projectActions.map((action, index) => (
                             <a
-                                href={primaryLink}
+                                key={action.label}
+                                href={action.href}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-[13px] font-bold text-white transition-colors"
-                                style={{ background: brandTeal }}
+                                className={
+                                    index === 0
+                                        ? 'flex min-w-0 flex-1 items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-[13px] font-bold text-white transition-colors'
+                                        : 'flex min-w-0 flex-1 items-center justify-center gap-2 rounded-sm border border-teal-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-teal-700 transition-colors hover:bg-teal-50/70'
+                                }
+                                style={
+                                    index === 0
+                                        ? { background: brandTeal }
+                                        : undefined
+                                }
                             >
-                                {getPrimaryLabel(project)}
+                                {action.icon}
+                                <span className="truncate">{action.label}</span>
                             </a>
-                        )}
+                        ))}
                         {!repoDisabled && (
                             <a
                                 href={project.github_url!}
@@ -571,20 +639,31 @@ export default function Show({ project, related }: ProjectShowProps) {
                             <div className="border-t border-slate-200/80 pt-6">
                                 <Eyebrow>Actions</Eyebrow>
                                 <div className="space-y-2.5">
-                                    {primaryLink && (
+                                    {projectActions.map((action, index) => (
                                         <a
-                                            href={primaryLink}
+                                            key={action.label}
+                                            href={action.href}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className={primaryButtonClass}
-                                            style={{
-                                                background: brandTeal,
-                                                boxShadow: `0 4px 20px ${brandTealGlow}`,
-                                            }}
+                                            className={cn(
+                                                'w-full',
+                                                index === 0
+                                                    ? primaryButtonClass
+                                                    : secondaryButtonClass,
+                                            )}
+                                            style={
+                                                index === 0
+                                                    ? {
+                                                          background: brandTeal,
+                                                          boxShadow: `0 4px 20px ${brandTealGlow}`,
+                                                      }
+                                                    : undefined
+                                            }
                                         >
-                                            {getPrimaryLabel(project)}
+                                            {action.icon}
+                                            {action.label}
                                         </a>
-                                    )}
+                                    ))}
                                     {!repoDisabled ? (
                                         <a
                                             href={project.github_url!}

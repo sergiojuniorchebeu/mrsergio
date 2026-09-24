@@ -22,6 +22,12 @@ interface Formation {
     tags: string[];
     level: string;
     language: string;
+    format: string;
+    target_audience: string | null;
+    prerequisites: string | null;
+    outcomes: string[];
+    cta_label: string | null;
+    cta_url: string | null;
     duration_hours: number;
     lessons_count: number;
     is_free: boolean;
@@ -63,6 +69,12 @@ export default function FormationForm({
         tags: formation?.tags ?? ([] as string[]),
         level: formation?.level ?? 'débutant',
         language: formation?.language ?? 'Français',
+        format: formation?.format ?? 'Cours en ligne',
+        target_audience: formation?.target_audience ?? '',
+        prerequisites: formation?.prerequisites ?? '',
+        outcomes: formation?.outcomes ?? [],
+        cta_label: formation?.cta_label ?? 'Demander cette formation',
+        cta_url: formation?.cta_url ?? '',
         duration_hours: formation?.duration_hours ?? 10,
         lessons_count: formation?.lessons_count ?? 20,
         is_free: formation?.is_free ?? false,
@@ -95,6 +107,14 @@ export default function FormationForm({
         formData.append('category', values.category);
         formData.append('level', values.level);
         formData.append('language', values.language);
+        formData.append('format', values.format);
+        formData.append('target_audience', values.target_audience ?? '');
+        formData.append('prerequisites', values.prerequisites ?? '');
+        values.outcomes.forEach((outcome) =>
+            formData.append('outcomes[]', outcome),
+        );
+        formData.append('cta_label', values.cta_label ?? '');
+        formData.append('cta_url', values.cta_url ?? '');
         formData.append('duration_hours', String(values.duration_hours));
         formData.append('lessons_count', String(values.lessons_count));
         formData.append('is_free', values.is_free ? '1' : '0');
@@ -111,10 +131,13 @@ export default function FormationForm({
             : '/admin/formations';
 
         router.post(url, formData as any, {
+            forceFormData: true,
+            preserveScroll: true,
             onError: (e) => {
                 setErrors(e);
                 setProcessing(false);
             },
+            onSuccess: () => setErrors({}),
             onFinish: () => setProcessing(false),
         });
     }
@@ -201,6 +224,39 @@ export default function FormationForm({
                                     )}
                                 />
                             </Field>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Field
+                                    label="Pour qui ?"
+                                    error={errors.target_audience}
+                                >
+                                    <textarea
+                                        value={values.target_audience ?? ''}
+                                        onChange={(e) =>
+                                            set(
+                                                'target_audience',
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder="Développeurs débutants, étudiants..."
+                                        rows={3}
+                                        className={cn(inputCls, 'resize-none')}
+                                    />
+                                </Field>
+                                <Field
+                                    label="Prérequis"
+                                    error={errors.prerequisites}
+                                >
+                                    <textarea
+                                        value={values.prerequisites ?? ''}
+                                        onChange={(e) =>
+                                            set('prerequisites', e.target.value)
+                                        }
+                                        placeholder="Ce qu'il faut connaître avant de commencer..."
+                                        rows={3}
+                                        className={cn(inputCls, 'resize-none')}
+                                    />
+                                </Field>
+                            </div>
                             <Field
                                 label="Programme (Markdown)"
                                 error={errors.content}
@@ -275,6 +331,24 @@ export default function FormationForm({
                                     />
                                 </Field>
                                 <Field
+                                    label="Format"
+                                    required
+                                    error={errors.format}
+                                >
+                                    <input
+                                        type="text"
+                                        value={values.format}
+                                        onChange={(e) =>
+                                            set('format', e.target.value)
+                                        }
+                                        placeholder="Cours en ligne"
+                                        className={cn(
+                                            inputCls,
+                                            errors.format && errorInputCls,
+                                        )}
+                                    />
+                                </Field>
+                                <Field
                                     label="Durée (heures)"
                                     required
                                     error={errors.duration_hours}
@@ -334,10 +408,70 @@ export default function FormationForm({
                                 tags={values.tags}
                                 onChange={(v) => set('tags', v)}
                             />
+                            <Field
+                                label="Objectifs (un par ligne)"
+                                error={errors.outcomes}
+                            >
+                                <textarea
+                                    value={values.outcomes.join('\n')}
+                                    onChange={(e) =>
+                                        set(
+                                            'outcomes',
+                                            e.target.value
+                                                .split('\n')
+                                                .map((item) => item.trim())
+                                                .filter(Boolean),
+                                        )
+                                    }
+                                    placeholder={
+                                        'Créer une API Laravel\nStructurer une application'
+                                    }
+                                    rows={4}
+                                    className={cn(inputCls, 'mt-3 resize-none')}
+                                />
+                            </Field>
                         </motion.div>
                     </div>
 
                     <div className="space-y-5">
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.04 }}
+                            className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                        >
+                            <h3 className="text-sm font-semibold text-slate-700">
+                                Inscription
+                            </h3>
+                            <Field
+                                label="Texte du bouton"
+                                error={errors.cta_label}
+                            >
+                                <input
+                                    type="text"
+                                    value={values.cta_label ?? ''}
+                                    onChange={(e) =>
+                                        set('cta_label', e.target.value)
+                                    }
+                                    className={inputCls}
+                                />
+                            </Field>
+                            <Field
+                                label="Lien externe (optionnel)"
+                                error={errors.cta_url}
+                            >
+                                <input
+                                    type="url"
+                                    value={values.cta_url ?? ''}
+                                    onChange={(e) =>
+                                        set('cta_url', e.target.value)
+                                    }
+                                    placeholder="https://..."
+                                    className={inputCls}
+                                />
+                            </Field>
+                        </motion.div>
+
                         <motion.div
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}

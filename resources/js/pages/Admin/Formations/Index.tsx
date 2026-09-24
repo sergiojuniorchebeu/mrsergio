@@ -43,7 +43,7 @@ export default function FormationsIndex({
 
     function togglePublished(f: Formation) {
         router.patch(
-            `/admin/formations/${f.id}`,
+            `/admin/formations/${f.id}/toggle`,
             { published: !f.published },
             { preserveScroll: true },
         );
@@ -81,6 +81,14 @@ export default function FormationsIndex({
                         />
                     </svg>
                     Nouvelle formation
+                </Link>
+            </div>
+            <div className="mb-5">
+                <Link
+                    href="/admin/formation-enrollments"
+                    className="text-sm font-semibold text-teal-600 hover:text-teal-700"
+                >
+                    Voir les demandes d'inscription
                 </Link>
             </div>
 

@@ -101,6 +101,12 @@ export interface Formation {
     level: 'débutant' | 'intermédiaire' | 'avancé';
     level_color: 'green' | 'amber' | 'red' | 'slate';
     language?: string;
+    format?: string;
+    target_audience?: string | null;
+    prerequisites?: string | null;
+    outcomes?: string[];
+    cta_label?: string | null;
+    cta_url?: string | null;
     duration_formatted: string;
     lessons_count: number;
     students_count?: number;

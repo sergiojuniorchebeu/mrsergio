@@ -124,6 +124,9 @@ export default function ProjectForm({ project }: { project: Project | null }) {
 
     const [image, setImage] = useState<File | null>(null);
     const [screenshots, setScreenshots] = useState<File[]>([]);
+    const [currentScreenshots, setCurrentScreenshots] = useState<string[]>(
+        project?.screenshots ?? [],
+    );
     const [errors, setErrors] = useState<FormErrors>({});
     const [processing, setProcessing] = useState(false);
 
@@ -192,6 +195,9 @@ export default function ProjectForm({ project }: { project: Project | null }) {
         formData.append('store_links[base_url]', values.store_links.base_url);
 
         screenshots.forEach((file) => formData.append('screenshots[]', file));
+        currentScreenshots.forEach((path) =>
+            formData.append('screenshots_keep[]', path),
+        );
         if (image) formData.append('image', image);
 
         const url = isEdit
@@ -746,13 +752,15 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                                 <MultiImageUpload
                                     values={screenshots}
                                     onChange={setScreenshots}
-                                    currentUrls={
-                                        project?.screenshots
-                                            ? project.screenshots.map(
-                                                  (s: string) =>
-                                                      `/storage/${s}`,
-                                              )
-                                            : []
+                                    currentUrls={currentScreenshots.map(
+                                        (s) => '/storage/' + s,
+                                    )}
+                                    onRemoveCurrent={(index) =>
+                                        setCurrentScreenshots((current) =>
+                                            current.filter(
+                                                (_, i) => i !== index,
+                                            ),
+                                        )
                                     }
                                 />
                             </div>

@@ -1,7 +1,9 @@
 // resources/js/Pages/Formations/Show.tsx
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
 import MainLayout from '@/layouts/MainLayout';
 import { cn, easings } from '@/lib/utils';
 import type { FormationShowProps } from '@/types';
@@ -12,14 +14,26 @@ const LEVEL_COLORS: Record<string, string> = {
     avancé: 'bg-red-50    text-red-700    border-red-100',
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-    Laravel: '🔴',
-    Flutter: '🔵',
-    Python: '🐍',
-    Java: '☕',
-};
-
 export default function Show({ formation, related }: FormationShowProps) {
+    const [values, setValues] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        message: '',
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [processing, setProcessing] = useState(false);
+
+    function submitEnrollment(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setProcessing(true);
+        router.post(`/formations/${formation.slug}/enroll`, values, {
+            onError: (formErrors) =>
+                setErrors(formErrors as Record<string, string>),
+            onFinish: () => setProcessing(false),
+        });
+    }
+
     return (
         <MainLayout>
             <Head title={`${formation.title} — Formations`} />
@@ -71,10 +85,6 @@ export default function Show({ formation, related }: FormationShowProps) {
                             {/* Catégorie + niveau */}
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-secondary">
-                                    <span>
-                                        {CATEGORY_ICONS[formation.category] ??
-                                            '📚'}
-                                    </span>
                                     {formation.category}
                                 </span>
                                 <span className="text-ink-subtle">·</span>
@@ -115,25 +125,19 @@ export default function Show({ formation, related }: FormationShowProps) {
                             <div className="grid grid-cols-3 gap-4 border-y border-slate-100 py-5">
                                 {[
                                     {
-                                        icon: '⏱',
                                         label: 'Durée',
                                         value: formation.duration_formatted,
                                     },
                                     {
-                                        icon: '📚',
                                         label: 'Leçons',
                                         value: `${formation.lessons_count}`,
                                     },
                                     {
-                                        icon: '🌍',
                                         label: 'Langue',
                                         value: formation.language ?? 'Français',
                                     },
                                 ].map((m) => (
                                     <div key={m.label} className="text-center">
-                                        <div className="mb-1 text-xl">
-                                            {m.icon}
-                                        </div>
                                         <div className="text-sm font-bold text-ink-primary">
                                             {m.value}
                                         </div>
@@ -193,7 +197,19 @@ export default function Show({ formation, related }: FormationShowProps) {
 
                                     {/* Bouton principal */}
                                     <a
-                                        href="#"
+                                        href={
+                                            formation.cta_url || '#inscription'
+                                        }
+                                        target={
+                                            formation.cta_url
+                                                ? '_blank'
+                                                : undefined
+                                        }
+                                        rel={
+                                            formation.cta_url
+                                                ? 'noreferrer'
+                                                : undefined
+                                        }
                                         className="flex w-full items-center justify-center gap-2 rounded-md bg-teal-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/20 transition-colors duration-200 hover:bg-teal-700"
                                     >
                                         {formation.is_free ? (
@@ -298,19 +314,157 @@ export default function Show({ formation, related }: FormationShowProps) {
                 </section>
             )}
 
-            {/* ── Formations similaires ─────────────────────────────────── */}
-            {related.length > 0 && (
-                <section className="border-t border-slate-200/60 bg-surface-card">
-                    <div className="container-main py-12 sm:py-16">
-                        <div className="mb-8 flex items-center gap-4">
-                            <div className="h-px flex-1 bg-slate-200" />
-                            <p className="text-xs font-medium tracking-[0.2em] whitespace-nowrap text-ink-muted uppercase">
-                                Formations similaires
+            {(formation.target_audience ||
+                formation.prerequisites ||
+                (formation.outcomes?.length ?? 0) > 0) && (
+                <section className="container-main grid gap-6 py-12 sm:grid-cols-3 sm:py-16">
+                    {formation.target_audience && (
+                        <div className="border-t border-slate-200 pt-4">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-teal-600 uppercase">
+                                Pour qui
                             </p>
-                            <div className="h-px flex-1 bg-slate-200" />
+                            <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
+                                {formation.target_audience}
+                            </p>
+                        </div>
+                    )}
+                    {formation.prerequisites && (
+                        <div className="border-t border-slate-200 pt-4">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-teal-600 uppercase">
+                                Prérequis
+                            </p>
+                            <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
+                                {formation.prerequisites}
+                            </p>
+                        </div>
+                    )}
+                    {(formation.outcomes?.length ?? 0) > 0 && (
+                        <div className="border-t border-slate-200 pt-4">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-teal-600 uppercase">
+                                À la fin
+                            </p>
+                            <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
+                                {formation.outcomes?.map((outcome) => (
+                                    <li key={outcome} className="flex gap-2">
+                                        <span className="text-teal-600">+</span>
+                                        {outcome}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </section>
+            )}
+
+            <section
+                id="inscription"
+                className="border-y border-slate-200/60 bg-surface-card"
+            >
+                <div className="container-main grid gap-10 py-12 sm:py-16 lg:grid-cols-[0.8fr_1.2fr]">
+                    <div>
+                        <p className="text-xs font-semibold tracking-[0.2em] text-teal-600 uppercase">
+                            Inscription
+                        </p>
+                        <h2 className="mt-3 font-display text-3xl font-bold text-ink-primary">
+                            Intéressé par cette formation ?
+                        </h2>
+                        <p className="mt-4 max-w-md leading-relaxed text-ink-secondary">
+                            Laisse tes coordonnées. Je te recontacte pour
+                            répondre à tes questions et te préciser les
+                            prochaines étapes.
+                        </p>
+                    </div>
+                    <form
+                        onSubmit={submitEnrollment}
+                        className="grid gap-4 rounded-2xl border border-slate-200/70 bg-surface-raised p-6 shadow-sm sm:grid-cols-2"
+                    >
+                        {[
+                            ['name', 'Nom complet', 'Ton nom'],
+                            ['email', 'Email', 'ton@email.com'],
+                            ['phone', 'Téléphone', 'Optionnel'],
+                        ].map(([key, label, placeholder]) => (
+                            <label
+                                key={key}
+                                className={
+                                    key === 'phone' ? 'sm:col-span-2' : ''
+                                }
+                            >
+                                <span className="mb-1.5 block text-xs font-semibold text-ink-secondary">
+                                    {label}
+                                </span>
+                                <input
+                                    type={key === 'email' ? 'email' : 'text'}
+                                    value={values[key as keyof typeof values]}
+                                    onChange={(event) =>
+                                        setValues({
+                                            ...values,
+                                            [key]: event.target.value,
+                                        })
+                                    }
+                                    placeholder={placeholder}
+                                    className="w-full rounded-md border border-slate-200 bg-white px-3.5 py-3 text-sm text-ink-primary transition outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10"
+                                />
+                                {errors[key] && (
+                                    <span className="mt-1 block text-xs text-red-500">
+                                        {errors[key]}
+                                    </span>
+                                )}
+                            </label>
+                        ))}
+                        <label className="sm:col-span-2">
+                            <span className="mb-1.5 block text-xs font-semibold text-ink-secondary">
+                                Message
+                            </span>
+                            <textarea
+                                value={values.message}
+                                onChange={(event) =>
+                                    setValues({
+                                        ...values,
+                                        message: event.target.value,
+                                    })
+                                }
+                                rows={4}
+                                placeholder="Une question ou un besoin particulier ?"
+                                className="w-full resize-none rounded-md border border-slate-200 bg-white px-3.5 py-3 text-sm text-ink-primary transition outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10"
+                            />
+                        </label>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="rounded-md bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+                        >
+                            {processing
+                                ? 'Envoi en cours...'
+                                : formation.cta_label ||
+                                  'Demander cette formation'}
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            {/* ── Autres formations ─────────────────────────────────────── */}
+            {related.length > 0 && (
+                <section className="relative overflow-hidden border-t border-[#e2e0da] bg-white py-14 sm:py-20">
+                    <AnimatedGridPattern
+                        numSquares={24}
+                        maxOpacity={0.03}
+                        duration={4.5}
+                        repeatDelay={0.8}
+                        className={cn(
+                            'absolute inset-0 h-full w-full text-teal-600/60',
+                            '[mask-image:radial-gradient(900px_circle_at_50%_0%,white,transparent)]',
+                        )}
+                    />
+                    <div className="container-main relative z-10">
+                        <div className="mb-10 flex items-center gap-4">
+                            <div className="h-px w-12 bg-[#1aa389]" />
+                            <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">
+                                À découvrir ensuite
+                            </span>
+                            <div className="h-px flex-1 bg-[#e2e0da]" />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-px bg-[#e2e0da] sm:grid-cols-2 lg:grid-cols-3">
                             {related.map((f, i) => (
                                 <motion.div
                                     key={f.id}
@@ -324,49 +478,74 @@ export default function Show({ formation, related }: FormationShowProps) {
                                     }}
                                 >
                                     <Link
-                                        href={`/formations/${f.slug}`}
-                                        className="group flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-surface-raised p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md"
+                                        href={'/formations/' + f.slug}
+                                        className="group flex h-full flex-col overflow-hidden bg-[#fafaf8] transition-colors duration-300 hover:bg-white"
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <span className="flex items-center gap-1 text-xs font-semibold text-ink-secondary">
-                                                <span>
-                                                    {CATEGORY_ICONS[
-                                                        f.category
-                                                    ] ?? '📚'}
-                                                </span>
-                                                {f.category}
-                                            </span>
-                                            <span
-                                                className={cn(
-                                                    'rounded-full border px-2 py-0.5 text-xs font-medium',
-                                                    LEVEL_COLORS[f.level],
-                                                )}
-                                            >
-                                                {f.level}
-                                            </span>
+                                        <div className="relative aspect-[16/9] overflow-hidden bg-[#f0efec]">
+                                            <img
+                                                src={f.cover_image_url}
+                                                alt={f.title}
+                                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                                                onError={(event) => {
+                                                    (
+                                                        event.target as HTMLImageElement
+                                                    ).style.display = 'none';
+                                                }}
+                                            />
                                         </div>
-                                        <p className="text-sm leading-snug font-semibold text-ink-primary transition-colors group-hover:text-teal-600">
-                                            {f.title}
-                                        </p>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-ink-muted">
-                                                {f.duration_formatted} ·{' '}
-                                                {f.lessons_count} leçons
-                                            </span>
-                                            <span
-                                                className={cn(
-                                                    'text-xs font-bold',
-                                                    f.is_free
-                                                        ? 'text-teal-600'
-                                                        : 'text-ink-primary',
-                                                )}
-                                            >
-                                                {f.price_formatted}
-                                            </span>
+                                        <div className="flex flex-1 flex-col gap-2.5 p-5">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="inline-block w-fit border border-[#d8eee8] bg-[#f0faf7] px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] text-[#138770] uppercase">
+                                                    {f.category}
+                                                </span>
+                                                <span className="text-[11px] font-medium text-[#aaa69e]">
+                                                    {f.level}
+                                                </span>
+                                            </div>
+                                            <p className="text-[15px] leading-snug font-bold tracking-[-0.01em] text-[#1a1916] transition-colors group-hover:text-[#138770]">
+                                                {f.title}
+                                            </p>
+                                            {f.excerpt && (
+                                                <p className="line-clamp-2 text-[12px] leading-relaxed text-[#8a8479]">
+                                                    {f.excerpt}
+                                                </p>
+                                            )}
+                                            <div className="mt-auto flex items-center justify-between border-t border-[#e2e0da] pt-3">
+                                                <span className="text-[11px] text-[#aaa69e]">
+                                                    {f.duration_formatted} ·{' '}
+                                                    {f.lessons_count} leçons
+                                                </span>
+                                                <span className="text-[11px] font-bold text-[#138770]">
+                                                    {f.price_formatted}
+                                                </span>
+                                            </div>
                                         </div>
                                     </Link>
                                 </motion.div>
                             ))}
+                        </div>
+                        <div className="mt-12 text-center">
+                            <Link
+                                href="/formations"
+                                className="group inline-flex items-center gap-3 border border-[#1a1916] bg-transparent px-8 py-3.5 text-[12px] font-bold tracking-[0.12em] text-[#1a1916] uppercase transition-all duration-300 hover:bg-[#1a1916] hover:text-white"
+                            >
+                                Voir toutes les formations
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    className="transition-transform duration-300 group-hover:translate-x-1"
+                                >
+                                    <path
+                                        d="M3 8h10M9 4l4 4-4 4"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </Link>
                         </div>
                     </div>
                 </section>

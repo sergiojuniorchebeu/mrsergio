@@ -4,6 +4,7 @@
 
 use App\Http\Controllers\Admin\AdminBlogController;
 use App\Http\Controllers\Admin\AdminFormationController;
+use App\Http\Controllers\Admin\AdminFormationEnrollmentController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogLikeController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FormationController;
+use App\Http\Controllers\FormationEnrollmentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SitemapController;
@@ -39,6 +41,7 @@ Route::post('/blog/{post:slug}/like', [BlogLikeController::class,    'toggle'])-
 Route::post('/blog/{post:slug}/comments', [BlogCommentController::class, 'store'])->name('blog.comments.store');
 Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
 Route::get('/formations/{formation:slug}', [FormationController::class, 'show'])->name('formations.show');
+Route::post('/formations/{formation:slug}/enroll', [FormationEnrollmentController::class, 'store'])->name('formations.enroll');
 Route::get('/contact', [ContactController::class,  'index'])->name('contact');
 Route::post('/contact', [ContactController::class,  'send'])->name('contact.send');
 
@@ -62,6 +65,9 @@ Route::prefix('admin')
         // Formations — resource + toggle séparé
         Route::resource('formations', AdminFormationController::class)->except(['show']);
         Route::patch('formations/{formation}/toggle', [AdminFormationController::class, 'togglePublished'])->name('formations.toggle');
+        Route::get('formation-enrollments', [AdminFormationEnrollmentController::class, 'index'])->name('formation-enrollments.index');
+        Route::patch('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'update'])->name('formation-enrollments.update');
+        Route::delete('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'destroy'])->name('formation-enrollments.destroy');
 
         // Messages
         Route::get('/messages', [AdminMessageController::class, 'index'])->name('messages.index');

@@ -1,14 +1,15 @@
 <?php
+
 // app/Http/Controllers/Admin/AdminProjectController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -111,7 +112,17 @@ class AdminProjectController extends Controller
             $data['image'] = $request->file('image')->store('projects', 'public');
         }
 
-        $screenshots = $project->screenshots ?? [];
+        $existingScreenshots = $project->screenshots ?? [];
+        $screenshotsToKeep = array_values(array_intersect(
+            $existingScreenshots,
+            $request->input('screenshots_keep', []),
+        ));
+
+        foreach (array_diff($existingScreenshots, $screenshotsToKeep) as $screenshot) {
+            Storage::disk('public')->delete($screenshot);
+        }
+
+        $screenshots = $screenshotsToKeep;
         if ($request->hasFile('screenshots')) {
             foreach ($request->file('screenshots') as $file) {
                 $screenshots[] = $file->store('projects/screenshots', 'public');
@@ -189,6 +200,8 @@ class AdminProjectController extends Controller
 
             'screenshots' => ['nullable', 'array', 'max:12'],
             'screenshots.*' => ['image', 'max:4096'],
+            'screenshots_keep' => ['nullable', 'array', 'max:12'],
+            'screenshots_keep.*' => ['string'],
 
             'featured' => ['nullable', 'boolean'],
             'published' => ['nullable', 'boolean'],

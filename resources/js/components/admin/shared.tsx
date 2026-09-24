@@ -265,11 +265,13 @@ export function MultiImageUpload({
     values,
     onChange,
     currentUrls = [],
+    onRemoveCurrent,
     label = "Captures d'écran (max 8)",
 }: {
     values: File[];
     onChange: (files: File[]) => void;
     currentUrls?: string[];
+    onRemoveCurrent?: (index: number) => void;
     label?: string;
 }) {
     function addFiles(files: FileList | null) {
@@ -303,6 +305,28 @@ export function MultiImageUpload({
                             alt={`screenshot-${i}`}
                             className="h-full w-full object-cover"
                         />
+                        {onRemoveCurrent && (
+                            <button
+                                type="button"
+                                onClick={() => onRemoveCurrent(i)}
+                                aria-label="Supprimer cette capture"
+                                className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-red-500"
+                            >
+                                <svg
+                                    className="h-3 w-3"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 ))}
                 {values.map((f, i) => (

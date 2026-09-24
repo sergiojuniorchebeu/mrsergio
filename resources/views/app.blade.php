@@ -59,14 +59,17 @@
             $jsonLd = $seo['json_ld'] ?? null;
         @endphp
 
-        <title inertia>{{ config('app.name', 'mrsergio.dev') }}</title>
+        <title inertia>{{ config('app.name', 'Mr Sergio') }}</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="shortcut icon" href="/favicon.ico">
+        <link rel="apple-touch-icon" href="/favicon.svg">
         <link rel="canonical" href="{{ $canonical }}">
 
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="application-name" content="{{ config('app.name') }}">
+        <meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
         <meta name="description" content="{{ $seoDescription }}">
         <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
         <meta property="og:site_name" content="{{ $siteName }}">
