@@ -3,34 +3,25 @@
 
 import { Link } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { primaryLinks, splitTitle } from '@/components/portofolio/project-meta';
+import { ShotPreview } from '@/components/portofolio/shot-preview';
+import { buttonVariants } from '@/components/ui/button';
 import { HoverUnderline } from '@/components/ui/hover-underline';
 import { SpotlightCard } from '@/components/ui/SpotlightCard';
-import { easings } from '@/lib/utils';
+import { cn, easings } from '@/lib/utils';
 import type { Project } from '@/types';
 
 interface ProjectCardProps {
     project: Project;
     index?: number;
+    /** Captures mobiles en cascade inclinée (cartes de l'accueil). */
+    tiltMobile?: boolean;
+    /** Grande carte sur toute la largeur : image d'un côté, texte de l'autre (desktop). */
+    isWide?: boolean;
 }
 
 function getPreviewImage(p: Project) {
     return p.screenshots_urls?.[0] ?? p.image_url ?? null;
-}
-
-function getPrimaryLink(p: Project) {
-    if (p.project_type === 'mobile')  return p.store_links?.play_store ?? p.store_links?.app_store ?? p.demo_url ?? null;
-    if (p.project_type === 'desktop') return p.store_links?.windows    ?? p.store_links?.macos     ?? p.demo_url ?? null;
-    if (p.project_type === 'api')     return p.store_links?.docs        ?? p.store_links?.base_url  ?? p.demo_url ?? null;
-    return p.demo_url ?? null;
-}
-
-function getExternalLabel(p: Project) {
-    switch (p.project_type) {
-        case 'mobile':  return 'Store';
-        case 'desktop': return 'Télécharger';
-        case 'api':     return 'Docs';
-        default:        return 'En ligne';
-    }
 }
 
 function GithubIcon({ className = 'w-4 h-4' }: { className?: string }) {
@@ -41,18 +32,12 @@ function GithubIcon({ className = 'w-4 h-4' }: { className?: string }) {
     );
 }
 
-function ArrowUpRight({ className = 'h-3 w-3' }: { className?: string }) {
-    return (
-        <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path d="M5 11L11 5M6 5h5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
-
-export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
+export function ProjectCard({ project, index = 0, tiltMobile = false, isWide = false }: ProjectCardProps) {
     const prefersReducedMotion = useReducedMotion();
     const previewImage = getPreviewImage(project);
-    const externalLink = getPrimaryLink(project);
+    const externalLink = primaryLinks(project)[0] ?? null;
+    const { name, tagline } = splitTitle(project.title);
+    const number = String(index + 1).padStart(2, '0');
     const typeKey      = project.project_type ?? 'web';
     const typeLabel    = project.project_type_label ?? typeKey;
     const showGithub   = Boolean(project.github_url) && !project.private_repo;
@@ -65,21 +50,26 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
             transition={{ duration: 0.6, delay: (index % 3) * 0.07, ease: easings.smooth }}
             className="h-full"
         >
-            <SpotlightCard className="h-full">
+            <SpotlightCard className="h-full" innerClassName={cn(isWide && 'md:flex-row')}>
                 <Link
                     href={`/projects/${project.slug}`}
                     aria-label={`Voir ${project.title}`}
                     className="absolute inset-0 z-10 rounded-2xl"
                 />
 
-                <div className="relative aspect-[16/10] flex-shrink-0 overflow-hidden border-b border-slate-100 bg-slate-50">
+                <div
+                    className={cn(
+                        'relative aspect-[16/10] flex-shrink-0 overflow-hidden border-b border-slate-100 bg-slate-50',
+                        isWide && 'md:aspect-auto md:min-h-[380px] md:w-[58%] md:border-r md:border-b-0',
+                    )}
+                >
                     {previewImage ? (
-                        <img
+                        <ShotPreview
                             src={previewImage}
                             alt={project.title}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-cover object-top transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.025]"
+                            moreSrcs={project.screenshots_urls ?? []}
+                            tiltMobile={tiltMobile}
+                            className="transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.02]"
                         />
                     ) : (
                         <div className="flex h-full w-full items-end p-5">
@@ -96,50 +86,71 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
                     )}
                 </div>
 
-                <div className="flex flex-1 flex-col gap-2.5 p-5">
-                    <p className="font-mono text-[11px] tracking-wide text-slate-400">
+                <div className={cn('relative isolate flex flex-1 flex-col gap-3 overflow-hidden p-5 sm:p-6', isWide && 'md:justify-center md:gap-4 md:p-10')}>
+                    <span
+                        aria-hidden
+                        className="pointer-events-none absolute -right-[0.04em] -bottom-[0.22em] -z-10 font-display text-[110px] leading-none font-extrabold tracking-[-0.06em] text-transparent select-none [-webkit-text-stroke:1.2px_rgba(26,25,22,0.08)]"
+                    >
+                        {number}
+                    </span>
+
+                    <p className="flex items-center gap-2.5 font-mono text-[11px] text-slate-400">
+                        <span className="text-teal-600">{number}</span>
+                        <span className="h-px w-6 bg-slate-200" />
                         <span className="capitalize">{typeLabel}</span>
-                        {project.tags.length > 0 && (
-                            <span> — {project.tags.slice(0, 3).join(', ')}</span>
-                        )}
                     </p>
 
-                    <h3 className="font-display text-[17px] leading-snug font-semibold text-slate-900">
-                        <HoverUnderline>
-                            {project.title}
-                        </HoverUnderline>
-                    </h3>
+                    <div>
+                        <h3
+                            className={cn(
+                                'font-display leading-[1.1] font-bold tracking-[-0.025em] text-slate-900',
+                                isWide ? 'text-[22px] md:text-[36px]' : 'text-[22px]',
+                            )}
+                        >
+                            <HoverUnderline>{name}</HoverUnderline>
+                        </h3>
+                        {tagline && (
+                            <p className="mt-1 font-display text-[14px] font-semibold tracking-tight text-teal-700">{tagline}</p>
+                        )}
+                    </div>
 
-                    <p className="line-clamp-2 flex-1 text-[15px] leading-relaxed text-slate-600">
+                    <p className={cn('line-clamp-2 text-[15px] leading-relaxed text-slate-600', isWide && 'md:line-clamp-4 md:text-[17px]')}>
                         {project.description}
                     </p>
 
-                    {(showGithub || externalLink) && (
-                        <div className="mt-2 flex items-center gap-4 text-[12px] font-medium text-slate-500">
-                            {externalLink && (
-                                <a
-                                    href={externalLink}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="relative z-20 inline-flex items-center gap-1 transition-colors hover:text-teal-700"
-                                >
-                                    {getExternalLabel(project)}
-                                    <ArrowUpRight />
-                                </a>
-                            )}
-                            {showGithub && (
-                                <a
-                                    href={project.github_url!}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="relative z-20 inline-flex items-center gap-1.5 transition-colors hover:text-slate-900"
-                                >
-                                    <GithubIcon className="h-3.5 w-3.5" />
-                                    Code
-                                </a>
-                            )}
-                        </div>
+                    {project.tags.length > 0 && (
+                        <dl className="grid grid-cols-[64px_1fr] gap-3 border-y border-slate-200 py-2 text-[13px]">
+                            <dt className="font-mono text-[10px] tracking-wide text-slate-400 uppercase">Stack</dt>
+                            <dd className="truncate text-slate-700">{project.tags.slice(0, 4).join(', ')}</dd>
+                        </dl>
                     )}
+
+                    <div className="relative z-20 mt-auto flex flex-wrap items-center gap-2 pt-1">
+                        <Link href={`/projects/${project.slug}`} className={buttonVariants({ size: 'sm' })}>
+                            Voir le projet
+                        </Link>
+                        {externalLink && (
+                            <a
+                                href={externalLink.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                            >
+                                {externalLink.label}
+                            </a>
+                        )}
+                        {showGithub && (
+                            <a
+                                href={project.github_url!}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Code source sur GitHub"
+                                className={buttonVariants({ variant: 'ghost', size: 'sm', className: 'px-2.5' })}
+                            >
+                                <GithubIcon className="h-4 w-4" />
+                            </a>
+                        )}
+                    </div>
                 </div>
             </SpotlightCard>
         </motion.article>

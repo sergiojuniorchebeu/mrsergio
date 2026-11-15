@@ -56,7 +56,7 @@ function DealtCard({
     const scale = useTransform(progress, [start, 1], [0.9, 1]);
 
     return (
-        <motion.div style={{ x, y, rotate, scale, zIndex: total - index }} className="relative h-full">
+        <motion.div style={{ x, y, rotate, scale, zIndex: total - index }} className="relative w-[calc((100%-3rem)/3)] shrink-0">
             <FormationCard formation={formation} index={index} withEntrance={false} />
         </motion.div>
     );
@@ -71,7 +71,7 @@ function DesktopDeck({ formations }: { formations: Formation[] }) {
     const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.5 });
 
     return (
-        <div ref={ref} className="grid grid-cols-3 gap-6">
+        <div ref={ref} className="flex flex-wrap justify-center gap-6">
             {formations.map((formation, index) => (
                 <DealtCard
                     key={formation.slug}

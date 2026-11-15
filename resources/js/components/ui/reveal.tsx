@@ -1,8 +1,9 @@
 // resources/js/components/ui/reveal.tsx
 // Animations d'apparition partagées (montage ou scroll), sans flou.
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import type { ReactNode } from 'react';
+import { useRef } from 'react';
 import { cn, easings } from '@/lib/utils';
 
 const SCROLL_VIEWPORT = { once: true, margin: '0px 0px -12% 0px' } as const;
@@ -56,19 +57,22 @@ export function MaskedLine({
     onScroll?: boolean;
 }) {
     const prefersReducedMotion = useReducedMotion();
+    const maskRef = useRef<HTMLSpanElement>(null);
+    // On observe le masque (toujours visible), pas le texte qui démarre caché dessous :
+    // sinon le navigateur peut considérer le texte comme jamais visible.
+    const isMaskInView = useInView(maskRef, SCROLL_VIEWPORT);
     const hidden = prefersReducedMotion
         ? { opacity: 0 }
         : { y: '110%', rotate: 2 };
     const shown = prefersReducedMotion ? { opacity: 1 } : { y: 0, rotate: 0 };
+    const isShown = !onScroll || isMaskInView;
 
     return (
-        <span className="block overflow-hidden pb-[0.1em]">
+        <span ref={maskRef} className="block overflow-hidden pb-[0.1em]">
             <motion.span
                 className={className ?? 'block'}
                 initial={hidden}
-                {...(onScroll
-                    ? { whileInView: shown, viewport: SCROLL_VIEWPORT }
-                    : { animate: shown })}
+                animate={isShown ? shown : hidden}
                 transition={{ duration: 0.95, delay, ease: easings.expo }}
                 style={{ transformOrigin: '0% 100%' }}
             >
@@ -82,15 +86,18 @@ export function MaskedLine({
  * Trait horizontal qui se dessine de gauche à droite au scroll.
  */
 export function DrawLine({ className }: { className?: string }) {
+    const wrapperRef = useRef<HTMLSpanElement>(null);
+    const isInView = useInView(wrapperRef, SCROLL_VIEWPORT);
+
     return (
-        <motion.span
-            aria-hidden
-            className={cn('block h-px origin-left bg-slate-200', className)}
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={SCROLL_VIEWPORT}
-            transition={{ duration: 1.2, ease: easings.expo }}
-        />
+        <span ref={wrapperRef} aria-hidden className={cn('block h-px', className)}>
+            <motion.span
+                className="block h-full w-full origin-left bg-slate-200"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: isInView ? 1 : 0 }}
+                transition={{ duration: 1.2, ease: easings.expo }}
+            />
+        </span>
     );
 }
 

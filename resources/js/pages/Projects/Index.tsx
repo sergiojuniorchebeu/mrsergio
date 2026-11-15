@@ -115,10 +115,10 @@ export default function Index({ projects }: ProjectsIndexProps) {
                     ) : visibleProjects.length === 0 ? (
                         <EmptyResults message="Aucun projet ne correspond à ces filtres." onReset={resetFilters} />
                     ) : (
-                        <FilterGrid id="projects-grid">
+                        <FilterGrid id="projects-grid" className="lg:grid-cols-2">
                             {visibleProjects.map((project, index) => (
-                                <FilterGridItem key={project.id}>
-                                    <ProjectCard project={project} index={index} />
+                                <FilterGridItem key={project.id} className={index === 0 ? 'sm:col-span-2' : undefined}>
+                                    <ProjectCard project={project} index={index} isWide={index === 0} />
                                 </FilterGridItem>
                             ))}
                         </FilterGrid>

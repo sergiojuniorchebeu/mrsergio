@@ -75,7 +75,7 @@ function PageCard({
     const imageScale = useTransform(
         progress,
         range,
-        isStatic ? [1, 1] : [1.2, 1],
+        isStatic ? [1, 1] : [1.05, 1],
     );
 
     const image = article.cover_image_url ?? article.image ?? null;
@@ -100,7 +100,7 @@ function PageCard({
                 {image && (
                     <motion.div
                         style={{ clipPath: imageClip }}
-                        className="aspect-[4/3] overflow-hidden bg-slate-100"
+                        className="aspect-[16/9] overflow-hidden bg-slate-100"
                     >
                         <motion.img
                             src={image}

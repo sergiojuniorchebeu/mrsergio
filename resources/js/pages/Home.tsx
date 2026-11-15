@@ -30,14 +30,13 @@ import { easings } from '@/lib/utils';
 const CONTACT_EMAIL = 'contact@mrsergio.dev';
 
 const techStack = [
+    'Flutter',
     'Laravel',
     'React',
-    'Inertia.js',
-    'TailwindCSS',
-    'Flutter',
-    'Firebase',
-    'Python',
     'Java',
+    'Python',
+    'Firebase',
+    'Déploiement',
 ];
 
 const socials = [

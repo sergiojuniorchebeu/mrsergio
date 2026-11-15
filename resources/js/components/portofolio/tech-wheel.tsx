@@ -11,7 +11,7 @@ import {
 } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { TECH_LOGO_PATHS } from '@/components/portofolio/tech-logos';
+import { EVENODD_TECH_LOGOS, TECH_LOGO_PATHS } from '@/components/portofolio/tech-logos';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const SCROLL_VH_PER_ITEM = 30;
@@ -68,7 +68,7 @@ function WheelItem({
  */
 function TechLogo({ name, index, position }: { name: string; index: number; position: MotionValue<number> }) {
     const paths = TECH_LOGO_PATHS[name];
-    const opacity = useTransform(position, (p) => Math.max(0, 1 - Math.abs(p - index) * 1.6) * 0.09);
+    const opacity = useTransform(position, (p) => Math.max(0, 1 - Math.abs(p - index) * 1.6) * 0.036);
     const scale = useTransform(position, (p) => 1 - Math.min(Math.abs(p - index), 1) * 0.25);
     const rotate = useTransform(position, (p) => (index - p) * 35);
 
@@ -81,10 +81,10 @@ function TechLogo({ name, index, position }: { name: string; index: number; posi
             viewBox="0 0 24 24"
             fill="currentColor"
             style={{ opacity, scale, rotate }}
-            className="absolute aspect-square h-[120%] max-h-[640px] text-teal-700"
+            className="absolute aspect-square h-[60%] max-h-[320px] text-teal-700"
         >
             {paths.map((path) => (
-                <path key={path} d={path} />
+                <path key={path} d={path} fillRule={EVENODD_TECH_LOGOS.has(name) ? 'evenodd' : undefined} />
             ))}
         </motion.svg>
     );
@@ -138,7 +138,6 @@ export function TechWheel({ items }: { items: string[] }) {
             vibrateTick();
         }
     });
-    const rulerOffset = useTransform(position, (p) => `${-p * ROW_HEIGHT_EM}em`);
     const barScale = useTransform(
         smoothProgress,
         [0, 1],
@@ -208,11 +207,6 @@ export function TechWheel({ items }: { items: string[] }) {
                         className="relative h-[4.4em] font-display text-[44px] font-bold tracking-[-0.04em] [perspective:900px] sm:text-7xl lg:text-[96px]"
                     >
                         <div className="absolute inset-x-0 top-1/2 h-[1.2em] -translate-y-1/2 border-y border-slate-200" />
-                        <motion.div
-                            style={{ backgroundPositionY: rulerOffset }}
-                            className="absolute inset-y-0 -left-2.5 w-1.5 text-slate-300 [background-image:linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:100%_0.27em] [mask-image:linear-gradient(to_bottom,transparent,black_30%,black_70%,transparent)] sm:-left-8 sm:w-3"
-                        />
-                        <span className="absolute top-1/2 -left-4 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-teal-500 sm:-left-11" />
                         <div className="absolute inset-0 [transform-style:preserve-3d]">
                             {items.map((item, index) => (
                                 <WheelItem

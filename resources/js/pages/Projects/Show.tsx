@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useMemo } from 'react';
 import { ProjectCaseStudy } from '@/components/portofolio/project-case-study';
 import { ProjectGallery } from '@/components/portofolio/project-gallery';
+import { primaryLinks, splitTitle } from '@/components/portofolio/project-meta';
 import {
     ExpandingCover,
     ReadingProgress,
@@ -20,47 +21,8 @@ import MainLayout from '@/layouts/MainLayout';
 import { easings } from '@/lib/utils';
 import type { Project, ProjectShowProps } from '@/types';
 
-type ProjectLink = { href: string; label: string };
-
-/**
- * « MrMarket — App de gestion de marché » → nom + accroche.
- */
-function splitTitle(title: string): { name: string; tagline: string | null } {
-    const [name, ...rest] = title.split(/\s+[—–-]\s+/);
-
-    return {
-        name: name.trim(),
-        tagline: rest.length > 0 ? rest.join(' — ').trim() : null,
-    };
-}
-
 function projectYear(createdAt?: string): string | null {
     return createdAt?.split('/')[2] ?? null;
-}
-
-function primaryLinks(project: Project): ProjectLink[] {
-    const links = project.store_links ?? {};
-    const candidates: (ProjectLink | null)[] = [
-        project.demo_url
-            ? {
-                  href: project.demo_url,
-                  label:
-                      project.project_type === 'web'
-                          ? 'Voir le site'
-                          : 'Voir la démo',
-              }
-            : null,
-        links.play_store
-            ? { href: links.play_store, label: 'Google Play' }
-            : null,
-        links.app_store ? { href: links.app_store, label: 'App Store' } : null,
-        links.windows ? { href: links.windows, label: 'Windows' } : null,
-        links.macos ? { href: links.macos, label: 'macOS' } : null,
-        links.linux ? { href: links.linux, label: 'Linux' } : null,
-        links.docs ? { href: links.docs, label: 'Documentation' } : null,
-    ];
-
-    return candidates.filter((link): link is ProjectLink => link !== null);
 }
 
 function previewImage(project: Project): string | null {
@@ -347,7 +309,14 @@ export default function Show({ project, related }: ProjectShowProps) {
             </HeroBackdrop>
 
             {/* ══ COUVERTURE ═════════════════════════════════════════ */}
-            {cover && <ExpandingCover src={cover} alt={project.title} />}
+            {cover && (
+                <ExpandingCover
+                    src={cover}
+                    alt={project.title}
+                    moreSrcs={project.screenshots_urls ?? []}
+                    framed
+                />
+            )}
 
             {/* ══ ÉTUDE DE CAS + GALERIE (après « Contexte ») ════════ */}
             <ProjectCaseStudy

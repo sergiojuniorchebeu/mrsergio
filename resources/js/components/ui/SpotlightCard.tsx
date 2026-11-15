@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils';
 interface SpotlightCardProps {
     children: React.ReactNode;
     className?: string;
+    /** Classes du conteneur interne (ex. passer en ligne sur desktop). */
+    innerClassName?: string;
 }
 
-export function SpotlightCard({ children, className }: SpotlightCardProps) {
+export function SpotlightCard({ children, className, innerClassName }: SpotlightCardProps) {
     return (
         <div
             className={cn(
@@ -19,7 +21,7 @@ export function SpotlightCard({ children, className }: SpotlightCardProps) {
                 className,
             )}
         >
-            <div className="relative flex h-full flex-col">{children}</div>
+            <div className={cn('relative flex h-full flex-col', innerClassName)}>{children}</div>
         </div>
     );
 }

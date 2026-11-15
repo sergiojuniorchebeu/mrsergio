@@ -11,6 +11,7 @@ import {
 } from 'framer-motion';
 import { useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
+import { ShotPreview } from '@/components/portofolio/shot-preview';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
@@ -55,10 +56,16 @@ export function ExpandingCover({
     src,
     alt,
     className,
+    framed = false,
+    moreSrcs = [],
 }: {
     src: string;
     alt: string;
     className?: string;
+    /** Capture d'écran : affichée entière dans un appareil adapté, sans rognage. */
+    framed?: boolean;
+    /** Autres captures, pour montrer plusieurs écrans mobiles. */
+    moreSrcs?: string[];
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const prefersReducedMotion = useReducedMotion();
@@ -81,7 +88,7 @@ export function ExpandingCover({
     const imageScale = useTransform(
         scrollYProgress,
         [0, 1],
-        isStatic ? [1, 1] : [1.25, 1],
+        isStatic ? [1, 1] : [1.08, 1],
     );
 
     return (
@@ -89,17 +96,24 @@ export function ExpandingCover({
             <motion.div
                 style={{ scale, borderRadius: radius }}
                 className={cn(
-                    'relative aspect-[16/10] overflow-hidden border border-slate-200 bg-slate-100 sm:aspect-[16/9]',
+                    'relative overflow-hidden border border-slate-200 bg-slate-100',
+                    framed && 'aspect-[16/10] sm:aspect-[16/9]',
                     className,
                 )}
             >
-                <motion.img
-                    src={src}
-                    alt={alt}
-                    fetchPriority="high"
-                    style={{ scale: imageScale }}
-                    className="h-full w-full object-cover object-top"
-                />
+                {framed ? (
+                    <motion.div style={{ scale: imageScale }} className="absolute inset-0">
+                        <ShotPreview src={src} alt={alt} moreSrcs={moreSrcs} eager fit />
+                    </motion.div>
+                ) : (
+                    <motion.img
+                        src={src}
+                        alt={alt}
+                        fetchPriority="high"
+                        style={{ scale: imageScale }}
+                        className="block h-auto w-full"
+                    />
+                )}
             </motion.div>
         </div>
     );

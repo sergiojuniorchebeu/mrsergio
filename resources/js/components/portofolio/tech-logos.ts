@@ -27,4 +27,11 @@ export const TECH_LOGO_PATHS: Record<string, string[]> = {
     'Inertia.js': [
         'M6.527 12L0 8.701V15.3L6.527 12zm10.946 0L24 8.701V15.3L17.473 12zm-5.473 3.112L5.473 12 12 8.888 18.527 12l-6.527 3.112z',
     ],
+    Déploiement: [
+        'M4 2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
+        'M4 13h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
+    ],
 };
+
+/** Logos dessinés avec des parties en creux (règle de remplissage « evenodd »). */
+export const EVENODD_TECH_LOGOS = new Set(['Déploiement']);

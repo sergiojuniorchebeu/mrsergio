@@ -48,7 +48,7 @@ function PostCard({
                 className={cn(
                     'relative shrink-0 overflow-hidden bg-slate-100',
                     isLead
-                        ? 'aspect-[16/9] lg:aspect-auto lg:w-[56%]'
+                        ? 'aspect-[16/9] lg:w-[56%]'
                         : 'aspect-[16/9]',
                 )}
             >

@@ -43,7 +43,7 @@ export function FormationCard({
                             alt={formation.title}
                             loading="lazy"
                             decoding="async"
-                            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.025]"
+                            className="h-full w-full object-cover object-[50%_25%] transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.025]"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                     ) : (
@@ -54,7 +54,7 @@ export function FormationCard({
                         </div>
                     )}
 
-                    <span className="absolute top-3 right-3 rounded-md bg-white/95 px-2 py-1 text-[11px] font-semibold text-slate-800 shadow-sm">
+                    <span className="absolute top-3 right-3 rounded-md bg-white/95 px-2 py-1 font-display text-[11px] font-semibold text-slate-800 shadow-sm">
                         {formation.is_free ? 'Gratuit' : formation.price_formatted}
                     </span>
                 </div>
@@ -78,7 +78,7 @@ export function FormationCard({
                     )}
 
                     {meta.length > 0 && (
-                        <p className="mt-auto pt-2 text-[12px] text-slate-400">{meta.join(' · ')}</p>
+                        <p className="mt-auto pt-2 font-mono text-[11px] text-slate-400">{meta.join(' · ')}</p>
                     )}
                 </div>
             </SpotlightCard>
