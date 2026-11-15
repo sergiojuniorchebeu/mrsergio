@@ -14,9 +14,10 @@ import {
     X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FooterWordmark } from '@/components/portofolio/footer-wordmark';
 import { buttonVariants } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn, easings } from '@/lib/utils';
 
 interface Props {
@@ -123,6 +124,33 @@ function LogoMark({ size = 26 }: { size?: number }) {
     );
 }
 
+/**
+ * Libellé de la barre du bas : masqué une fois la page défilée (icônes seules).
+ */
+function BottomBarLabel({
+    isVisible,
+    children,
+}: {
+    isVisible: boolean;
+    children: ReactNode;
+}) {
+    return (
+        <AnimatePresence initial={false}>
+            {isVisible && (
+                <motion.span
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: easings.smooth }}
+                    className="relative overflow-hidden leading-none"
+                >
+                    {children}
+                </motion.span>
+            )}
+        </AnimatePresence>
+    );
+}
+
 // ─── Layout ───────────────────────────────────────────────────────────────────
 function isActiveLink(url: string, href: string): boolean {
     return href === '/' ? url === '/' : url.startsWith(href);
@@ -134,15 +162,50 @@ export default function MainLayout({ children }: Props) {
     const [hostingLogoFailed, setHostingLogoFailed] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [navHidden, setNavHidden] = useState(false);
+    const [isPastTop, setIsPastTop] = useState(false);
+    const [isBottomBarHidden, setIsBottomBarHidden] = useState(false);
+    const [isBottomBarCompact, setIsBottomBarCompact] = useState(false);
+    const scrollIdleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const isMobile = useIsMobile();
     const closeMenu = () => setMenuOpen(false);
     const { scrollY } = useScroll();
 
     useMotionValueEvent(scrollY, 'change', (current) => {
         const previous = scrollY.getPrevious() ?? 0;
+        // Un petit seuil évite que la barre clignote sur les micro-mouvements du doigt ou du pavé tactile.
+        const isScrollingDown = current - previous > 2;
+        const isScrollingUp = previous - current > 2;
+        const isNearPageBottom =
+            document.documentElement.scrollHeight -
+                (current + window.innerHeight) <
+            160;
+        const shouldHide =
+            !menuOpen &&
+            current > 80 &&
+            (isScrollingDown || (navHidden && !isScrollingUp));
 
         setScrolled(current > 12);
-        setNavHidden(!menuOpen && current > 240 && current > previous);
+        setIsPastTop(current > 80);
+        setNavHidden(shouldHide);
+        setIsBottomBarCompact(current > 320);
+        setIsBottomBarHidden(shouldHide && !isNearPageBottom);
+
+        // La barre du bas revient dès que l'on arrête de faire défiler.
+        clearTimeout(scrollIdleTimer.current);
+        scrollIdleTimer.current = setTimeout(
+            () => setIsBottomBarHidden(false),
+            900,
+        );
     });
+
+    useEffect(() => () => clearTimeout(scrollIdleTimer.current), []);
+
+    // Sur mobile, la barre du haut ne sert qu'en haut de page : la barre du bas contient tout.
+    const isTopBarHidden = !menuOpen && (navHidden || (isMobile && isPastTop));
+    const showBottomLabels = menuOpen || !isBottomBarCompact;
+    const [hoveredHref, setHoveredHref] = useState<string | null>(null);
+    const activeHref =
+        navLinks.find((link) => isActiveLink(url, link.href))?.href ?? null;
 
     useEffect(() => {
         document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -157,17 +220,21 @@ export default function MainLayout({ children }: Props) {
             {/* ══ NAV ═══════════════════════════════════════════════════════ */}
             <motion.div
                 className="fixed inset-x-0 top-0 z-50 px-4 pt-3"
-                animate={{ y: navHidden ? '-120%' : '0%' }}
-                transition={{ duration: 0.35, ease: easings.smooth }}
+                animate={{ y: isTopBarHidden ? '-120%' : '0%' }}
+                transition={{ duration: 0.22, ease: easings.smooth }}
             >
-                <div className="mx-auto w-full max-w-5xl">
+                <motion.div
+                    className="mx-auto w-full"
+                    initial={false}
+                    animate={{ maxWidth: scrolled && !isMobile ? 880 : 1024 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                >
                     <header
                         className={cn(
-                            'grid h-14 grid-cols-[1fr_auto] items-center gap-2 rounded-xl border pr-2 pl-4 md:grid-cols-[1fr_auto_1fr]',
-                            'border-slate-200/80 bg-white/80 backdrop-blur-xl transition-shadow duration-300',
+                            'grid grid-cols-[1fr_auto] items-center gap-2 rounded-full border pr-1.5 pl-4 transition-[height,background-color,box-shadow,border-color] duration-300 md:grid-cols-[1fr_auto_1fr] md:pl-5',
                             scrolled
-                                ? 'shadow-[0_10px_30px_-12px_rgba(26,25,22,0.18)]'
-                                : 'shadow-[0_1px_2px_rgba(26,25,22,0.04)]',
+                                ? 'h-[52px] border-slate-200 bg-white/90 shadow-[0_14px_34px_-16px_rgba(26,25,22,0.28)] backdrop-blur-xl'
+                                : 'h-14 border-slate-200/70 bg-white/70 shadow-[0_1px_2px_rgba(26,25,22,0.04)] backdrop-blur-md',
                         )}
                     >
                         <Link
@@ -175,56 +242,102 @@ export default function MainLayout({ children }: Props) {
                             onClick={closeMenu}
                             className="flex w-fit items-center gap-2.5"
                         >
-                            <LogoMark size={26} />
-                            <span className="font-display text-[14px] font-bold tracking-tight text-slate-900">
-                                mr<span className="text-teal-600">sergio</span>
-                            </span>
+                            <motion.span
+                                animate={{ rotate: scrolled ? -12 : 0 }}
+                                transition={{
+                                    type: 'spring',
+                                    stiffness: 300,
+                                    damping: 20,
+                                }}
+                            >
+                                <LogoMark size={26} />
+                            </motion.span>
+                            <AnimatePresence initial={false}>
+                                {(!scrolled || isMobile) && (
+                                    <motion.span
+                                        initial={{ opacity: 0, width: 0 }}
+                                        animate={{ opacity: 1, width: 'auto' }}
+                                        exit={{ opacity: 0, width: 0 }}
+                                        transition={{
+                                            duration: 0.3,
+                                            ease: easings.smooth,
+                                        }}
+                                        className="overflow-hidden font-display text-[14px] font-bold tracking-tight whitespace-nowrap text-slate-900"
+                                    >
+                                        mr
+                                        <span className="text-teal-600">
+                                            sergio
+                                        </span>
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
                         </Link>
 
-                        <nav className="hidden items-center gap-1 md:flex">
+                        <nav
+                            className="hidden items-center md:flex"
+                            onMouseLeave={() => setHoveredHref(null)}
+                        >
                             {navLinks.map((link) => {
                                 const isActive = isActiveLink(url, link.href);
+                                const isHighlighted =
+                                    (hoveredHref ?? activeHref) === link.href;
 
                                 return (
                                     <Link
                                         key={link.href}
                                         href={link.href}
                                         onClick={closeMenu}
-                                        className={buttonVariants({
-                                            variant: 'ghost',
-                                            size: 'sm',
-                                            className: cn(
-                                                'relative hover:bg-transparent',
-                                                isActive
-                                                    ? 'text-slate-900'
-                                                    : 'text-slate-500',
-                                            ),
-                                        })}
+                                        onMouseEnter={() =>
+                                            setHoveredHref(link.href)
+                                        }
+                                        onFocus={() =>
+                                            setHoveredHref(link.href)
+                                        }
+                                        className={cn(
+                                            'relative rounded-full px-4 py-2 font-display text-[13px] font-semibold transition-colors duration-200',
+                                            isHighlighted
+                                                ? 'text-slate-900'
+                                                : 'text-slate-500',
+                                        )}
                                     >
-                                        {isActive && (
+                                        {isHighlighted && (
                                             <motion.span
-                                                layoutId="nav-active"
-                                                className="absolute inset-0 rounded-lg bg-slate-100"
+                                                layoutId="nav-highlight"
+                                                className="absolute inset-0 rounded-full bg-slate-100"
                                                 transition={{
                                                     type: 'spring',
-                                                    stiffness: 420,
-                                                    damping: 36,
+                                                    stiffness: 500,
+                                                    damping: 38,
                                                 }}
                                             />
                                         )}
                                         <span className="relative">
                                             {link.label}
                                         </span>
+                                        {isActive && (
+                                            <motion.span
+                                                layoutId="nav-active-dot"
+                                                className="absolute inset-x-0 bottom-1 mx-auto h-1 w-1 rounded-full bg-teal-500"
+                                                transition={{
+                                                    type: 'spring',
+                                                    stiffness: 420,
+                                                    damping: 32,
+                                                }}
+                                            />
+                                        )}
                                     </Link>
                                 );
                             })}
                         </nav>
 
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end">
                             <Link
                                 href="/contact"
                                 onClick={closeMenu}
-                                className={buttonVariants({ size: 'sm' })}
+                                className={buttonVariants({
+                                    size: 'sm',
+                                    className: 'rounded-full',
+                                })}
                             >
                                 <span className="md:hidden">Contact</span>
                                 <span className="hidden md:inline">
@@ -233,7 +346,7 @@ export default function MainLayout({ children }: Props) {
                             </Link>
                         </div>
                     </header>
-                </div>
+                </motion.div>
             </motion.div>
 
             {/* ══ MENU PLEIN ÉCRAN (mobile) ═══════════════════════════════ */}
@@ -332,16 +445,22 @@ export default function MainLayout({ children }: Props) {
             </AnimatePresence>
 
             {/* ══ BARRE DU BAS (mobile, zone du pouce) ═══════════════════ */}
-            <nav
+            <motion.nav
                 aria-label="Navigation mobile"
-                className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[70] md:hidden"
+                initial={false}
+                animate={{ y: isBottomBarHidden && !menuOpen ? '160%' : '0%' }}
+                transition={{ duration: 0.22, ease: easings.smooth }}
+                className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[70] flex justify-center px-3 md:hidden"
             >
-                <div
+                <motion.div
+                    initial={false}
+                    animate={{ maxWidth: showBottomLabels ? 520 : 252 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 32 }}
                     className={cn(
-                        'grid grid-cols-5 rounded-2xl border p-1.5 backdrop-blur-xl transition-colors duration-300',
+                        'flex w-full items-center gap-1 rounded-full border p-1.5 backdrop-blur-xl transition-colors duration-300',
                         menuOpen
                             ? 'border-white/10 bg-white/10'
-                            : 'border-slate-200/80 bg-white/85 shadow-[0_12px_32px_-12px_rgba(26,25,22,0.35)]',
+                            : 'border-slate-200/80 bg-white/85 shadow-[0_14px_34px_-14px_rgba(26,25,22,0.4)]',
                     )}
                 >
                     {bottomNavLinks.map((link) => {
@@ -355,30 +474,52 @@ export default function MainLayout({ children }: Props) {
                                 href={link.href}
                                 onClick={closeMenu}
                                 className={cn(
-                                    'relative flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-[color,transform] duration-200 active:scale-90',
+                                    'relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-semibold transition-[height,color,transform] duration-300 active:scale-90',
+                                    showBottomLabels ? 'h-12' : 'h-11',
                                     isActive
-                                        ? 'text-teal-700'
+                                        ? 'text-white'
                                         : menuOpen
-                                          ? 'text-white/50'
+                                          ? 'text-white/55'
                                           : 'text-slate-500',
                                 )}
                             >
                                 {isActive && (
                                     <motion.span
                                         layoutId="bottom-nav-active"
-                                        className="absolute inset-0 rounded-xl bg-teal-50"
+                                        className="absolute inset-0 rounded-full bg-slate-900"
                                         transition={{
                                             type: 'spring',
                                             stiffness: 420,
-                                            damping: 36,
+                                            damping: 34,
                                         }}
                                     />
                                 )}
-                                <Icon
-                                    className="relative h-[18px] w-[18px]"
-                                    strokeWidth={1.8}
-                                />
-                                <span className="relative">{link.label}</span>
+                                <motion.span
+                                    key={
+                                        isActive
+                                            ? `${link.href}-active`
+                                            : link.href
+                                    }
+                                    className="relative"
+                                    initial={isActive ? { scale: 0.7 } : false}
+                                    animate={
+                                        isActive
+                                            ? { scale: [0.7, 1.18, 1] }
+                                            : { scale: 1 }
+                                    }
+                                    transition={{
+                                        duration: 0.45,
+                                        ease: easings.smooth,
+                                    }}
+                                >
+                                    <Icon
+                                        className="h-[18px] w-[18px]"
+                                        strokeWidth={1.8}
+                                    />
+                                </motion.span>
+                                <BottomBarLabel isVisible={showBottomLabels}>
+                                    {link.label}
+                                </BottomBarLabel>
                             </Link>
                         );
                     })}
@@ -391,27 +532,39 @@ export default function MainLayout({ children }: Props) {
                         }
                         aria-expanded={menuOpen}
                         className={cn(
-                            'flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-[color,background-color,transform] duration-200 active:scale-90',
+                            'flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-semibold transition-[height,color,background-color,transform] duration-300 active:scale-90',
+                            showBottomLabels ? 'h-12' : 'h-11',
                             menuOpen
                                 ? 'bg-teal-500 text-[#0b2a24]'
                                 : 'text-slate-500',
                         )}
                     >
-                        {menuOpen ? (
-                            <X
-                                className="h-[18px] w-[18px]"
-                                strokeWidth={1.8}
-                            />
-                        ) : (
-                            <Menu
-                                className="h-[18px] w-[18px]"
-                                strokeWidth={1.8}
-                            />
-                        )}
-                        {menuOpen ? 'Fermer' : 'Menu'}
+                        <motion.span
+                            animate={{ rotate: menuOpen ? 90 : 0 }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 400,
+                                damping: 24,
+                            }}
+                        >
+                            {menuOpen ? (
+                                <X
+                                    className="h-[18px] w-[18px]"
+                                    strokeWidth={1.8}
+                                />
+                            ) : (
+                                <Menu
+                                    className="h-[18px] w-[18px]"
+                                    strokeWidth={1.8}
+                                />
+                            )}
+                        </motion.span>
+                        <BottomBarLabel isVisible={showBottomLabels}>
+                            {menuOpen ? 'Fermer' : 'Menu'}
+                        </BottomBarLabel>
                     </button>
-                </div>
-            </nav>
+                </motion.div>
+            </motion.nav>
 
             {/* ══ CONTENU ═══════════════════════════════════════════════════ */}
             <main className="relative z-10 overflow-clip rounded-b-[28px] bg-white shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] sm:rounded-b-[40px]">

@@ -1,6 +1,6 @@
 // resources/js/components/ui/section-backdrop.tsx
 // Motifs de fond discrets (sans dégradé de couleur) avec léger parallaxe au scroll.
-// Sur mobile, les motifs restent fixes pour économiser les calculs.
+// Sur mobile, le mouvement est réduit (environ un tiers) pour rester léger.
 // Le parent doit être `relative isolate` et `overflow-clip` (compatible sticky).
 
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
@@ -58,8 +58,8 @@ export function SectionBackdrop({
     const ref = useRef<HTMLDivElement>(null);
     const prefersReducedMotion = useReducedMotion();
     const isMobile = useIsMobile();
-    const isStatic = Boolean(prefersReducedMotion) || isMobile;
-    const travel = isStatic ? 0 : 80;
+    const isStatic = Boolean(prefersReducedMotion);
+    const travel = isStatic ? 0 : isMobile ? 28 : 80;
     const { scrollYProgress } = useScroll({
         target: ref,
         offset: ['start end', 'end start'],
