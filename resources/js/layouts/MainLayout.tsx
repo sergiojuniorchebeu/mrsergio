@@ -1,8 +1,23 @@
 import { Link, usePage } from '@inertiajs/react';
+import {
+    AnimatePresence,
+    motion,
+    useMotionValueEvent,
+    useScroll,
+} from 'framer-motion';
+import {
+    FolderKanban,
+    GraduationCap,
+    House,
+    Menu,
+    PenLine,
+    X,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { RevealText } from '@/components/ui/AnimatedText';
-import { cn } from '@/lib/utils';
+import { FooterWordmark } from '@/components/portofolio/footer-wordmark';
+import { buttonVariants } from '@/components/ui/button';
+import { cn, easings } from '@/lib/utils';
 
 interface Props {
     children: ReactNode;
@@ -15,16 +30,17 @@ const navLinks = [
     { href: '/formations', label: 'Formations' },
 ];
 
+const bottomNavLinks = [
+    { href: '/', label: 'Accueil', icon: House },
+    { href: '/projects', label: 'Projets', icon: FolderKanban },
+    { href: '/blog', label: 'Blog', icon: PenLine },
+    { href: '/formations', label: 'Formations', icon: GraduationCap },
+];
+
 const footerLinks = [
     { href: '/projects', label: 'Projets' },
     { href: '/blog', label: 'Blog' },
     { href: '/formations', label: 'Formations' },
-];
-
-const footerNotes = [
-    'Interfaces claires',
-    'Architecture simple',
-    'Produits qui tiennent',
 ];
 
 const socials = [
@@ -108,242 +124,333 @@ function LogoMark({ size = 26 }: { size?: number }) {
 }
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
+function isActiveLink(url: string, href: string): boolean {
+    return href === '/' ? url === '/' : url.startsWith(href);
+}
+
 export default function MainLayout({ children }: Props) {
     const { url } = usePage();
     const [menuOpen, setMenuOpen] = useState(false);
     const [hostingLogoFailed, setHostingLogoFailed] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [navHidden, setNavHidden] = useState(false);
     const closeMenu = () => setMenuOpen(false);
+    const { scrollY } = useScroll();
 
-    // Scroll detection
-    useEffect(() => {
-        let ticking = false;
-        const onScroll = () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    setScrolled(window.scrollY > 12);
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-        onScroll();
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+    useMotionValueEvent(scrollY, 'change', (current) => {
+        const previous = scrollY.getPrevious() ?? 0;
 
-    // Lock body scroll when mobile menu open
+        setScrolled(current > 12);
+        setNavHidden(!menuOpen && current > 240 && current > previous);
+    });
+
     useEffect(() => {
         document.body.style.overflow = menuOpen ? 'hidden' : '';
+
         return () => {
             document.body.style.overflow = '';
         };
     }, [menuOpen]);
 
     return (
-        <div className="min-h-screen bg-surface">
+        <div className="min-h-screen bg-[#171511]">
             {/* ══ NAV ═══════════════════════════════════════════════════════ */}
-            <div className="fixed inset-x-0 top-0 z-50 px-4 pt-3">
+            <motion.div
+                className="fixed inset-x-0 top-0 z-50 px-4 pt-3"
+                animate={{ y: navHidden ? '-120%' : '0%' }}
+                transition={{ duration: 0.35, ease: easings.smooth }}
+            >
                 <div className="mx-auto w-full max-w-5xl">
                     <header
                         className={cn(
-                            'flex items-center justify-between rounded-2xl border transition-all duration-300',
-                            'bg-white/90 supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:backdrop-blur-md',
-                            'border-slate-200/70',
+                            'grid h-14 grid-cols-[1fr_auto] items-center gap-2 rounded-xl border pr-2 pl-4 md:grid-cols-[1fr_auto_1fr]',
+                            'border-slate-200/80 bg-white/80 backdrop-blur-xl transition-shadow duration-300',
                             scrolled
-                                ? 'h-[52px] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.09)]'
-                                : 'h-[58px] px-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)]',
+                                ? 'shadow-[0_10px_30px_-12px_rgba(26,25,22,0.18)]'
+                                : 'shadow-[0_1px_2px_rgba(26,25,22,0.04)]',
                         )}
                     >
-                        {/* Logo */}
                         <Link
                             href="/"
                             onClick={closeMenu}
-                            className="flex shrink-0 items-center gap-2.5"
+                            className="flex w-fit items-center gap-2.5"
                         >
-                            <LogoMark size={scrolled ? 24 : 26} />
-                            <div className="flex flex-col gap-[2px] leading-none">
-                                <span className="font-display text-[13px] font-bold tracking-tight text-slate-900">
-                                    mr
-                                    <span className="text-teal-600">
-                                        sergio
-                                    </span>
-                                </span>
-                                <span className="font-mono text-[9px] tracking-[0.18em] text-slate-400">
-                                    .dev
-                                </span>
-                            </div>
+                            <LogoMark size={26} />
+                            <span className="font-display text-[14px] font-bold tracking-tight text-slate-900">
+                                mr<span className="text-teal-600">sergio</span>
+                            </span>
                         </Link>
 
-                        {/* Séparateur */}
-                        <div className="mx-1 hidden h-4 w-px bg-slate-200 md:block" />
-
-                        {/* Desktop links */}
-                        <nav className="hidden items-center gap-0.5 md:flex">
+                        <nav className="hidden items-center gap-1 md:flex">
                             {navLinks.map((link) => {
-                                const isActive =
-                                    link.href === '/'
-                                        ? url === '/'
-                                        : url.startsWith(link.href);
+                                const isActive = isActiveLink(url, link.href);
+
                                 return (
                                     <Link
                                         key={link.href}
                                         href={link.href}
                                         onClick={closeMenu}
-                                        className={cn(
-                                            'relative rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors duration-150',
-                                            isActive
-                                                ? 'text-teal-700'
-                                                : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-900',
-                                        )}
+                                        className={buttonVariants({
+                                            variant: 'ghost',
+                                            size: 'sm',
+                                            className: cn(
+                                                'relative hover:bg-transparent',
+                                                isActive
+                                                    ? 'text-slate-900'
+                                                    : 'text-slate-500',
+                                            ),
+                                        })}
                                     >
-                                        {link.label}
                                         {isActive && (
-                                            <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-teal-500" />
+                                            <motion.span
+                                                layoutId="nav-active"
+                                                className="absolute inset-0 rounded-lg bg-slate-100"
+                                                transition={{
+                                                    type: 'spring',
+                                                    stiffness: 420,
+                                                    damping: 36,
+                                                }}
+                                            />
                                         )}
+                                        <span className="relative">
+                                            {link.label}
+                                        </span>
                                     </Link>
                                 );
                             })}
                         </nav>
 
-                        {/* Séparateur */}
-                        <div className="mx-1 hidden h-4 w-px bg-slate-200 md:block" />
-
-                        {/* Desktop CTA */}
-                        <div className="hidden md:block">
+                        <div className="flex items-center justify-end gap-2">
                             <Link
                                 href="/contact"
                                 onClick={closeMenu}
-                                className="inline-flex items-center rounded-md bg-teal-600 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(26,163,137,0.2)_inset] transition-all duration-200 hover:bg-teal-700 hover:shadow-[0_2px_8px_rgba(26,163,137,0.25)]"
+                                className={buttonVariants({ size: 'sm' })}
                             >
-                                Me contacter
+                                <span className="md:hidden">Contact</span>
+                                <span className="hidden md:inline">
+                                    Me contacter
+                                </span>
                             </Link>
                         </div>
-
-                        {/* Hamburger */}
-                        <button
-                            onClick={() => setMenuOpen((v) => !v)}
-                            aria-label={
-                                menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'
-                            }
-                            aria-expanded={menuOpen}
-                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 md:hidden"
-                        >
-                            <div className="relative h-[14px] w-[18px]">
-                                <span
-                                    className={cn(
-                                        'absolute top-0 left-0 h-[1.5px] w-full rounded-full bg-current transition-all duration-200',
-                                        menuOpen ? 'top-[6px] rotate-45' : '',
-                                    )}
-                                />
-                                <span
-                                    className={cn(
-                                        'absolute top-[6px] left-0 h-[1.5px] w-full rounded-full bg-current transition-opacity duration-200',
-                                        menuOpen ? 'opacity-0' : '',
-                                    )}
-                                />
-                                <span
-                                    className={cn(
-                                        'absolute top-[12px] left-0 h-[1.5px] w-full rounded-full bg-current transition-all duration-200',
-                                        menuOpen ? 'top-[6px] -rotate-45' : '',
-                                    )}
-                                />
-                            </div>
-                        </button>
                     </header>
+                </div>
+            </motion.div>
 
-                    {/* Mobile dropdown */}
-                    {menuOpen && (
-                        <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 p-3 shadow-[0_18px_40px_rgba(15,23,42,0.10)] supports-[backdrop-filter]:backdrop-blur-md md:hidden">
-                            <div className="space-y-1">
-                                {navLinks.map((link) => {
-                                    const isActive =
-                                        link.href === '/'
-                                            ? url === '/'
-                                            : url.startsWith(link.href);
-                                    return (
+            {/* ══ MENU PLEIN ÉCRAN (mobile) ═══════════════════════════════ */}
+            <AnimatePresence>
+                {menuOpen && (
+                    <motion.div
+                        key="mobile-menu"
+                        initial={{ clipPath: 'circle(0% at 90% 94%)' }}
+                        animate={{ clipPath: 'circle(150% at 90% 94%)' }}
+                        exit={{ clipPath: 'circle(0% at 90% 94%)' }}
+                        transition={{ duration: 0.6, ease: easings.expo }}
+                        className="fixed inset-0 z-[60] flex flex-col justify-between bg-[#171511] px-6 pt-24 pb-32 md:hidden"
+                    >
+                        <nav className="flex flex-col gap-1">
+                            {[
+                                ...navLinks,
+                                { href: '/contact', label: 'Contact' },
+                            ].map((link, i) => (
+                                <span
+                                    key={link.href}
+                                    className="block overflow-hidden"
+                                >
+                                    <motion.span
+                                        className="block"
+                                        initial={{ y: '110%' }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: '110%' }}
+                                        transition={{
+                                            duration: 0.6,
+                                            delay: 0.12 + i * 0.05,
+                                            ease: easings.expo,
+                                        }}
+                                    >
                                         <Link
-                                            key={link.href}
                                             href={link.href}
                                             onClick={closeMenu}
                                             className={cn(
-                                                'flex items-center justify-between rounded-lg px-4 py-3 text-[14px] font-medium transition-colors',
-                                                isActive
-                                                    ? 'border border-teal-100/80 bg-teal-50 text-teal-700'
-                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                                                'flex items-baseline gap-4 py-1 font-display text-[44px] leading-tight font-bold tracking-[-0.04em] transition-colors active:text-teal-300',
+                                                isActiveLink(url, link.href)
+                                                    ? 'text-teal-400'
+                                                    : 'text-white',
                                             )}
                                         >
+                                            <span className="font-mono text-[11px] font-normal tracking-normal text-white/30">
+                                                {String(i + 1).padStart(2, '0')}
+                                            </span>
                                             {link.label}
-                                            {isActive && (
-                                                <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                                            )}
                                         </Link>
-                                    );
-                                })}
-                                <div className="pt-1">
-                                    <Link
-                                        href="/contact"
-                                        onClick={closeMenu}
-                                        className="flex w-full items-center justify-center gap-2 rounded-md bg-teal-600 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-teal-700"
-                                    >
-                                        Me contacter
-                                    </Link>
-                                </div>
+                                    </motion.span>
+                                </span>
+                            ))}
+                        </nav>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{
+                                duration: 0.5,
+                                delay: 0.4,
+                                ease: easings.smooth,
+                            }}
+                            className="flex flex-col gap-5"
+                        >
+                            <a
+                                href="mailto:contact@mrsergio.dev"
+                                className="font-mono text-[14px] text-white/60"
+                            >
+                                contact@mrsergio.dev
+                            </a>
+                            <div className="flex gap-3">
+                                {socials
+                                    .filter(
+                                        (social) =>
+                                            !social.href.startsWith('mailto'),
+                                    )
+                                    .map((social) => (
+                                        <a
+                                            key={social.label}
+                                            href={social.href}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={buttonVariants({
+                                                variant: 'dark',
+                                                size: 'sm',
+                                            })}
+                                        >
+                                            {social.icon}
+                                            {social.label}
+                                        </a>
+                                    ))}
                             </div>
-                        </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ══ BARRE DU BAS (mobile, zone du pouce) ═══════════════════ */}
+            <nav
+                aria-label="Navigation mobile"
+                className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[70] md:hidden"
+            >
+                <div
+                    className={cn(
+                        'grid grid-cols-5 rounded-2xl border p-1.5 backdrop-blur-xl transition-colors duration-300',
+                        menuOpen
+                            ? 'border-white/10 bg-white/10'
+                            : 'border-slate-200/80 bg-white/85 shadow-[0_12px_32px_-12px_rgba(26,25,22,0.35)]',
                     )}
+                >
+                    {bottomNavLinks.map((link) => {
+                        const isActive =
+                            !menuOpen && isActiveLink(url, link.href);
+                        const Icon = link.icon;
+
+                        return (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={closeMenu}
+                                className={cn(
+                                    'relative flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-[color,transform] duration-200 active:scale-90',
+                                    isActive
+                                        ? 'text-teal-700'
+                                        : menuOpen
+                                          ? 'text-white/50'
+                                          : 'text-slate-500',
+                                )}
+                            >
+                                {isActive && (
+                                    <motion.span
+                                        layoutId="bottom-nav-active"
+                                        className="absolute inset-0 rounded-xl bg-teal-50"
+                                        transition={{
+                                            type: 'spring',
+                                            stiffness: 420,
+                                            damping: 36,
+                                        }}
+                                    />
+                                )}
+                                <Icon
+                                    className="relative h-[18px] w-[18px]"
+                                    strokeWidth={1.8}
+                                />
+                                <span className="relative">{link.label}</span>
+                            </Link>
+                        );
+                    })}
+
+                    <button
+                        type="button"
+                        onClick={() => setMenuOpen((open) => !open)}
+                        aria-label={
+                            menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'
+                        }
+                        aria-expanded={menuOpen}
+                        className={cn(
+                            'flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-[color,background-color,transform] duration-200 active:scale-90',
+                            menuOpen
+                                ? 'bg-teal-500 text-[#0b2a24]'
+                                : 'text-slate-500',
+                        )}
+                    >
+                        {menuOpen ? (
+                            <X
+                                className="h-[18px] w-[18px]"
+                                strokeWidth={1.8}
+                            />
+                        ) : (
+                            <Menu
+                                className="h-[18px] w-[18px]"
+                                strokeWidth={1.8}
+                            />
+                        )}
+                        {menuOpen ? 'Fermer' : 'Menu'}
+                    </button>
                 </div>
-            </div>
+            </nav>
 
             {/* ══ CONTENU ═══════════════════════════════════════════════════ */}
-            <main>{children}</main>
+            <main className="relative z-10 overflow-clip rounded-b-[28px] bg-white shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] sm:rounded-b-[40px]">
+                {children}
+            </main>
 
             {/* ══ FOOTER ════════════════════════════════════════════════════ */}
-            <footer className="relative overflow-hidden border-t border-white/[0.04] bg-[#171511]">
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 flex items-end justify-center overflow-hidden select-none"
-                >
-                    <span
-                        className="translate-y-8 font-display leading-none font-extrabold tracking-[-0.05em] whitespace-nowrap text-slate-50/[0.03] uppercase"
-                        style={{ fontSize: 'clamp(72px, 15vw, 220px)' }}
-                    >
-                        Mr Sergio
-                    </span>
-                </div>
-                <div className="container-main py-16 sm:py-20">
-                    <div className="grid gap-10 border-b border-white/[0.08] py-10 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] sm:py-12 lg:grid-cols-[minmax(0,1.1fr)_220px_260px]">
+            <footer className="relative z-0 overflow-hidden bg-[#171511] pb-28 md:pb-0 [@media(min-width:1024px)_and_(min-height:780px)]:sticky [@media(min-width:1024px)_and_(min-height:780px)]:bottom-0">
+                <div className="container-main relative pt-20 sm:pt-24">
+                    <div className="grid gap-10 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:grid-cols-[minmax(0,1.2fr)_200px_240px]">
                         <div className="max-w-md">
-                            <Link
-                                href="/"
-                                onClick={closeMenu}
-                                className="flex items-center gap-2.5"
-                            >
-                                <LogoMark size={26} />
-                                <span className="font-display text-[14px] font-bold tracking-tight text-white/80">
-                                    mr
-                                    <span className="text-teal-400">
-                                        sergio
-                                    </span>
-                                    <span className="ml-px font-mono text-[10px] font-normal text-white/20">
-                                        .dev
-                                    </span>
-                                </span>
-                            </Link>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {footerNotes.map((note) => (
-                                    <span
-                                        key={note}
-                                        className="rounded-md border border-white/[0.08] px-2.5 py-1 text-[11px] tracking-[0.14em] text-white/34 uppercase"
-                                    >
-                                        {note}
-                                    </span>
-                                ))}
+                            <p className="font-display text-2xl leading-tight font-bold tracking-tight text-white sm:text-3xl">
+                                Une idée, une application à construire&nbsp;?
+                            </p>
+                            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/45">
+                                Développeur full stack basé au Cameroun. Web,
+                                Android, et formations.
+                            </p>
+                            <div className="mt-7 flex flex-wrap gap-3">
+                                <Link
+                                    href="/contact"
+                                    className={buttonVariants()}
+                                >
+                                    Me contacter
+                                </Link>
+                                <a
+                                    href="mailto:contact@mrsergio.dev"
+                                    className={buttonVariants({
+                                        variant: 'dark',
+                                        className: 'font-mono font-normal',
+                                    })}
+                                >
+                                    contact@mrsergio.dev
+                                </a>
                             </div>
                         </div>
 
                         <div>
-                            <p className="mb-4 text-[11px] font-semibold tracking-[0.18em] text-white/26 uppercase">
+                            <p className="mb-4 font-mono text-[11px] text-white/30">
                                 Explorer
                             </p>
                             <ul className="space-y-2.5">
@@ -351,8 +458,7 @@ export default function MainLayout({ children }: Props) {
                                     <li key={link.href}>
                                         <Link
                                             href={link.href}
-                                            onClick={closeMenu}
-                                            className="text-[14px] text-white/42 transition-colors duration-200 hover:text-white"
+                                            className="text-[15px] text-white/55 transition-colors duration-200 hover:text-white"
                                         >
                                             {link.label}
                                         </Link>
@@ -362,75 +468,66 @@ export default function MainLayout({ children }: Props) {
                         </div>
 
                         <div>
-                            <p className="mb-4 text-[11px] font-semibold tracking-[0.18em] text-white/26 uppercase">
+                            <p className="mb-4 font-mono text-[11px] text-white/30">
                                 Suivre
                             </p>
-                            <div className="flex flex-col gap-3">
+                            <ul className="space-y-2.5">
                                 {socials.map((social) => (
-                                    <a
-                                        key={social.label}
-                                        href={social.href}
-                                        target={
-                                            social.href.startsWith('mailto')
-                                                ? undefined
-                                                : '_blank'
-                                        }
-                                        rel="noreferrer"
-                                        className="group inline-flex items-center gap-3 text-[14px] text-white/42 transition-colors duration-200 hover:text-white"
-                                    >
-                                        <span className="flex h-8 w-8 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/40 transition-colors duration-200 group-hover:border-white/[0.14] group-hover:text-teal-400">
-                                            {social.icon}
-                                        </span>
-                                        <span>{social.label}</span>
-                                    </a>
+                                    <li key={social.label}>
+                                        <a
+                                            href={social.href}
+                                            target={
+                                                social.href.startsWith('mailto')
+                                                    ? undefined
+                                                    : '_blank'
+                                            }
+                                            rel="noreferrer"
+                                            className="group inline-flex items-center gap-2.5 text-[15px] text-white/55 transition-colors duration-200 hover:text-white"
+                                        >
+                                            <span className="text-white/35 transition-colors group-hover:text-teal-400">
+                                                {social.icon}
+                                            </span>
+                                            {social.label}
+                                        </a>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 pt-6 text-[11px] text-white/20 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-16 flex flex-col gap-4 border-t border-white/[0.08] pt-6 text-[12px] text-white/30 sm:flex-row sm:items-center sm:justify-between">
                         <p>
-                            © {new Date().getFullYear()} Sergio Junior Chebeu —
-                            Tous droits reserves.
+                            © {new Date().getFullYear()} Sergio Junior Chebeu ·
+                            Tous droits réservés
                         </p>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-                            <span>
-                                Base au Cameroun • Disponible a distance
-                            </span>
-                            <a
-                                href="https://www.kennhosting.com"
-                                target="_blank"
-                                rel="noreferrer"
-                                aria-label="Site hébergé par KennHosting"
-                                className="group inline-flex w-fit items-center gap-2.5 border border-white/[0.12] bg-white/[0.035] px-3 py-2 text-left transition-colors duration-200 hover:border-teal-400/40 hover:bg-teal-400/[0.06]"
-                            >
-                                <span className="flex h-7 w-7 items-center justify-center overflow-hidden border border-teal-400/35 text-[10px] font-black tracking-[-0.08em] text-teal-300 transition-colors group-hover:border-teal-300 group-hover:text-teal-200">
-                                    {hostingLogoFailed ? (
-                                        'KH'
-                                    ) : (
-                                        <img
-                                            src="https://www.kennhosting.com/favicon.ico"
-                                            alt=""
-                                            className="h-full w-full object-contain p-1"
-                                            onError={() =>
-                                                setHostingLogoFailed(true)
-                                            }
-                                        />
-                                    )}
-                                </span>
-                                <span className="flex flex-col gap-0.5 leading-none">
-                                    <span className="text-[9px] font-semibold tracking-[0.16em] text-white/30 uppercase">
-                                        Hébergé par
-                                    </span>
-                                    <RevealText
-                                        text="KennHosting"
-                                        duration={0.65}
-                                        className="text-[12px] font-semibold tracking-tight text-white/75 transition-colors group-hover:text-white"
+                        <a
+                            href="https://www.kennhosting.com"
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="Site hébergé par KennHosting"
+                            className="group inline-flex w-fit items-center gap-2 transition-colors hover:text-white/70"
+                        >
+                            <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded text-[9px] font-black text-teal-300">
+                                {hostingLogoFailed ? (
+                                    'KH'
+                                ) : (
+                                    <img
+                                        src="https://www.kennhosting.com/favicon.ico"
+                                        alt=""
+                                        className="h-full w-full object-contain"
+                                        onError={() =>
+                                            setHostingLogoFailed(true)
+                                        }
                                     />
-                                </span>
-                            </a>
-                        </div>
+                                )}
+                            </span>
+                            Hébergé par KennHosting
+                        </a>
                     </div>
+                </div>
+
+                <div className="relative mt-6 sm:mt-10">
+                    <FooterWordmark />
                 </div>
             </footer>
         </div>

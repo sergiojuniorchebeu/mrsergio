@@ -10,6 +10,7 @@ import {
     TagInput,
     MarkdownEditor,
 } from '@/components/admin/shared';
+import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
 
@@ -427,16 +428,7 @@ export default function BlogForm({ post }: { post: Post | null }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={cn(
-                                    'flex w-full items-center justify-center gap-2',
-                                    'rounded-md py-2.5 text-[13px] font-semibold text-white',
-                                    'bg-teal-600',
-                                    'shadow-[0_1px_3px_rgba(29,158,117,0.3)]',
-                                    'transition-all duration-200',
-                                    processing
-                                        ? 'cursor-not-allowed opacity-60'
-                                        : 'hover:bg-teal-700 hover:shadow-[0_4px_12px_rgba(29,158,117,0.35)]',
-                                )}
+                                className={buttonVariants({ size: 'lg', className: 'w-full' })}
                             >
                                 {processing ? (
                                     <>
@@ -454,12 +446,7 @@ export default function BlogForm({ post }: { post: Post | null }) {
 
                             <Link
                                 href="/admin/blog"
-                                className={cn(
-                                    'flex w-full items-center justify-center',
-                                    'rounded-md py-2.5 text-[13px] font-medium text-slate-600',
-                                    'border border-slate-200 hover:border-slate-300 hover:bg-slate-50',
-                                    'transition-all duration-150',
-                                )}
+                                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full' })}
                             >
                                 Annuler
                             </Link>

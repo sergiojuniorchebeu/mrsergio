@@ -10,6 +10,7 @@ import {
     TagInput,
     MarkdownEditor,
 } from '@/components/admin/shared';
+import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
 
@@ -170,7 +171,7 @@ export default function FormationForm({
                     </svg>
                 </Link>
                 <div>
-                    <h2 className="font-display text-xl font-bold text-slate-800">
+                    <h2 className="font-display text-[26px] leading-tight font-bold tracking-[-0.02em] text-slate-900">
                         {isEdit
                             ? 'Modifier la formation'
                             : 'Nouvelle formation'}
@@ -631,12 +632,7 @@ export default function FormationForm({
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={cn(
-                                    'flex w-full items-center justify-center gap-2 rounded-md bg-teal-600 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-500/20 transition-all duration-200',
-                                    processing
-                                        ? 'cursor-not-allowed opacity-70'
-                                        : 'hover:bg-teal-700',
-                                )}
+                                className={buttonVariants({ size: 'lg', className: 'w-full' })}
                             >
                                 {processing ? (
                                     <>
@@ -669,7 +665,7 @@ export default function FormationForm({
                             </button>
                             <Link
                                 href="/admin/formations"
-                                className="flex w-full items-center justify-center rounded-md border border-slate-200 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full' })}
                             >
                                 Annuler
                             </Link>

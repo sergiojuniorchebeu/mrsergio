@@ -1,222 +1,359 @@
-// resources/js/Pages/Auth/Login.tsx
-import { Head, useForm, Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+// resources/js/pages/Auth/Login.tsx
+// Connexion à l'admin : panneau de marque à gauche (desktop), formulaire à droite.
+// Afficher/masquer le mot de passe, alerte majuscules, secousse en cas d'erreur.
 
+import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    AnimatePresence,
+    motion,
+    useAnimate,
+    useReducedMotion,
+} from 'framer-motion';
+import { useState } from 'react';
+import { buttonVariants } from '@/components/ui/button';
+import { SplitWords } from '@/components/ui/reveal';
+import { cn, easings } from '@/lib/utils';
+
+const FIELD_CLASS =
+    'w-full rounded-lg border bg-white px-4 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 outline-none transition-[border-color,box-shadow] duration-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10';
+
+const DOTS = 'radial-gradient(circle, currentColor 1px, transparent 1.4px)';
+
+function FieldError({ message }: { message?: string }) {
+    return (
+        <AnimatePresence initial={false}>
+            {message && (
+                <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-[13px] text-rose-600"
+                >
+                    {message}
+                </motion.p>
+            )}
+        </AnimatePresence>
+    );
+}
+
+// ─── Panneau de marque ───────────────────────────────────────────────────────
+function BrandPanel() {
+    return (
+        <aside className="relative isolate hidden overflow-hidden bg-[#171511] lg:flex lg:flex-col lg:justify-between lg:p-12">
+            <div
+                aria-hidden
+                className="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_80%_70%_at_30%_40%,black_30%,transparent_80%)] text-white/[0.09]"
+                style={{ backgroundImage: DOTS, backgroundSize: '22px 22px' }}
+            />
+
+            <Link
+                href="/"
+                className="font-display text-[15px] font-bold tracking-tight text-white"
+            >
+                mr<span className="text-teal-400">sergio</span>
+            </Link>
+
+            <div>
+                <p
+                    aria-hidden
+                    className="font-display leading-[0.82] font-extrabold tracking-[-0.06em] text-transparent [-webkit-text-stroke:1.5px_rgba(255,255,255,0.22)]"
+                    style={{ fontSize: 'clamp(72px, 9vw, 150px)' }}
+                >
+                    <motion.span
+                        className="block"
+                        initial={{ y: '40%', opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 1.1, ease: easings.expo }}
+                    >
+                        MR
+                    </motion.span>
+                    <motion.span
+                        className="block"
+                        initial={{ y: '40%', opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{
+                            duration: 1.1,
+                            delay: 0.1,
+                            ease: easings.expo,
+                        }}
+                    >
+                        SERGIO
+                    </motion.span>
+                </p>
+                <p className="mt-8 max-w-sm text-[17px] leading-relaxed text-white/55">
+                    Espace d&apos;administration : projets, articles, formations
+                    et messages, au même endroit.
+                </p>
+            </div>
+
+            <p className="font-mono text-[12px] text-white/30">
+                © {new Date().getFullYear()} Sergio Junior Chebeu
+            </p>
+        </aside>
+    );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═════════════════════════════════════════════════════════════════════════════
 export default function Login({ status }: { status?: string }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const prefersReducedMotion = useReducedMotion();
+    const [formScope, animateForm] = useAnimate<HTMLFormElement>();
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+    const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
     });
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        post('/login');
+    function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
+        post('/login', {
+            onError: () => {
+                reset('password');
+
+                if (!prefersReducedMotion && formScope.current) {
+                    animateForm(
+                        formScope.current,
+                        { x: [0, -10, 10, -6, 6, 0] },
+                        { duration: 0.45 },
+                    );
+                }
+            },
+        });
     }
+
+    const fadeIn = (delay: number) => ({
+        initial: { opacity: 0, y: prefersReducedMotion ? 0 : 14 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.7, delay, ease: easings.smooth },
+    });
 
     return (
         <>
             <Head title="Connexion — Admin" />
 
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-                {/* Fond décoratif */}
-                <div className="pointer-events-none absolute top-0 left-0 h-full w-full overflow-hidden">
-                    <div className="absolute top-1/4 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-teal-500/5 blur-3xl" />
-                </div>
+            <div className="grid min-h-[100svh] bg-white lg:grid-cols-[1.05fr_1fr]">
+                <BrandPanel />
 
-                <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="relative w-full max-w-md"
-                >
-                    {/* Card */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-slate-200/50">
-                        {/* Header */}
-                        <div className="border-b border-slate-100 px-8 pt-8 pb-6 text-center">
-                            <Link
-                                href="/"
-                                className="mb-6 inline-flex items-center gap-2"
+                <main className="flex flex-col px-5 py-8 sm:px-10">
+                    <div className="flex items-center justify-between">
+                        <Link
+                            href="/"
+                            className="font-display text-[15px] font-bold tracking-tight text-slate-900 lg:invisible"
+                        >
+                            mr<span className="text-teal-600">sergio</span>
+                        </Link>
+                        <Link
+                            href="/"
+                            className={buttonVariants({
+                                variant: 'ghost',
+                                size: 'sm',
+                            })}
+                        >
+                            Retour au site
+                        </Link>
+                    </div>
+
+                    <div className="flex flex-1 items-center justify-center py-12">
+                        <div className="w-full max-w-sm">
+                            <motion.p
+                                {...fadeIn(0)}
+                                className="mb-4 font-mono text-[12px] text-slate-500"
                             >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 shadow-sm shadow-teal-500/30">
-                                    <span className="font-display font-bold text-white">
-                                        S
-                                    </span>
-                                </div>
-                                <span className="font-display font-semibold text-slate-800">
-                                    mrsergio
-                                </span>
-                            </Link>
-                            <h1 className="font-display text-xl font-bold text-slate-800">
-                                Connexion admin
+                                Admin
+                            </motion.p>
+                            <h1 className="font-display text-[40px] leading-[1.02] font-bold tracking-[-0.04em] text-slate-900">
+                                <SplitWords text="Bon retour" delay={0.05} />
+                                <SplitWords
+                                    text="parmi nous."
+                                    delay={0.15}
+                                    className="text-teal-600"
+                                />
                             </h1>
-                            <p className="mt-1 text-sm text-slate-500">
-                                Accès réservé aux administrateurs
-                            </p>
-                        </div>
+                            <motion.p
+                                {...fadeIn(0.35)}
+                                className="mt-4 text-[16px] text-slate-500"
+                            >
+                                Accès réservé aux administrateurs.
+                            </motion.p>
 
-                        {/* Formulaire */}
-                        <div className="px-8 py-6">
-                            {status && (
-                                <div className="mb-4 rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-700">
-                                    {status}
-                                </div>
-                            )}
+                            <AnimatePresence>
+                                {status && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: -6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-6 rounded-lg bg-teal-50 px-4 py-3 text-[14px] text-teal-800 ring-1 ring-teal-100"
+                                    >
+                                        {status}
+                                    </motion.p>
+                                )}
+                            </AnimatePresence>
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Email */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-medium text-slate-700">
+                            <motion.form
+                                ref={formScope}
+                                {...fadeIn(0.45)}
+                                onSubmit={handleSubmit}
+                                noValidate
+                                className="mt-8 flex flex-col gap-5"
+                            >
+                                <label className="flex flex-col gap-1.5">
+                                    <span className="font-display text-[13px] font-semibold text-slate-700">
                                         Adresse email
-                                    </label>
+                                    </span>
                                     <input
                                         type="email"
                                         value={data.email}
-                                        onChange={(e) =>
-                                            setData('email', e.target.value)
+                                        onChange={(event) =>
+                                            setData('email', event.target.value)
                                         }
                                         placeholder="admin@mrsergio.dev"
                                         autoComplete="email"
                                         autoFocus
+                                        aria-invalid={Boolean(errors.email)}
                                         className={cn(
-                                            'w-full rounded-md border bg-slate-50 px-4 py-3 text-sm transition-all duration-200 outline-none',
-                                            'text-slate-800 placeholder:text-slate-400',
-                                            'focus:border-teal-400 focus:bg-white focus:ring-2 focus:ring-teal-400/15',
+                                            FIELD_CLASS,
                                             errors.email
-                                                ? 'border-red-300'
+                                                ? 'border-rose-300'
                                                 : 'border-slate-200',
                                         )}
                                     />
-                                    {errors.email && (
-                                        <p className="text-xs text-red-500">
-                                            {errors.email}
-                                        </p>
-                                    )}
-                                </div>
+                                    <FieldError message={errors.email} />
+                                </label>
 
-                                {/* Mot de passe */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-medium text-slate-700">
+                                <label className="flex flex-col gap-1.5">
+                                    <span className="font-display text-[13px] font-semibold text-slate-700">
                                         Mot de passe
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={data.password}
-                                        onChange={(e) =>
-                                            setData('password', e.target.value)
-                                        }
-                                        placeholder="••••••••"
-                                        autoComplete="current-password"
-                                        className={cn(
-                                            'w-full rounded-md border bg-slate-50 px-4 py-3 text-sm transition-all duration-200 outline-none',
-                                            'text-slate-800 placeholder:text-slate-400',
-                                            'focus:border-teal-400 focus:bg-white focus:ring-2 focus:ring-teal-400/15',
-                                            errors.password
-                                                ? 'border-red-300'
-                                                : 'border-slate-200',
+                                    </span>
+                                    <span className="relative">
+                                        <input
+                                            type={
+                                                isPasswordVisible
+                                                    ? 'text'
+                                                    : 'password'
+                                            }
+                                            value={data.password}
+                                            onChange={(event) =>
+                                                setData(
+                                                    'password',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            onKeyUp={(event) =>
+                                                setIsCapsLockOn(
+                                                    event.getModifierState(
+                                                        'CapsLock',
+                                                    ),
+                                                )
+                                            }
+                                            onBlur={() =>
+                                                setIsCapsLockOn(false)
+                                            }
+                                            placeholder="••••••••"
+                                            autoComplete="current-password"
+                                            aria-invalid={Boolean(
+                                                errors.password,
+                                            )}
+                                            className={cn(
+                                                FIELD_CLASS,
+                                                'pr-24',
+                                                errors.password
+                                                    ? 'border-rose-300'
+                                                    : 'border-slate-200',
+                                            )}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setIsPasswordVisible(
+                                                    (visible) => !visible,
+                                                )
+                                            }
+                                            aria-pressed={isPasswordVisible}
+                                            className="absolute inset-y-1.5 right-1.5 rounded-md px-3 text-[12px] font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                                        >
+                                            {isPasswordVisible
+                                                ? 'Masquer'
+                                                : 'Afficher'}
+                                        </button>
+                                    </span>
+                                    <AnimatePresence initial={false}>
+                                        {isCapsLockOn && (
+                                            <motion.span
+                                                initial={{
+                                                    opacity: 0,
+                                                    height: 0,
+                                                }}
+                                                animate={{
+                                                    opacity: 1,
+                                                    height: 'auto',
+                                                }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="text-[13px] text-amber-700"
+                                            >
+                                                Majuscules activées
+                                            </motion.span>
                                         )}
-                                    />
-                                    {errors.password && (
-                                        <p className="text-xs text-red-500">
-                                            {errors.password}
-                                        </p>
-                                    )}
-                                </div>
+                                    </AnimatePresence>
+                                    <FieldError message={errors.password} />
+                                </label>
 
-                                {/* Se souvenir */}
-                                <label className="flex cursor-pointer items-center gap-2.5">
+                                <label className="flex w-fit cursor-pointer items-center gap-3">
                                     <input
                                         type="checkbox"
                                         checked={data.remember}
-                                        onChange={(e) =>
+                                        onChange={(event) =>
                                             setData(
                                                 'remember',
-                                                e.target.checked,
+                                                event.target.checked,
                                             )
                                         }
-                                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                                        className="peer sr-only"
                                     />
-                                    <span className="text-sm text-slate-600">
-                                        Se souvenir de moi
+                                    <span
+                                        aria-hidden
+                                        className={cn(
+                                            'relative h-6 w-11 rounded-full transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-500/40',
+                                            data.remember
+                                                ? 'bg-teal-600'
+                                                : 'bg-slate-300',
+                                        )}
+                                    >
+                                        <motion.span
+                                            layout
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 500,
+                                                damping: 32,
+                                            }}
+                                            className={cn(
+                                                'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm',
+                                                data.remember
+                                                    ? 'right-0.5'
+                                                    : 'left-0.5',
+                                            )}
+                                        />
+                                    </span>
+                                    <span className="text-[14px] text-slate-600">
+                                        Rester connecté
                                     </span>
                                 </label>
 
-                                {/* Submit */}
-                                <motion.button
+                                <button
                                     type="submit"
                                     disabled={processing}
-                                    whileHover={
-                                        !processing ? { scale: 1.01 } : {}
-                                    }
-                                    whileTap={
-                                        !processing ? { scale: 0.98 } : {}
-                                    }
-                                    className={cn(
-                                        'flex w-full items-center justify-center gap-2 rounded-md px-4 py-3',
-                                        'bg-teal-600 text-sm font-semibold text-white',
-                                        'shadow-sm shadow-teal-500/20 transition-all duration-200',
-                                        processing
-                                            ? 'cursor-not-allowed opacity-70'
-                                            : 'hover:bg-teal-700',
-                                    )}
+                                    className={buttonVariants({
+                                        size: 'lg',
+                                        className: 'mt-2 w-full',
+                                    })}
                                 >
-                                    {processing ? (
-                                        <>
-                                            <svg
-                                                className="h-4 w-4 animate-spin"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                />
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                                />
-                                            </svg>
-                                            Connexion...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg
-                                                className="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                strokeWidth={2}
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                                                />
-                                            </svg>
-                                            Se connecter
-                                        </>
-                                    )}
-                                </motion.button>
-                            </form>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="px-8 pb-6 text-center">
-                            <Link
-                                href="/"
-                                className="text-xs text-slate-400 transition-colors hover:text-teal-600"
-                            >
-                                ← Retour au site public
-                            </Link>
+                                    {processing ? 'Connexion…' : 'Se connecter'}
+                                </button>
+                            </motion.form>
                         </div>
                     </div>
-                </motion.div>
+                </main>
             </div>
         </>
     );

@@ -1,286 +1,216 @@
 import { Head, Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
-import { ProjectCard } from '@/components/ui/ProjectCard';
-import { ProjectScreenshotsGallery } from '@/components/ui/ProjectScreenshotsGallery';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useMemo } from 'react';
+import { ProjectCaseStudy } from '@/components/portofolio/project-case-study';
+import { ProjectGallery } from '@/components/portofolio/project-gallery';
+import {
+    ExpandingCover,
+    ReadingProgress,
+} from '@/components/portofolio/reading-chrome';
+import { buttonVariants } from '@/components/ui/button';
+import { HeroBackdrop } from '@/components/ui/hero-backdrop';
+import {
+    DrawLine,
+    MaskedLine,
+    Reveal,
+    SplitChars,
+} from '@/components/ui/reveal';
+import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import MainLayout from '@/layouts/MainLayout';
-import { cn, easings } from '@/lib/utils';
-import type { ProjectShowProps } from '@/types';
+import { easings } from '@/lib/utils';
+import type { Project, ProjectShowProps } from '@/types';
 
-// ─── Color maps ────────────────────────────────────────────────────────────────
-const TAG_COLORS: Record<string, string> = {
-    Laravel: 'border-red-200/60    bg-red-50/80    text-red-600',
-    React: 'border-sky-200/60    bg-sky-50/80    text-sky-600',
-    Flutter: 'border-blue-200/60   bg-blue-50/80   text-blue-600',
-    TypeScript: 'border-blue-200/60   bg-blue-50/80   text-blue-700',
-    MySQL: 'border-orange-200/60 bg-orange-50/80 text-orange-600',
-    PostgreSQL: 'border-indigo-200/60 bg-indigo-50/80 text-indigo-600',
-    Firebase: 'border-amber-200/60  bg-amber-50/80  text-amber-600',
-    Redis: 'border-rose-200/60   bg-rose-50/80   text-rose-600',
-    Python: 'border-yellow-200/60 bg-yellow-50/80 text-yellow-700',
-    Dart: 'border-cyan-200/60   bg-cyan-50/80   text-cyan-600',
-};
-const PLATFORM_COLORS: Record<string, string> = {
-    Web: 'border-slate-200/60 bg-white/70       text-slate-600',
-    Android: 'border-emerald-200/60 bg-emerald-50/80 text-emerald-700',
-    iOS: 'border-sky-200/60   bg-sky-50/80      text-sky-700',
-    Desktop: 'border-indigo-200/60 bg-indigo-50/80  text-indigo-700',
-    API: 'border-amber-200/60  bg-amber-50/80   text-amber-700',
-    Windows: 'border-indigo-200/60 bg-indigo-50/80  text-indigo-700',
-    macOS: 'border-slate-200/60  bg-white/70      text-slate-600',
-    Linux: 'border-amber-200/60  bg-amber-50/80   text-amber-700',
-};
-const TYPE_MAP: Record<
-    string,
-    { color: string; glow: string; label_cls: string }
-> = {
-    web: {
-        color: '#10b981',
-        glow: 'rgba(16,185,129,0.25)',
-        label_cls: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    },
-    mobile: {
-        color: '#3b82f6',
-        glow: 'rgba(59,130,246,0.25)',
-        label_cls: 'text-blue-700   bg-blue-50   border-blue-200',
-    },
-    desktop: {
-        color: '#6366f1',
-        glow: 'rgba(99,102,241,0.25)',
-        label_cls: 'text-indigo-700 bg-indigo-50 border-indigo-200',
-    },
-    api: {
-        color: '#f59e0b',
-        glow: 'rgba(245,158,11,0.25)',
-        label_cls: 'text-amber-700  bg-amber-50  border-amber-200',
-    },
-};
-const defaultTag = 'border-slate-200/60 bg-white/60 text-slate-500';
-const defaultPlatform = 'border-slate-200/60 bg-white/60 text-slate-600';
+type ProjectLink = { href: string; label: string };
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-const GithubIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg viewBox="0 0 24 24" className={cls} fill="currentColor" aria-hidden>
-        <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-    </svg>
-);
-const ExtIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg
-        className={cls}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-        />
-    </svg>
-);
-const ArrowL = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg
-        className={cls}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M7 16l-4-4m0 0l4-4m-4 4h18"
-        />
-    </svg>
-);
-const ArrowR = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg
-        className={cls}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M17 8l4 4m0 0l-4 4m4-4H3"
-        />
-    </svg>
-);
-const AppleIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg viewBox="0 0 24 24" className={cls} fill="currentColor" aria-hidden>
-        <path d="M16.365 12.33c.02 2.127 1.864 2.835 1.884 2.844-.016.05-.295 1.015-.973 2.01-.585.862-1.19 1.72-2.147 1.738-.94.018-1.242-.558-2.317-.558-1.076 0-1.412.54-2.3.576-.92.035-1.62-.924-2.21-1.782-1.205-1.742-2.124-4.921-.888-7.065.614-1.064 1.712-1.737 2.904-1.755.905-.018 1.76.612 2.317.612.558 0 1.606-.757 2.708-.646.462.02 1.758.187 2.59 1.405-.067.042-1.546.901-1.568 2.621ZM14.36 6.042c.49-.594.82-1.422.73-2.242-.707.029-1.562.47-2.07 1.064-.455.528-.854 1.373-.747 2.18.79.061 1.596-.402 2.087-1.002Z" />
-    </svg>
-);
-const PlayStoreIcon = ({ cls = 'h-4 w-4' }: { cls?: string }) => (
-    <svg viewBox="0 0 24 24" className={cls} aria-hidden>
-        <path
-            fill="#00d7ff"
-            d="M4.8 3.5c-.24.24-.38.6-.38 1.07v14.86c0 .47.14.83.38 1.07l8.24-8.5L4.8 3.5Z"
-        />
-        <path fill="#00ef78" d="m6.7 4.45 9.28 5.39-2.15 1.96L6.7 4.45Z" />
-        <path fill="#ffcf3f" d="m6.7 19.55 9.28-5.4-2.15-1.96-7.13 7.36Z" />
-        <path
-            fill="#ff4b55"
-            d="M18.7 11.46c.82.45.82 1.18 0 1.63l-2.57 1.42-2.3-2.38 2.3-2.1 2.57 1.43Z"
-        />
-    </svg>
-);
+/**
+ * « MrMarket — App de gestion de marché » → nom + accroche.
+ */
+function splitTitle(title: string): { name: string; tagline: string | null } {
+    const [name, ...rest] = title.split(/\s+[—–-]\s+/);
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function splitContent(c?: string) {
-    return (c ?? '')
-        .split(/\n\s*\n/)
-        .map((p) => p.trim())
-        .filter(Boolean);
+    return {
+        name: name.trim(),
+        tagline: rest.length > 0 ? rest.join(' — ').trim() : null,
+    };
 }
-type ProjectAction = {
-    href: string;
+
+function projectYear(createdAt?: string): string | null {
+    return createdAt?.split('/')[2] ?? null;
+}
+
+function primaryLinks(project: Project): ProjectLink[] {
+    const links = project.store_links ?? {};
+    const candidates: (ProjectLink | null)[] = [
+        project.demo_url
+            ? {
+                  href: project.demo_url,
+                  label:
+                      project.project_type === 'web'
+                          ? 'Voir le site'
+                          : 'Voir la démo',
+              }
+            : null,
+        links.play_store
+            ? { href: links.play_store, label: 'Google Play' }
+            : null,
+        links.app_store ? { href: links.app_store, label: 'App Store' } : null,
+        links.windows ? { href: links.windows, label: 'Windows' } : null,
+        links.macos ? { href: links.macos, label: 'macOS' } : null,
+        links.linux ? { href: links.linux, label: 'Linux' } : null,
+        links.docs ? { href: links.docs, label: 'Documentation' } : null,
+    ];
+
+    return candidates.filter((link): link is ProjectLink => link !== null);
+}
+
+function previewImage(project: Project): string | null {
+    return project.image_url || project.screenshots_urls?.[0] || null;
+}
+
+// ─── Fiche technique ─────────────────────────────────────────────────────────
+function FactRow({
+    label,
+    children,
+    delay,
+}: {
     label: string;
-    icon: React.ReactNode;
-};
-
-function getProjectActions(p: ProjectShowProps['project']): ProjectAction[] {
-    const links = p.store_links ?? {};
-
-    if (p.project_type === 'mobile') {
-        return [
-            links.app_store && {
-                href: links.app_store,
-                label: 'App Store',
-                icon: <AppleIcon />,
-            },
-            links.play_store && {
-                href: links.play_store,
-                label: 'Google Play',
-                icon: <PlayStoreIcon />,
-            },
-        ].filter(Boolean) as ProjectAction[];
-    }
-
-    if (p.project_type === 'desktop') {
-        const downloads = [
-            links.windows && {
-                href: links.windows,
-                label: 'Télécharger Windows',
-                icon: <ExtIcon />,
-            },
-            links.macos && {
-                href: links.macos,
-                label: 'Télécharger macOS',
-                icon: <AppleIcon />,
-            },
-            links.linux && {
-                href: links.linux,
-                label: 'Télécharger Linux',
-                icon: <ExtIcon />,
-            },
-        ].filter(Boolean) as ProjectAction[];
-
-        return downloads.length > 0
-            ? downloads
-            : p.demo_url
-              ? [
-                    {
-                        href: p.demo_url,
-                        label: "Télécharger l'application",
-                        icon: <ExtIcon />,
-                    },
-                ]
-              : [];
-    }
-
-    if (p.project_type === 'api') {
-        return [
-            (links.docs ?? p.demo_url) && {
-                href: links.docs ?? p.demo_url!,
-                label: 'Ouvrir la documentation',
-                icon: <ExtIcon />,
-            },
-        ].filter(Boolean) as ProjectAction[];
-    }
-
-    return p.demo_url
-        ? [{ href: p.demo_url, label: 'Ouvrir le site web', icon: <ExtIcon /> }]
-        : [];
-}
-
-// ─── Eyebrow ──────────────────────────────────────────────────────────────────
-function Eyebrow({ children }: { children: React.ReactNode }) {
+    children: React.ReactNode;
+    delay: number;
+}) {
     return (
-        <p className="mb-3 flex items-center gap-2 text-[10px] font-black tracking-[0.28em] text-slate-400/90 uppercase">
-            <span className="inline-block h-px w-5 bg-teal-400/60" />
-            {children}
-        </p>
+        <div>
+            <DrawLine />
+            <Reveal
+                y={10}
+                delay={delay}
+                className="grid grid-cols-[110px_1fr] gap-4 py-4"
+            >
+                <dt className="font-mono text-[11px] tracking-wide text-slate-400 uppercase">
+                    {label}
+                </dt>
+                <dd className="text-[16px] leading-snug text-slate-800">
+                    {children}
+                </dd>
+            </Reveal>
+        </div>
     );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-export default function Show({ project, related }: ProjectShowProps) {
-    const repoDisabled = project.private_repo || !project.github_url;
-    const projectActions = getProjectActions(project);
-    const contentBlocks = splitContent(project.content);
-    const screenshots = project.screenshots?.length ?? 0;
-    const brandTeal = '#1aa389';
-    const brandTealGlow = 'rgba(26,163,137,0.22)';
-    const typeAccent = TYPE_MAP[project.project_type] ?? {
-        color: brandTeal,
-        glow: brandTealGlow,
-        label_cls: 'text-teal-700 bg-teal-50 border-teal-200',
-    };
-    const primaryButtonClass =
-        'inline-flex items-center justify-center gap-2 rounded-sm px-5 py-2.5 text-[13px] font-bold text-white transition-all hover:brightness-[1.03]';
-    const secondaryButtonClass =
-        'inline-flex items-center justify-center gap-2 rounded-sm border border-teal-200/80 bg-white/92 px-5 py-2.5 text-[13px] font-semibold text-teal-700 transition-colors hover:bg-teal-50/80 hover:text-teal-800';
+// ─── Projet suivant ──────────────────────────────────────────────────────────
+function NextProject({ projects }: { projects: Project[] }) {
+    const [next, ...others] = projects;
 
-    const allLinks = [
-        project.demo_url && {
-            href: project.demo_url,
-            label: 'Démo live',
-            icon: <ExtIcon />,
-        },
-        project.github_url &&
-            !project.private_repo && {
-                href: project.github_url,
-                label: 'Code source',
-                icon: <GithubIcon />,
-            },
-        project.store_links?.play_store && {
-            href: project.store_links.play_store,
-            label: 'Google Play',
-            icon: <PlayStoreIcon />,
-        },
-        project.store_links?.app_store && {
-            href: project.store_links.app_store,
-            label: 'App Store',
-            icon: <AppleIcon />,
-        },
-        project.store_links?.windows && {
-            href: project.store_links.windows,
-            label: 'Windows',
-            icon: <ExtIcon />,
-        },
-        project.store_links?.macos && {
-            href: project.store_links.macos,
-            label: 'macOS',
-            icon: <AppleIcon />,
-        },
-        project.store_links?.docs && {
-            href: project.store_links.docs,
-            label: 'Documentation',
-            icon: <ExtIcon />,
-        },
-        project.store_links?.base_url && {
-            href: project.store_links.base_url,
-            label: 'Base URL',
-            icon: <ExtIcon />,
-        },
-    ].filter(Boolean) as ProjectAction[];
+    if (!next) {
+        return null;
+    }
+
+    const { name, tagline } = splitTitle(next.title);
+    const image = previewImage(next);
+
+    return (
+        <section className="relative isolate overflow-clip border-t border-slate-200/80 bg-white py-24 sm:py-32">
+            <SectionBackdrop pattern="grid" />
+            <div className="container-main">
+                <Reveal y={8}>
+                    <p className="mb-8 font-mono text-[11px] text-slate-400">
+                        Projet suivant
+                    </p>
+                </Reveal>
+
+                <Link
+                    href={`/projects/${next.slug}`}
+                    className="group grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]"
+                >
+                    <div>
+                        <h2 className="font-display text-[44px] leading-[0.98] font-bold tracking-[-0.045em] text-slate-900 transition-colors duration-500 group-hover:text-teal-700 sm:text-7xl lg:text-[92px]">
+                            <MaskedLine onScroll>{name}</MaskedLine>
+                        </h2>
+                        {tagline && (
+                            <Reveal delay={0.15}>
+                                <p className="mt-5 max-w-lg text-[19px] leading-relaxed text-slate-600">
+                                    {tagline}
+                                </p>
+                            </Reveal>
+                        )}
+                        <Reveal delay={0.25}>
+                            <span
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    className: 'mt-8',
+                                })}
+                            >
+                                Découvrir le projet
+                            </span>
+                        </Reveal>
+                    </div>
+
+                    {image && (
+                        <Reveal delay={0.1}>
+                            <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                                <img
+                                    src={image}
+                                    alt={next.title}
+                                    loading="lazy"
+                                    className="h-full w-full object-cover object-top transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.05]"
+                                />
+                            </div>
+                        </Reveal>
+                    )}
+                </Link>
+
+                {others.length > 0 && (
+                    <div className="mt-20">
+                        <p className="mb-2 font-mono text-[11px] text-slate-400">
+                            Autres projets
+                        </p>
+                        <ul>
+                            {others.map((project) => (
+                                <li key={project.id}>
+                                    <DrawLine />
+                                    <Link
+                                        href={`/projects/${project.slug}`}
+                                        className="group flex items-baseline justify-between gap-6 py-5"
+                                    >
+                                        <span className="font-display text-xl font-bold tracking-tight text-slate-900 transition-[color,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-2 group-hover:text-teal-700 sm:text-2xl">
+                                            {splitTitle(project.title).name}
+                                        </span>
+                                        <span className="shrink-0 font-mono text-[12px] text-slate-400 capitalize">
+                                            {project.project_type_label ??
+                                                project.project_type}
+                                        </span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                        <DrawLine />
+                    </div>
+                )}
+            </div>
+        </section>
+    );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+export default function Show({ project, related }: ProjectShowProps) {
+    const prefersReducedMotion = useReducedMotion();
+    const { name, tagline } = splitTitle(project.title);
+    const year = projectYear(project.created_at);
+    const links = primaryLinks(project);
+    const hasPublicCode = Boolean(project.github_url) && !project.private_repo;
+    const cover = previewImage(project);
+    const screenshots = useMemo(
+        () => (project.screenshots_urls ?? []).filter((src) => src !== cover),
+        [project.screenshots_urls, cover],
+    );
+    const typeLabel = project.project_type_label ?? project.project_type;
+
+    const fadeIn = (delay: number) => ({
+        initial: { opacity: 0, y: prefersReducedMotion ? 0 : 16 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.8, delay, ease: easings.smooth },
+    });
 
     return (
         <MainLayout>
@@ -296,515 +226,145 @@ export default function Show({ project, related }: ProjectShowProps) {
                 <meta name="twitter:image" content={project.image_url} />
             </Head>
 
-            <section className="relative overflow-hidden border-b border-slate-200/60 bg-white pt-[104px]">
-                <AnimatedGridPattern
-                    numSquares={22}
-                    maxOpacity={0.035}
-                    duration={4.5}
-                    repeatDelay={0.8}
-                    className={cn(
-                        'absolute inset-0 h-full w-full text-teal-600/70',
-                        '[mask-image:radial-gradient(720px_circle_at_50%_10%,white,transparent)]',
-                    )}
-                />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,rgba(26,163,137,0.08),transparent_26%),radial-gradient(circle_at_88%_12%,rgba(15,23,42,0.05),transparent_22%)]" />
-                <div className="pointer-events-none absolute top-24 left-[8%] h-24 w-24 rounded-full border border-teal-200/35" />
-                <div className="pointer-events-none absolute right-[10%] bottom-12 h-px w-16 bg-teal-300/50" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(255,255,255,0.92))]" />
+            <ReadingProgress />
 
-                <div className="container-main relative z-10 py-14 sm:py-16">
+            {/* ══ HERO ═══════════════════════════════════════════════ */}
+            <HeroBackdrop>
+                <div className="container-main pt-[110px] pb-14 sm:pt-[130px] sm:pb-20">
                     <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.35 }}
-                        className="mb-7"
+                        {...fadeIn(0)}
+                        className="mb-10 flex flex-wrap items-center gap-3"
                     >
                         <Link
                             href="/projects"
-                            className="group inline-flex items-center gap-2 text-[11px] font-bold tracking-[0.18em] text-slate-500 uppercase transition-colors hover:text-teal-700"
+                            className={buttonVariants({
+                                variant: 'outline',
+                                size: 'sm',
+                            })}
                         >
-                            <ArrowL cls="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
                             Tous les projets
                         </Link>
+                        <span className="font-mono text-[12px] text-slate-500">
+                            <span className="capitalize">{typeLabel}</span>
+                            {year && <span> · {year}</span>}
+                            {project.featured && (
+                                <span className="text-teal-600">
+                                    {' '}
+                                    · À la une
+                                </span>
+                            )}
+                        </span>
                     </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 32 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: 0.6,
-                            delay: 0.1,
-                            ease: easings.smooth,
-                        }}
-                        className="max-w-3xl"
-                    >
-                        <div className="mb-5 flex flex-wrap items-center gap-2">
-                            <span
-                                className={cn(
-                                    'rounded-sm border px-3 py-1 text-[10px] font-black tracking-[0.2em] uppercase',
-                                    typeAccent.label_cls,
-                                )}
-                            >
-                                {project.project_type_label ??
-                                    project.project_type}
-                            </span>
-                            {project.platforms?.slice(0, 3).map((p) => (
-                                <span
-                                    key={p}
-                                    className="rounded-sm border border-slate-200 bg-white/75 px-2.5 py-1 text-[10px] font-semibold text-slate-600"
+                    <div className="grid gap-12 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16">
+                        <div>
+                            <h1 className="font-display text-[48px] leading-[0.96] font-bold tracking-[-0.05em] text-[#1a1916] sm:text-7xl lg:text-[104px]">
+                                <SplitChars text={name} delay={0.1} />
+                            </h1>
+                            {tagline && (
+                                <motion.p
+                                    {...fadeIn(0.45)}
+                                    className="mt-5 font-display text-2xl font-semibold tracking-tight text-teal-700 sm:text-3xl"
                                 >
-                                    {p}
-                                </span>
-                            ))}
-                        </div>
-
-                        <h1 className="max-w-4xl font-display text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] font-black tracking-[-0.045em] text-slate-950">
-                            {project.title}
-                        </h1>
-
-                        <p className="mt-5 max-w-2xl text-[15px] leading-[1.9] text-slate-600 sm:text-[17px]">
-                            {project.description}
-                        </p>
-
-                        <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-200/70 pt-6">
-                            {projectActions.map((action, index) => (
-                                <a
-                                    key={action.label}
-                                    href={action.href}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={
-                                        index === 0
-                                            ? primaryButtonClass
-                                            : secondaryButtonClass
-                                    }
-                                    style={
-                                        index === 0
-                                            ? {
-                                                  background: brandTeal,
-                                                  boxShadow: `0 0 24px ${brandTealGlow}`,
-                                              }
-                                            : undefined
-                                    }
-                                >
-                                    {action.icon}
-                                    {action.label}
-                                </a>
-                            ))}
-                            {!repoDisabled && (
-                                <a
-                                    href={project.github_url!}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={secondaryButtonClass}
-                                >
-                                    <GithubIcon cls="h-4 w-4" />
-                                    Voir le code
-                                </a>
+                                    {tagline}
+                                </motion.p>
                             )}
-                        </div>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* Mobile sticky bar */}
-            {(projectActions.length > 0 || !repoDisabled) && (
-                <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="sticky top-[56px] z-30 border-b border-white/40 bg-white/80 backdrop-blur-lg lg:hidden"
-                >
-                    <div className="container-main flex flex-wrap gap-3 py-3">
-                        {projectActions.map((action, index) => (
-                            <a
-                                key={action.label}
-                                href={action.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={
-                                    index === 0
-                                        ? 'flex min-w-0 flex-1 items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-[13px] font-bold text-white transition-colors'
-                                        : 'flex min-w-0 flex-1 items-center justify-center gap-2 rounded-sm border border-teal-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-teal-700 transition-colors hover:bg-teal-50/70'
-                                }
-                                style={
-                                    index === 0
-                                        ? { background: brandTeal }
-                                        : undefined
-                                }
+                            <motion.p
+                                {...fadeIn(0.55)}
+                                className="mt-6 max-w-[38rem] text-[20px] leading-[1.6] text-slate-700"
                             >
-                                {action.icon}
-                                <span className="truncate">{action.label}</span>
-                            </a>
-                        ))}
-                        {!repoDisabled && (
-                            <a
-                                href={project.github_url!}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2 rounded-sm border border-teal-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-teal-700 transition-colors hover:bg-teal-50/70"
-                            >
-                                <GithubIcon /> Code
-                            </a>
-                        )}
-                    </div>
-                </motion.div>
-            )}
+                                {project.description}
+                            </motion.p>
 
-            <div className="relative overflow-hidden bg-white">
-                <AnimatedGridPattern
-                    numSquares={40}
-                    maxOpacity={0.04}
-                    duration={4}
-                    repeatDelay={0.6}
-                    className={cn(
-                        'absolute inset-0 h-full w-full text-teal-600/70',
-                        '[mask-image:radial-gradient(900px_circle_at_50%_20%,white,transparent)]',
-                    )}
-                />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />
-
-                <div className="container-main relative z-10 py-14 lg:py-18">
-                    {project.screenshots?.length > 0 && (
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.55,
-                                delay: 0.14,
-                                ease: easings.smooth,
-                            }}
-                            className="mb-14"
-                        >
-                            <div className="mb-6 flex items-end justify-between gap-4">
-                                <div>
-                                    <Eyebrow>Lecture visuelle</Eyebrow>
-                                    <h2 className="font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                        Quelques écrans pour situer le projet.
-                                    </h2>
-                                </div>
-                                <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-                                    {screenshots} capture
-                                    {screenshots > 1 ? 's' : ''}
-                                </span>
-                            </div>
-                            <ProjectScreenshotsGallery
-                                projectType={project.project_type}
-                                screenshots={project.screenshots}
-                                title={project.title}
-                                demoUrl={project.demo_url}
-                            />
-                        </motion.section>
-                    )}
-
-                    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-14">
-                        <motion.div
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.55,
-                                delay: 0.18,
-                                ease: easings.smooth,
-                            }}
-                            className="min-w-0 space-y-12"
-                        >
-                            <section className="border-t border-slate-200/80 pt-8">
-                                <div className="mb-8 grid gap-5 border-b border-slate-200/75 pb-6 sm:grid-cols-3">
-                                    {[
-                                        {
-                                            label: 'Format',
-                                            value:
-                                                project.project_type_label ??
-                                                project.project_type,
-                                        },
-                                        {
-                                            label: 'Plateformes',
-                                            value:
-                                                project.platforms?.length > 0
-                                                    ? project.platforms.join(
-                                                          ' · ',
-                                                      )
-                                                    : 'Digital',
-                                        },
-                                        {
-                                            label: 'Captures',
-                                            value:
-                                                screenshots > 0
-                                                    ? `${screenshots} écran${screenshots > 1 ? 's' : ''}`
-                                                    : '—',
-                                        },
-                                    ].map((item) => (
-                                        <div
-                                            key={item.label}
-                                            className="space-y-2"
-                                        >
-                                            <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                                                {item.label}
-                                            </p>
-                                            <p className="text-[14px] leading-7 font-semibold text-slate-800">
-                                                {item.value}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <Eyebrow>Vue d'ensemble</Eyebrow>
-                                <h2 className="mb-5 font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                    Le projet, son contexte et les choix qui ont
-                                    compté.
-                                </h2>
-
-                                {contentBlocks.length > 0 ? (
-                                    <div className="space-y-6">
-                                        {contentBlocks.map((para, i) => (
-                                            <motion.p
-                                                key={i}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                whileInView={{
-                                                    opacity: 1,
-                                                    y: 0,
-                                                }}
-                                                viewport={{
-                                                    once: true,
-                                                    amount: 0.2,
-                                                }}
-                                                transition={{
-                                                    duration: 0.4,
-                                                    delay: i * 0.05,
-                                                }}
-                                                className="max-w-3xl text-[15px] leading-[1.95] text-slate-600 sm:text-[16px]"
-                                            >
-                                                {para}
-                                            </motion.p>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-[15px] leading-8 text-slate-400">
-                                        Pas de description disponible.
-                                    </p>
-                                )}
-                            </section>
-
-                            <section className="border-t border-slate-200/80 pt-8">
-                                <Eyebrow>Ce qu'il faut retenir</Eyebrow>
-                                <div className="grid gap-8 sm:grid-cols-2">
-                                    <div>
-                                        <h3 className="mb-3 text-[12px] font-black tracking-[0.14em] text-slate-800 uppercase">
-                                            Ce qu'on retient
-                                        </h3>
-                                        <p className="text-[14px] leading-[1.85] text-slate-600">
-                                            Le travail a surtout porté sur la
-                                            lisibilité, la fluidité et une base
-                                            assez propre pour faire évoluer le
-                                            produit sans le compliquer.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <h3 className="mb-3 text-[12px] font-black tracking-[0.14em] text-slate-800 uppercase">
-                                            Côté technique
-                                        </h3>
-                                        <p className="text-[14px] leading-[1.85] text-slate-600">
-                                            La stack et la structure ont été
-                                            choisies pour rester cohérentes avec
-                                            le produit, sans surcouche inutile.
-                                        </p>
-                                    </div>
-                                </div>
-                            </section>
-                        </motion.div>
-
-                        <motion.aside
-                            initial={{ opacity: 0, y: 24 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                duration: 0.55,
-                                delay: 0.24,
-                                ease: easings.smooth,
-                            }}
-                            className="space-y-8 lg:sticky lg:top-28 lg:self-start"
-                        >
-                            {project.image_url && (
-                                <div className="overflow-hidden rounded-lg border border-slate-200/85 bg-white/70 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.05)] backdrop-blur-sm">
-                                    <div className="relative aspect-[16/11] overflow-hidden rounded-md bg-[#ebe7de]">
-                                        <img
-                                            src={project.image_url}
-                                            alt={project.title}
-                                            className="h-full w-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/12 to-transparent" />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="border-t border-slate-200/80 pt-6">
-                                <Eyebrow>Actions</Eyebrow>
-                                <div className="space-y-2.5">
-                                    {projectActions.map((action, index) => (
+                            {(links.length > 0 || hasPublicCode) && (
+                                <motion.div
+                                    {...fadeIn(0.65)}
+                                    className="mt-9 flex flex-wrap gap-3"
+                                >
+                                    {links.map((link, index) => (
                                         <a
-                                            key={action.label}
-                                            href={action.href}
+                                            key={link.href}
+                                            href={link.href}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className={cn(
-                                                'w-full',
-                                                index === 0
-                                                    ? primaryButtonClass
-                                                    : secondaryButtonClass,
-                                            )}
-                                            style={
-                                                index === 0
-                                                    ? {
-                                                          background: brandTeal,
-                                                          boxShadow: `0 4px 20px ${brandTealGlow}`,
-                                                      }
-                                                    : undefined
-                                            }
+                                            className={buttonVariants({
+                                                variant:
+                                                    index === 0
+                                                        ? 'default'
+                                                        : 'outline',
+                                                size: 'lg',
+                                            })}
                                         >
-                                            {action.icon}
-                                            {action.label}
+                                            {link.label}
                                         </a>
                                     ))}
-                                    {!repoDisabled ? (
+                                    {hasPublicCode && (
                                         <a
                                             href={project.github_url!}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className={secondaryButtonClass}
+                                            className={buttonVariants({
+                                                variant:
+                                                    links.length === 0
+                                                        ? 'default'
+                                                        : 'outline',
+                                                size: 'lg',
+                                            })}
                                         >
-                                            <GithubIcon />
-                                            Voir le code
+                                            Code source
                                         </a>
-                                    ) : (
-                                        <div className="flex items-center justify-center gap-2 rounded-sm border border-slate-200 bg-white px-4 py-3 text-[13px] font-semibold text-slate-400">
-                                            <GithubIcon />
-                                            {project.private_repo
-                                                ? 'Dépôt privé'
-                                                : 'Non disponible'}
-                                        </div>
                                     )}
-                                </div>
-                            </div>
-
-                            <div className="border-t border-slate-200/80 pt-6">
-                                <Eyebrow>Stack</Eyebrow>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {project.tags.map((t) => (
-                                        <span
-                                            key={t}
-                                            className={cn(
-                                                'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                                TAG_COLORS[t] ?? defaultTag,
-                                            )}
-                                        >
-                                            {t}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {project.platforms?.length > 0 && (
-                                <div className="border-t border-slate-200/80 pt-6">
-                                    <Eyebrow>Distribution</Eyebrow>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {project.platforms.map((p) => (
-                                            <span
-                                                key={p}
-                                                className={cn(
-                                                    'rounded-sm border px-2.5 py-1 text-[11px] font-semibold',
-                                                    PLATFORM_COLORS[p] ??
-                                                        defaultPlatform,
-                                                )}
-                                            >
-                                                {p}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
+                                </motion.div>
                             )}
+                        </div>
 
-                            {allLinks.length > 0 && (
-                                <div className="border-t border-slate-200/80 pt-6">
-                                    <Eyebrow>Liens utiles</Eyebrow>
-                                    <div className="space-y-2">
-                                        {allLinks.map((l) => (
-                                            <a
-                                                key={l.label}
-                                                href={l.href}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="group flex items-center justify-between border-b border-slate-200/70 py-2.5 text-[13px] font-medium text-slate-600 transition-colors hover:text-slate-950"
-                                            >
-                                                {l.label}
-                                                <span className="text-slate-300 transition-colors group-hover:text-teal-600">
-                                                    {l.icon}
-                                                </span>
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
+                        <dl className="self-end">
+                            <FactRow label="Type" delay={0.3}>
+                                <span className="capitalize">{typeLabel}</span>
+                            </FactRow>
+                            {project.platforms.length > 0 && (
+                                <FactRow label="Plateformes" delay={0.38}>
+                                    {project.platforms.join(', ')}
+                                </FactRow>
                             )}
-                        </motion.aside>
+                            {project.tags.length > 0 && (
+                                <FactRow label="Stack" delay={0.46}>
+                                    {project.tags.join(', ')}
+                                </FactRow>
+                            )}
+                            {year && (
+                                <FactRow label="Année" delay={0.54}>
+                                    {year}
+                                </FactRow>
+                            )}
+                            <FactRow label="Code" delay={0.62}>
+                                {hasPublicCode ? 'Public sur GitHub' : 'Privé'}
+                            </FactRow>
+                            <DrawLine />
+                        </dl>
                     </div>
                 </div>
-            </div>
+            </HeroBackdrop>
 
-            {/* ══════════════════════════════════════════════════════════
-                RELATED
-            ══════════════════════════════════════════════════════════ */}
-            {related.length > 0 && (
-                <section
-                    className="relative overflow-hidden py-16 sm:py-20"
-                    style={{
-                        background: `
-                            radial-gradient(ellipse 60% 50% at 90% 20%, rgba(20,184,166,0.06) 0%, transparent 55%),
-                            linear-gradient(170deg, #eef3f0 0%, #eef1f8 45%, #f5f3ee 100%)
-                        `,
-                    }}
-                >
-                    {/* Diagonal accent lines */}
-                    <div
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0 overflow-hidden"
-                    >
-                        <div className="absolute top-0 -right-20 h-full w-px rotate-[15deg] bg-gradient-to-b from-transparent via-teal-300/15 to-transparent" />
-                        <div className="via-teal-300/08 absolute top-0 -right-4 h-full w-px rotate-[15deg] bg-gradient-to-b from-transparent to-transparent" />
-                    </div>
+            {/* ══ COUVERTURE ═════════════════════════════════════════ */}
+            {cover && <ExpandingCover src={cover} alt={project.title} />}
 
-                    <div className="container-main relative z-10">
-                        <div className="mb-10 flex items-end justify-between gap-4">
-                            <div>
-                                <Eyebrow>Suite</Eyebrow>
-                                <h2 className="font-display text-2xl font-black tracking-[-0.035em] text-slate-900 sm:text-3xl">
-                                    D'autres projets.
-                                </h2>
-                            </div>
-                            <Link
-                                href="/projects"
-                                className="hidden shrink-0 items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-teal-600 uppercase transition-colors hover:text-teal-500 sm:flex"
-                            >
-                                Tout voir <ArrowR cls="h-3 w-3" />
-                            </Link>
-                        </div>
-                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                            {related.map((rp, i) => (
-                                <motion.div
-                                    key={rp.id}
-                                    initial={{ opacity: 0, y: 18 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, amount: 0.2 }}
-                                    transition={{
-                                        duration: 0.45,
-                                        ease: easings.smooth,
-                                        delay: i * 0.07,
-                                    }}
-                                >
-                                    <ProjectCard project={rp} />
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            )}
+            {/* ══ ÉTUDE DE CAS + GALERIE (après « Contexte ») ════════ */}
+            <ProjectCaseStudy
+                key={project.slug}
+                content={project.content ?? ''}
+                afterContext={
+                    <ProjectGallery
+                        images={screenshots}
+                        title={project.title}
+                        siteUrl={project.demo_url}
+                        projectType={project.project_type}
+                    />
+                }
+            />
+
+            {/* ══ PROJET SUIVANT ═════════════════════════════════════ */}
+            <NextProject projects={related} />
         </MainLayout>
     );
 }

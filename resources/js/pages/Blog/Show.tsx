@@ -1,521 +1,490 @@
-// resources/js/Pages/Blog/Show.tsx
-// ─── 2026 Redesign — Editorial Studio Aesthetic ──────────────────────────────
+// resources/js/pages/Blog/Show.tsx
+// Page de lecture d'un article : hero, couverture, sommaire collant (scroll spy),
+// contenu Markdown, réactions, commentaires, articles liés.
 
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import NumberFlow from '@number-flow/react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern';
+import { ArticleList } from '@/components/portofolio/article-list';
+import type { MarkdownHeading } from '@/components/portofolio/markdown';
+import {
+    extractHeadings,
+    markdownComponents,
+} from '@/components/portofolio/markdown';
+import {
+    ExpandingCover,
+    ReadingProgress,
+} from '@/components/portofolio/reading-chrome';
+import { buttonVariants } from '@/components/ui/button';
+import { HeroBackdrop } from '@/components/ui/hero-backdrop';
+import {
+    DrawLine,
+    MaskedLine,
+    Reveal,
+    SplitWords,
+} from '@/components/ui/reveal';
+import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import MainLayout from '@/layouts/MainLayout';
-import { cn } from '@/lib/utils';
+import { cn, easings } from '@/lib/utils';
 import type { BlogComment, BlogShowProps } from '@/types';
 
-// ─── Easing ───────────────────────────────────────────────────────────────────
-const expo = [0.16, 1, 0.3, 1] as const;
+const AUTHOR_NAME = 'Sergio Junior Chebeu';
+const AUTHOR_AVATAR = '/images/profile_avatar-600.webp';
 
-// ─── Reading Progress Bar ─────────────────────────────────────────────────────
-function ReadingProgress() {
-    const [progress, setProgress] = useState(0);
+function csrfToken(): string {
+    return (
+        (
+            document.querySelector(
+                'meta[name="csrf-token"]',
+            ) as HTMLMetaElement | null
+        )?.content ?? ''
+    );
+}
+
+// ─── Sommaire (scroll spy) ───────────────────────────────────────────────────
+function useActiveHeading(headings: MarkdownHeading[]): string | null {
+    const [activeId, setActiveId] = useState<string | null>(
+        headings[0]?.id ?? null,
+    );
 
     useEffect(() => {
-        const update = () => {
-            const scrollTop = window.scrollY;
-            const docHeight = document.body.offsetHeight - window.innerHeight;
-            setProgress(docHeight > 0 ? (scrollTop / docHeight) * 100 : 0);
-        };
-        window.addEventListener('scroll', update, { passive: true });
-        return () => window.removeEventListener('scroll', update);
-    }, []);
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries.filter((entry) => entry.isIntersecting);
 
-    return (
-        <div className="fixed top-0 right-0 left-0 z-50 h-[2px] bg-[#e2e0da]">
-            <motion.div
-                className="h-full origin-left bg-[#1aa389]"
-                style={{ scaleX: progress / 100 }}
-            />
-        </div>
-    );
-}
-
-// ─── Image with fallback ──────────────────────────────────────────────────────
-function ImageWithFallback({
-    src,
-    alt,
-    className,
-}: {
-    src: string;
-    alt: string;
-    className?: string;
-}) {
-    const [failed, setFailed] = useState(false);
-
-    if (failed) {
-        return (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#f0efec]">
-                <svg
-                    className="h-10 w-10 text-[#cac7be]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.2}
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                </svg>
-                <span className="text-[11px] font-medium text-[#aaa69e]">
-                    Image à venir
-                </span>
-            </div>
+                if (visible.length > 0) {
+                    setActiveId(visible[0].target.id);
+                }
+            },
+            { rootMargin: '-20% 0px -70% 0px' },
         );
-    }
+
+        headings.forEach(({ id }) => {
+            const element = document.getElementById(id);
+
+            if (element) {
+                observer.observe(element);
+            }
+        });
+
+        return () => observer.disconnect();
+    }, [headings]);
+
+    return activeId;
+}
+
+function TableOfContents({ headings }: { headings: MarkdownHeading[] }) {
+    const prefersReducedMotion = useReducedMotion();
+    const activeId = useActiveHeading(headings);
+    const activeIndex = Math.max(
+        0,
+        headings.findIndex((heading) => heading.id === activeId),
+    );
+
+    const goTo = (id: string) => {
+        document
+            .getElementById(id)
+            ?.scrollIntoView({
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        window.history.replaceState(null, '', `#${id}`);
+    };
 
     return (
-        <img
-            src={src}
-            alt={alt}
-            className={className}
-            onError={() => setFailed(true)}
-        />
+        <nav aria-label="Sommaire" className="sticky top-28">
+            <p className="mb-5 font-mono text-[11px] text-slate-400">
+                Sommaire
+            </p>
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 w-px bg-slate-200" />
+                <motion.div
+                    initial={false}
+                    animate={{ scaleY: (activeIndex + 1) / headings.length }}
+                    transition={{ duration: 0.5, ease: easings.smooth }}
+                    className="absolute inset-y-0 left-0 w-px origin-top bg-teal-500"
+                />
+                <ul className="flex flex-col">
+                    {headings.map((heading) => {
+                        const isActive = heading.id === activeId;
+
+                        return (
+                            <li key={heading.id}>
+                                <a
+                                    href={`#${heading.id}`}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        goTo(heading.id);
+                                    }}
+                                    className={cn(
+                                        'block py-1.5 text-[14px] leading-snug transition-colors duration-300',
+                                        heading.level === 3
+                                            ? 'pl-9 text-[13px]'
+                                            : 'pl-5',
+                                        isActive
+                                            ? 'font-semibold text-slate-900'
+                                            : 'text-slate-400 hover:text-slate-700',
+                                    )}
+                                >
+                                    {heading.text}
+                                </a>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        </nav>
     );
 }
 
-// ─── Tag color map ────────────────────────────────────────────────────────────
-const TAG_COLORS: Record<string, string> = {
-    Laravel: 'text-red-700 border-red-200 bg-red-50',
-    Inertia: 'text-sky-700 border-sky-200 bg-sky-50',
-    Tailwind: 'text-teal-700 border-[#a8ebd8] bg-[#effcf8]',
-    React: 'text-sky-700 border-sky-200 bg-sky-50',
-    TypeScript: 'text-blue-700 border-blue-200 bg-blue-50',
-    Database: 'text-violet-700 border-violet-200 bg-violet-50',
-    Productivité: 'text-amber-700 border-amber-200 bg-amber-50',
-};
-const defaultTag = 'text-[#706a5f] border-[#e2e0da] bg-[#f4f3ef]';
-const profileImageSrc = '/images/profile_avatar.jpg';
-
-// ─── Like Button ──────────────────────────────────────────────────────────────
-function LikeButton({ slug, initialCount, initialLiked }: { slug: string; initialCount: number; initialLiked: boolean }) {
+// ─── Réactions ───────────────────────────────────────────────────────────────
+function LikeButton({
+    slug,
+    initialCount,
+    initialLiked,
+}: {
+    slug: string;
+    initialCount: number;
+    initialLiked: boolean;
+}) {
     const [liked, setLiked] = useState(initialLiked);
     const [count, setCount] = useState(initialCount);
     const [loading, setLoading] = useState(false);
 
     const toggle = () => {
-        if (loading) return;
+        if (loading) {
+            return;
+        }
+
         setLoading(true);
         const next = !liked;
         setLiked(next);
-        setCount((c) => (next ? c + 1 : c - 1));
+        setCount((current) => (next ? current + 1 : current - 1));
 
         fetch(`/blog/${slug}/like`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                Accept: 'application/json',
             },
         })
-            .then((r) => r.json())
+            .then((response) => response.json())
             .then((data) => {
                 setLiked(data.liked);
                 setCount(data.likes_count);
             })
             .catch(() => {
                 setLiked(!next);
-                setCount((c) => (next ? c - 1 : c + 1));
+                setCount((current) => (next ? current - 1 : current + 1));
             })
             .finally(() => setLoading(false));
     };
 
     return (
         <button
+            type="button"
             onClick={toggle}
             disabled={loading}
-            className={cn(
-                'inline-flex items-center gap-2 border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase transition-all duration-200',
-                liked
-                    ? 'border-[#e05c4a]/30 bg-[#fef2f0] text-[#e05c4a]'
-                    : 'border-[#e2e0da] text-[#8a8479] hover:border-[#e05c4a]/40 hover:text-[#e05c4a]',
-            )}
+            aria-pressed={liked}
+            className={buttonVariants({
+                variant: 'outline',
+                className: cn(
+                    liked &&
+                        'border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-50',
+                ),
+            })}
         >
-            <svg
-                className={cn('h-3.5 w-3.5 transition-transform duration-200', liked && 'scale-110')}
+            <motion.svg
+                key={liked ? 'liked' : 'idle'}
+                initial={liked ? { scale: 0.6 } : false}
+                animate={{ scale: [null, 1.35, 1] }}
+                transition={{ duration: 0.45, ease: easings.smooth }}
+                className="h-4 w-4"
                 fill={liked ? 'currentColor' : 'none'}
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden
             >
                 <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
-            </svg>
-            {count > 0 ? count : ''}
-            {count > 0 ? ' ' : ''}J'aime
+            </motion.svg>
+            <NumberFlow value={count} className="tabular-nums" />
+            <span>J&apos;aime</span>
         </button>
     );
 }
 
-// ─── Share Button ─────────────────────────────────────────────────────────────
-function ShareButton({ url }: { url: string }) {
+function ShareButton({ title }: { title: string }) {
     const [copied, setCopied] = useState(false);
 
-    const copy = () => {
-        navigator.clipboard.writeText(url).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        });
+    const share = async () => {
+        const url = window.location.href;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, url });
+
+                return;
+            } catch {
+                // Partage annulé : on retombe sur la copie du lien.
+            }
+        }
+
+        await navigator.clipboard?.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
         <button
-            onClick={copy}
-            className="inline-flex items-center gap-2 border border-[#e2e0da] px-4 py-2 text-[11px] font-bold tracking-[0.12em] text-[#8a8479] uppercase transition-all duration-200 hover:border-[#1a1916] hover:text-[#1a1916]"
+            type="button"
+            onClick={share}
+            className={buttonVariants({ variant: 'outline' })}
         >
-            {copied ? (
-                <>
-                    <svg
-                        className="h-3.5 w-3.5 text-[#1aa389]"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
+            <span className="relative inline-flex h-5 items-center overflow-hidden">
+                <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.span
+                        key={copied ? 'copied' : 'share'}
+                        initial={{ y: '110%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '-110%' }}
+                        transition={{ duration: 0.3, ease: easings.smooth }}
+                        className={cn('block', copied && 'text-teal-700')}
                     >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                        />
-                    </svg>
-                    Copié !
-                </>
-            ) : (
-                <>
-                    <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                    </svg>
-                    Copier le lien
-                </>
-            )}
+                        {copied ? 'Lien copié' : 'Partager'}
+                    </motion.span>
+                </AnimatePresence>
+            </span>
         </button>
     );
 }
 
-// ─── Sidebar TOC ──────────────────────────────────────────────────────────────
-function TableOfContents({ content }: { content: string }) {
-    const headings = content
-        .split('\n')
-        .filter((line) => line.startsWith('## ') || line.startsWith('### '))
-        .map((line) => ({
-            level: line.startsWith('### ') ? 3 : 2,
-            text: line.replace(/^#{2,3}\s+/, ''),
-            id: line
-                .replace(/^#{2,3}\s+/, '')
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^\w-]/g, ''),
-        }));
-
-    if (headings.length < 2) return null;
-
-    return (
-        <div className="sticky top-24 space-y-1">
-            <p className="mb-4 text-[10px] font-bold tracking-[0.22em] text-[#aaa69e] uppercase">
-                Sommaire
-            </p>
-            {headings.map((h, i) => (
-                <a
-                    key={i}
-                    href={`#${h.id}`}
-                    className={cn(
-                        'block border-l-2 py-0.5 text-[12px] leading-snug transition-colors duration-200',
-                        h.level === 2
-                            ? 'border-[#e2e0da] pl-3 font-semibold text-[#706a5f] hover:border-[#1a1916] hover:text-[#1a1916]'
-                            : 'border-[#e2e0da] pl-5 font-medium text-[#aaa69e] hover:border-[#cac7be] hover:text-[#706a5f]',
-                    )}
-                >
-                    {h.text}
-                </a>
-            ))}
-        </div>
-    );
-}
-
-// ─── Related Post Card ────────────────────────────────────────────────────────
-function RelatedCard({ post, index }: { post: any; index: number }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: expo, delay: index * 0.08 }}
-        >
-            <Link
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col overflow-hidden border border-[#e2e0da] bg-[#fafaf8] transition-all duration-300 hover:border-[#1a1916]/20"
-            >
-                {post.cover_image_url && (
-                    <div
-                        className="relative overflow-hidden bg-[#f0efec]"
-                        style={{ aspectRatio: '16/9' }}
-                    >
-                        <img
-                            src={post.cover_image_url}
-                            alt={post.title}
-                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).style.display =
-                                    'none';
-                            }}
-                        />
-                    </div>
-                )}
-                <div className="flex flex-col gap-2.5 p-5">
-                    {post.tags?.slice(0, 2).map((tag: string) => (
-                        <span
-                            key={tag}
-                            className={cn(
-                                'inline-block w-fit border px-2 py-0.5 text-[10px] font-bold tracking-[0.12em] uppercase',
-                                TAG_COLORS[tag] ?? defaultTag,
-                            )}
-                        >
-                            {tag}
-                        </span>
-                    ))}
-                    <p className="text-[14px] leading-snug font-bold tracking-[-0.01em] text-[#1a1916] transition-colors group-hover:text-[#138770]">
-                        {post.title}
-                    </p>
-                    {post.excerpt && (
-                        <p className="line-clamp-2 text-[12px] leading-relaxed text-[#8a8479]">
-                            {post.excerpt}
-                        </p>
-                    )}
-                    <div className="mt-auto flex items-center justify-between border-t border-[#e2e0da] pt-2">
-                        <span className="text-[11px] text-[#aaa69e]">
-                            {post.published_at}
-                        </span>
-                        <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            className="text-[#1aa389] transition-transform duration-200 group-hover:translate-x-0.5"
-                        >
-                            <path
-                                d="M3 8h10M9 4l4 4-4 4"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            </Link>
-        </motion.div>
-    );
-}
-
-// ─── Comments Section ─────────────────────────────────────────────────────────
-function CommentsSection({ slug, initial }: { slug: string; initial: BlogComment[] }) {
-    const { auth } = usePage<{ auth: { user: { is_admin: boolean } | null } }>().props;
+// ─── Commentaires ────────────────────────────────────────────────────────────
+function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
+    const { auth } = usePage<{ auth: { user: { is_admin: boolean } | null } }>()
+        .props;
     const isAdmin = auth?.user?.is_admin ?? false;
     const [comments, setComments] = useState<BlogComment[]>(initial);
-    const [name, setName]         = useState('');
-    const [content, setContent]   = useState('');
-    const [error, setError]       = useState<string | null>(null);
-    const [sending, setSending]   = useState(false);
-    const [sent, setSent]         = useState(false);
+    const [name, setName] = useState('');
+    const [content, setContent] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [sending, setSending] = useState(false);
+    const [sent, setSent] = useState(false);
 
     const deleteComment = async (id: number) => {
-        if (!confirm('Supprimer ce commentaire ?')) return;
+        if (!confirm('Supprimer ce commentaire ?')) {
+            return;
+        }
+
         try {
             await fetch(`/admin/blog-comments/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    Accept: 'application/json',
                 },
             });
-            setComments((prev) => prev.filter((c) => c.id !== id));
+            setComments((previous) =>
+                previous.filter((comment) => comment.id !== id),
+            );
         } catch {
-            // silently fail
+            // Échec silencieux : le commentaire reste affiché.
         }
     };
 
-    const submit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!content.trim() || sending) return;
+    const submit = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (!content.trim() || sending) {
+            return;
+        }
+
         setSending(true);
         setError(null);
 
         try {
-            const res = await fetch(`/blog/${slug}/comments`, {
+            const response = await fetch(`/blog/${slug}/comments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    Accept: 'application/json',
                 },
-                body: JSON.stringify({ author_name: name.trim() || null, content: content.trim() }),
+                body: JSON.stringify({
+                    author_name: name.trim() || null,
+                    content: content.trim(),
+                }),
             });
+            const data = await response.json();
 
-            const data = await res.json();
-
-            if (!res.ok) {
+            if (!response.ok) {
                 setError(data.error ?? 'Une erreur est survenue.');
             } else {
-                setComments((prev) => [data.comment, ...prev]);
+                setComments((previous) => [data.comment, ...previous]);
                 setContent('');
                 setName('');
                 setSent(true);
                 setTimeout(() => setSent(false), 3000);
             }
         } catch {
-            setError('Impossible d\'envoyer le commentaire.');
+            setError("Impossible d'envoyer le commentaire.");
         } finally {
             setSending(false);
         }
     };
 
+    const fieldClass =
+        'w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-[16px] text-slate-900 placeholder:text-slate-400 outline-none transition-[border-color,box-shadow] focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10';
+
     return (
-        <section className="relative overflow-hidden border-t border-[#e2e0da] bg-white py-14 sm:py-20">
-            <AnimatedGridPattern
-                numSquares={24}
-                maxOpacity={0.04}
-                duration={4.5}
-                repeatDelay={0.8}
-                className={cn(
-                    'absolute inset-0 h-full w-full text-teal-600/70',
-                    '[mask-image:radial-gradient(900px_circle_at_50%_0%,white,transparent)]',
-                )}
-            />
-            <div className="container-main relative z-10">
-                <div className="max-w-2xl">
-                    {/* Header */}
-                    <div className="mb-10 flex items-center gap-4">
-                        <div className="h-px w-12 bg-[#1aa389]" />
-                        <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">
-                            Discussion
+        <section
+            id="commentaires"
+            className="relative isolate overflow-clip border-t border-slate-200/80 bg-white py-20 sm:py-28"
+        >
+            <SectionBackdrop pattern="lines" withMargin />
+            <div className="container-main">
+                <div className="mx-auto max-w-2xl">
+                    <div className="mb-10 flex items-end justify-between gap-4">
+                        <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-slate-900 sm:text-4xl">
+                            <MaskedLine onScroll>Discussion</MaskedLine>
+                        </h2>
+                        <span className="font-mono text-[12px] text-slate-500">
+                            <NumberFlow value={comments.length} /> commentaire
+                            {comments.length > 1 ? 's' : ''}
                         </span>
-                        <div className="h-px flex-1 bg-[#e2e0da]" />
-                        {comments.length > 0 && (
-                            <span className="text-[11px] font-bold tabular-nums text-[#cac7be]">
-                                {comments.length}
-                            </span>
-                        )}
                     </div>
 
-                    {/* Form */}
-                    <form onSubmit={submit} className="mb-12 space-y-3">
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Votre nom (facultatif)"
-                            maxLength={80}
-                            className="w-full border border-[#e2e0da] bg-white px-4 py-2.5 text-[13px] text-[#1a1916] placeholder-[#cac7be] outline-none transition-colors focus:border-[#1aa389]"
-                        />
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            placeholder="Votre commentaire…"
-                            required
-                            maxLength={1000}
-                            rows={4}
-                            className="w-full resize-none border border-[#e2e0da] bg-white px-4 py-3 text-[13px] leading-relaxed text-[#1a1916] placeholder-[#cac7be] outline-none transition-colors focus:border-[#1aa389]"
-                        />
-
-                        {error && (
-                            <motion.p
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="text-[12px] font-medium text-[#e05c4a]"
-                            >
-                                {error}
-                            </motion.p>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] text-[#cac7be]">
-                                {content.length}/1000
-                            </span>
-                            <button
-                                type="submit"
-                                disabled={sending || !content.trim()}
+                    <Reveal>
+                        <form
+                            onSubmit={submit}
+                            className="mb-14 flex flex-col gap-3"
+                        >
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(event) =>
+                                    setName(event.target.value)
+                                }
+                                placeholder="Votre nom (facultatif)"
+                                maxLength={80}
+                                className={fieldClass}
+                            />
+                            <textarea
+                                value={content}
+                                onChange={(event) =>
+                                    setContent(event.target.value)
+                                }
+                                placeholder="Votre commentaire…"
+                                required
+                                maxLength={1000}
+                                rows={4}
                                 className={cn(
-                                    'inline-flex items-center gap-2 px-5 py-2.5 text-[12px] font-bold tracking-[0.1em] uppercase transition-all duration-200',
-                                    sending || !content.trim()
-                                        ? 'cursor-not-allowed bg-[#e2e0da] text-[#cac7be]'
-                                        : sent
-                                          ? 'bg-[#1aa389] text-white'
-                                          : 'bg-[#1a1916] text-white hover:bg-[#138770]',
+                                    fieldClass,
+                                    'resize-none leading-relaxed',
                                 )}
-                            >
-                                {sent ? (
-                                    <>
-                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Envoyé
-                                    </>
-                                ) : sending ? 'Envoi…' : 'Commenter'}
-                            </button>
-                        </div>
-                    </form>
+                            />
 
-                    {/* List */}
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.p
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="text-[14px] font-medium text-rose-600"
+                                    >
+                                        {error}
+                                    </motion.p>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="font-mono text-[12px] text-slate-400 tabular-nums">
+                                    {content.length}/1000
+                                </span>
+                                <button
+                                    type="submit"
+                                    disabled={sending || !content.trim()}
+                                    className={buttonVariants({
+                                        className: 'min-w-[130px]',
+                                    })}
+                                >
+                                    {sent
+                                        ? 'Envoyé'
+                                        : sending
+                                          ? 'Envoi…'
+                                          : 'Commenter'}
+                                </button>
+                            </div>
+                        </form>
+                    </Reveal>
+
                     {comments.length === 0 ? (
-                        <p className="text-[13px] text-[#aaa69e]">
-                            Aucun commentaire pour l'instant. Soyez le premier.
+                        <p className="rounded-2xl border border-dashed border-slate-200 px-6 py-10 text-center text-[16px] text-slate-500">
+                            Aucun commentaire pour l&apos;instant. Soyez le
+                            premier.
                         </p>
                     ) : (
-                        <div className="space-y-6">
-                            {comments.map((c) => (
-                                <motion.div
-                                    key={c.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35 }}
-                                    className="border-b border-[#e2e0da] pb-6 last:border-0"
-                                >
-                                    <div className="mb-2 flex items-center gap-3">
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-[#1a1916] text-[11px] font-bold text-white uppercase">
-                                            {(c.author_name ?? 'A')[0]}
+                        <ul className="flex flex-col">
+                            <AnimatePresence initial={false}>
+                                {comments.map((comment) => (
+                                    <motion.li
+                                        key={comment.id}
+                                        layout
+                                        initial={{ opacity: 0, y: -12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{
+                                            duration: 0.4,
+                                            ease: easings.smooth,
+                                        }}
+                                        className="border-t border-slate-200 py-6"
+                                    >
+                                        <div className="mb-2 flex items-center gap-3">
+                                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 font-display text-[12px] font-bold text-white uppercase">
+                                                {
+                                                    (comment.author_name ??
+                                                        'A')[0]
+                                                }
+                                            </span>
+                                            <span className="font-display text-[14px] font-semibold text-slate-900">
+                                                {comment.author_name ??
+                                                    'Anonyme'}
+                                            </span>
+                                            <span className="font-mono text-[11px] text-slate-400">
+                                                {comment.created_at}
+                                            </span>
+                                            {isAdmin && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        deleteComment(
+                                                            comment.id,
+                                                        )
+                                                    }
+                                                    className={buttonVariants({
+                                                        variant: 'ghost',
+                                                        size: 'sm',
+                                                        className:
+                                                            'ml-auto text-rose-600 hover:bg-rose-50',
+                                                    })}
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            )}
                                         </div>
-                                        <span className="text-[13px] font-bold text-[#1a1916]">
-                                            {c.author_name ?? 'Anonyme'}
-                                        </span>
-                                        <span className="text-[11px] text-[#cac7be]">{c.created_at}</span>
-                                        {isAdmin && (
-                                            <button
-                                                onClick={() => deleteComment(c.id)}
-                                                className="ml-auto text-[#cac7be] transition-colors hover:text-[#e05c4a]"
-                                                title="Supprimer"
-                                            >
-                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="pl-10 text-[14px] leading-relaxed text-[#706a5f]">
-                                        {c.content}
-                                    </p>
-                                </motion.div>
-                            ))}
-                        </div>
+                                        <p className="pl-11 text-[17px] leading-relaxed text-slate-700">
+                                            {comment.content}
+                                        </p>
+                                    </motion.li>
+                                ))}
+                            </AnimatePresence>
+                        </ul>
                     )}
                 </div>
             </div>
@@ -523,8 +492,24 @@ function CommentsSection({ slug, initial }: { slug: string; initial: BlogComment
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═════════════════════════════════════════════════════════════════════════════
 export default function Show({ post, related, comments }: BlogShowProps) {
+    const prefersReducedMotion = useReducedMotion();
+    const headings = useMemo(
+        () => extractHeadings(post.content ?? ''),
+        [post.content],
+    );
+    const hasTableOfContents = headings.length >= 2;
+    const meta = [post.published_at, post.reading_time].filter(Boolean);
+
+    const fadeIn = (delay: number) => ({
+        initial: { opacity: 0, y: prefersReducedMotion ? 0 : 16 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.8, delay, ease: easings.smooth },
+    });
+
     return (
         <MainLayout>
             <Head title={`${post.title} — Blog`}>
@@ -536,338 +521,186 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                 <meta name="twitter:image" content={post.cover_image_url} />
             </Head>
 
-            {/* Reading progress */}
             <ReadingProgress />
 
-            {/* ── Hero ──────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden border-b border-slate-200/60 bg-white pt-[96px]">
-                <AnimatedGridPattern
-                    numSquares={22}
-                    maxOpacity={0.035}
-                    duration={4.5}
-                    repeatDelay={0.8}
-                    className={cn(
-                        'absolute inset-0 h-full w-full text-teal-600/70',
-                        '[mask-image:radial-gradient(720px_circle_at_50%_10%,white,transparent)]',
-                    )}
-                />
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                        backgroundSize: '200px',
-                    }}
-                />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[280px] [background-image:linear-gradient(to_right,rgba(148,163,184,0.16)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,white,transparent)] [background-size:34px_34px] opacity-[0.14]" />
-                <div className="pointer-events-none absolute top-24 left-[8%] h-20 w-20 rounded-full border border-teal-200/40" />
-                <div className="pointer-events-none absolute top-28 right-[10%] h-px w-16 bg-teal-300/50" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(255,255,255,0.94))]" />
-
-                <div className="container-main relative z-10 pb-16 sm:pb-20">
-                    {/* Back */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, ease: expo }}
-                        className="mb-10"
-                    >
-                        <Link
-                            href="/blog"
-                            className="group inline-flex items-center gap-2.5 text-[11px] font-bold tracking-[0.18em] text-[#8a8479] uppercase transition-colors hover:text-[#138770]"
+            {/* ══ HERO ═══════════════════════════════════════════════ */}
+            <HeroBackdrop>
+                <div className="container-main pt-[110px] pb-14 sm:pt-[130px] sm:pb-20">
+                    <div className="mx-auto max-w-4xl">
+                        <motion.div
+                            {...fadeIn(0)}
+                            className="mb-10 flex flex-wrap items-center gap-3"
                         >
-                            <svg
-                                className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={2.5}
+                            <Link
+                                href="/blog"
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    size: 'sm',
+                                })}
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M7 16l-4-4m0 0l4-4m-4 4h18"
-                                />
-                            </svg>
-                            Blog
-                        </Link>
-                    </motion.div>
-
-                    <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_400px]">
-                        <div className="max-w-3xl">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    duration: 0.5,
-                                    ease: expo,
-                                    delay: 0.1,
-                                }}
-                                className="mb-6 flex flex-wrap gap-2"
-                            >
-                                {post.tags.map((tag: string) => (
-                                    <span
-                                        key={tag}
-                                        className="border border-[#ddd8cf] bg-white/60 px-3 py-1 text-[10px] font-bold tracking-[0.18em] text-[#8a8479] uppercase"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </motion.div>
-
-                            <motion.h1
-                                initial={{ opacity: 0, y: 24 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    duration: 0.7,
-                                    ease: expo,
-                                    delay: 0.15,
-                                }}
-                                className="mb-5 font-display text-3xl leading-[1.08] font-bold tracking-[-0.025em] text-[#1a1916] sm:text-4xl lg:text-5xl"
-                            >
-                                {post.title}
-                            </motion.h1>
-
-                            {post.excerpt && (
-                                <motion.p
-                                    initial={{ opacity: 0, y: 16 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{
-                                        duration: 0.6,
-                                        ease: expo,
-                                        delay: 0.22,
-                                    }}
-                                    className="mb-8 max-w-2xl text-[16px] leading-[1.75] text-[#706a5f]"
-                                >
-                                    {post.excerpt}
-                                </motion.p>
-                            )}
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    duration: 0.55,
-                                    ease: expo,
-                                    delay: 0.28,
-                                }}
-                                className="flex items-center gap-5 border-t border-slate-200/70 pt-6"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="h-9 w-9 overflow-hidden rounded-full border border-white/80 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-2 ring-teal-50">
-                                        <img
-                                            src={profileImageSrc}
-                                            alt="Sergio Junior Chebeu"
-                                            className="h-full w-full object-cover object-top"
-                                        />
-                                    </div>
-                                    <div>
-                                        <p className="text-[12px] font-bold text-[#1a1916]">
-                                            Sergio Junior Chebeu
-                                        </p>
-                                        <p className="text-[11px] text-[#aaa69e]">
-                                            {post.published_at}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="h-5 w-px bg-[#e2e0da]" />
-                                <span className="text-[11px] font-medium text-[#8a8479]">
-                                    {post.reading_time ?? '~5 min de lecture'}
+                                Tous les articles
+                            </Link>
+                            {post.tags.length > 0 && (
+                                <span className="font-mono text-[12px] text-slate-500">
+                                    {post.tags.join(' · ')}
                                 </span>
-                            </motion.div>
-                        </div>
+                            )}
+                        </motion.div>
 
-                        {post.cover_image_url && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    duration: 0.6,
-                                    ease: expo,
-                                    delay: 0.2,
-                                }}
-                                className="overflow-hidden rounded-lg border border-slate-200/90 bg-white/80 p-3 shadow-[0_16px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm"
+                        <h1 className="font-display text-[34px] leading-[1.08] font-bold tracking-[-0.035em] text-[#1a1916] sm:text-5xl lg:text-[64px]">
+                            <SplitWords text={post.title} delay={0.1} />
+                        </h1>
+
+                        {post.excerpt && (
+                            <motion.p
+                                {...fadeIn(0.5)}
+                                className="mt-7 max-w-[40rem] text-[21px] leading-[1.6] text-slate-600"
                             >
-                                <div className="relative aspect-[5/3.8] overflow-hidden rounded-md bg-[#f0efec] lg:aspect-[5/3.9]">
-                                    <ImageWithFallback
-                                        src={post.cover_image_url}
-                                        alt={post.title}
-                                        className="h-full w-full object-cover"
-                                    />
-                                </div>
-                            </motion.div>
+                                {post.excerpt}
+                            </motion.p>
                         )}
+
+                        <motion.div
+                            {...fadeIn(0.6)}
+                            className="mt-10 flex items-center gap-4"
+                        >
+                            <img
+                                src={AUTHOR_AVATAR}
+                                alt={AUTHOR_NAME}
+                                width={44}
+                                height={44}
+                                className="h-11 w-11 rounded-full object-cover object-top ring-2 ring-white"
+                            />
+                            <div className="flex flex-col">
+                                <span className="font-display text-[14px] font-semibold text-slate-900">
+                                    {AUTHOR_NAME}
+                                </span>
+                                <span className="font-mono text-[12px] text-slate-500">
+                                    {meta.join(' · ')}
+                                </span>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
-            </section>
+            </HeroBackdrop>
 
-            {/* ── Article Body ──────────────────────────────────────── */}
+            {/* ══ COUVERTURE ═════════════════════════════════════════ */}
+            {post.cover_image_url && (
+                <ExpandingCover src={post.cover_image_url} alt={post.title} />
+            )}
+
+            {/* ══ CONTENU ════════════════════════════════════════════ */}
             {post.content && (
-                <section className="relative overflow-hidden bg-white py-14 sm:py-20">
-                    <AnimatedGridPattern
-                        numSquares={38}
-                        maxOpacity={0.04}
-                        duration={4}
-                        repeatDelay={0.6}
+                <section className="bg-white py-20 sm:py-28">
+                    <div
                         className={cn(
-                            'absolute inset-0 h-full w-full text-teal-600/70',
-                            '[mask-image:radial-gradient(900px_circle_at_50%_20%,white,transparent)]',
+                            'container-main grid gap-12',
+                            hasTableOfContents &&
+                                'lg:grid-cols-[220px_1fr] lg:gap-20',
                         )}
-                    />
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.94),rgba(255,255,255,0))]" />
-                    <div className="container-main relative z-10">
-                        <div className="flex gap-16 lg:gap-20">
-                            {/* Sidebar TOC */}
-                            <aside className="hidden w-48 shrink-0 pt-1 xl:block">
-                                <TableOfContents content={post.content} />
+                    >
+                        {hasTableOfContents && (
+                            <aside className="hidden lg:block">
+                                <TableOfContents headings={headings} />
                             </aside>
+                        )}
 
-                            {/* Main content */}
-                            <div className="min-w-0 flex-1">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 24 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.7, ease: expo }}
-                                    className="max-w-2xl"
-                                >
-                                    {/* Decorative rule */}
-                                    <div className="mb-12 flex items-center gap-4">
-                                        <div className="h-px w-12 bg-[#1aa389]" />
-                                        <span className="text-[10px] font-bold tracking-[0.22em] text-[#aaa69e] uppercase">
-                                            Article
-                                        </span>
-                                        <div className="h-px flex-1 bg-[#e2e0da]" />
-                                    </div>
+                        <article
+                            className={cn(
+                                'min-w-0',
+                                !hasTableOfContents &&
+                                    'mx-auto w-full max-w-[44rem]',
+                            )}
+                        >
+                            <Reveal>
+                                <div className="max-w-[44rem]">
+                                    <ReactMarkdown
+                                        components={markdownComponents}
+                                    >
+                                        {post.content}
+                                    </ReactMarkdown>
+                                </div>
+                            </Reveal>
 
-                                    {/* Prose */}
-                                    <div className="prose max-w-none prose-slate prose-headings:font-display prose-headings:tracking-[-0.02em] prose-headings:text-[#1a1916] prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-[#e2e0da] prose-h2:pb-3 prose-h2:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[18px] prose-p:text-[15px] prose-p:leading-[1.85] prose-p:text-[#4a4740] prose-a:text-[#138770] prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-2 prose-blockquote:border-[#1aa389] prose-blockquote:bg-[#f4f3ef] prose-blockquote:py-1 prose-blockquote:pl-5 prose-blockquote:text-[#706a5f] prose-blockquote:not-italic prose-strong:font-bold prose-strong:text-[#1a1916] prose-code:rounded-none prose-code:border prose-code:border-[#a8ebd8] prose-code:bg-[#effcf8] prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-[13px] prose-code:font-normal prose-code:text-[#138770] prose-pre:rounded-none prose-pre:border prose-pre:border-[#433e37] prose-pre:bg-[#1a1916] prose-ol:text-[#4a4740] prose-ul:text-[#4a4740] prose-li:text-[15px] prose-li:leading-[1.8] prose-hr:border-[#e2e0da]">
-                                        <ReactMarkdown>
-                                            {post.content}
-                                        </ReactMarkdown>
+                            {/* Réactions */}
+                            <div className="mt-16 max-w-[44rem]">
+                                <DrawLine />
+                                <div className="flex flex-wrap items-center justify-between gap-4 pt-8">
+                                    <p className="font-display text-[15px] font-semibold text-slate-900">
+                                        Cet article vous a été utile&nbsp;?
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        <LikeButton
+                                            slug={post.slug}
+                                            initialCount={post.likes_count ?? 0}
+                                            initialLiked={post.liked ?? false}
+                                        />
+                                        <ShareButton title={post.title} />
                                     </div>
-
-                                    {/* Footer — tags + like + share */}
-                                    <div className="mt-16 border-t border-[#e2e0da] pt-10">
-                                        <div className="flex flex-wrap items-center justify-between gap-4">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="mr-1 text-[10px] font-bold tracking-[0.2em] text-[#aaa69e] uppercase">
-                                                    Tags
-                                                </span>
-                                                {post.tags.map(
-                                                    (tag: string) => (
-                                                        <span
-                                                            key={tag}
-                                                            className={cn(
-                                                                'border px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] uppercase',
-                                                                TAG_COLORS[
-                                                                    tag
-                                                                ] ?? defaultTag,
-                                                            )}
-                                                        >
-                                                            {tag}
-                                                        </span>
-                                                    ),
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <LikeButton
-                                                    slug={post.slug}
-                                                    initialCount={post.likes_count ?? 0}
-                                                    initialLiked={post.liked ?? false}
-                                                />
-                                                <ShareButton
-                                                    url={
-                                                        typeof window !==
-                                                        'undefined'
-                                                            ? window.location.href
-                                                            : ''
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Author card */}
-                                    <div className="mt-10 flex items-start gap-5 border border-[#e2e0da] bg-[#f8f7f3] p-6">
-                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-2 ring-teal-50">
-                                            <img
-                                                src={profileImageSrc}
-                                                alt="Sergio Junior Chebeu"
-                                                className="h-full w-full object-cover object-top"
-                                            />
-                                        </div>
-                                        <div>
-                                            <p className="mb-1 text-[13px] font-bold text-[#1a1916]">
-                                                Sergio Junior Chebeu
-                                            </p>
-                                            <p className="text-[13px] leading-relaxed text-[#706a5f]">
-                                                Je conçois des produits web
-                                                clairs, robustes et agréables à
-                                                utiliser, avec une attention
-                                                particulière portée au détail.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
+                                </div>
                             </div>
-                        </div>
+
+                            {/* Auteur */}
+                            <Reveal className="mt-12 max-w-[44rem]">
+                                <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 sm:flex-row sm:items-center">
+                                    <img
+                                        src={AUTHOR_AVATAR}
+                                        alt={AUTHOR_NAME}
+                                        width={64}
+                                        height={64}
+                                        loading="lazy"
+                                        className="h-16 w-16 shrink-0 rounded-full object-cover object-top"
+                                    />
+                                    <div className="flex-1">
+                                        <p className="font-display text-[15px] font-semibold text-slate-900">
+                                            {AUTHOR_NAME}
+                                        </p>
+                                        <p className="mt-1 text-[16px] leading-relaxed text-slate-600">
+                                            Je conçois des produits web clairs,
+                                            robustes et agréables à utiliser,
+                                            avec une attention particulière
+                                            portée au détail.
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href="/contact"
+                                        className={buttonVariants({
+                                            variant: 'outline',
+                                            className: 'shrink-0',
+                                        })}
+                                    >
+                                        Me contacter
+                                    </Link>
+                                </div>
+                            </Reveal>
+                        </article>
                     </div>
                 </section>
             )}
 
-            {/* ── Comments ──────────────────────────────────────────── */}
-            <CommentsSection slug={post.slug} initial={comments} />
+            {/* ══ COMMENTAIRES ═══════════════════════════════════════ */}
+            <Comments slug={post.slug} initial={comments} />
 
-            {/* ── Related Articles ──────────────────────────────────── */}
+            {/* ══ À LIRE AUSSI ═══════════════════════════════════════ */}
             {related.length > 0 && (
-                <section className="relative overflow-hidden border-t border-[#e2e0da] bg-white py-14 sm:py-20">
-                    <AnimatedGridPattern
-                        numSquares={24}
-                        maxOpacity={0.03}
-                        duration={4.5}
-                        repeatDelay={0.8}
-                        className={cn(
-                            'absolute inset-0 h-full w-full text-teal-600/60',
-                            '[mask-image:radial-gradient(900px_circle_at_50%_0%,white,transparent)]',
-                        )}
-                    />
-                    <div className="container-main relative z-10">
-                        <div className="mb-10 flex items-center gap-4">
-                            <div className="h-px w-12 bg-[#1aa389]" />
-                            <span className="text-[10px] font-bold tracking-[0.25em] text-[#aaa69e] uppercase">
-                                À lire aussi
-                            </span>
-                            <div className="h-px flex-1 bg-[#e2e0da]" />
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-px bg-[#e2e0da] sm:grid-cols-2 lg:grid-cols-3">
-                            {related.map((p, i) => (
-                                <RelatedCard key={p.id} post={p} index={i} />
-                            ))}
-                        </div>
-
-                        <div className="mt-12 text-center">
-                            <Link
-                                href="/blog"
-                                className="group/btn inline-flex items-center gap-3 border border-[#1a1916] bg-transparent px-8 py-3.5 text-[12px] font-bold tracking-[0.12em] text-[#1a1916] uppercase transition-all duration-300 hover:bg-[#1a1916] hover:text-white"
-                            >
-                                Voir tous les articles
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    className="transition-transform duration-300 group-hover/btn:translate-x-1"
+                <section className="border-t border-slate-200/80 bg-white py-20 sm:py-28">
+                    <div className="container-main">
+                        <div className="mb-10 flex flex-col gap-5 sm:mb-14 sm:flex-row sm:items-end sm:justify-between">
+                            <h2 className="font-display text-4xl font-bold tracking-[-0.03em] text-slate-900 sm:text-5xl">
+                                <MaskedLine onScroll>À lire aussi</MaskedLine>
+                            </h2>
+                            <Reveal delay={0.15}>
+                                <Link
+                                    href="/blog"
+                                    className={buttonVariants({
+                                        variant: 'outline',
+                                    })}
                                 >
-                                    <path
-                                        d="M3 8h10M9 4l4 4-4 4"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                            </Link>
+                                    Tous les articles
+                                </Link>
+                            </Reveal>
                         </div>
+                        <ArticleList articles={related} />
                     </div>
                 </section>
             )}

@@ -10,7 +10,6 @@ import {
     Mail,
     LogOut,
     ExternalLink,
-    PanelLeftOpen,
     ChevronRight,
 } from 'lucide-react';
 
@@ -85,13 +84,24 @@ function FlashToast({ type, message }: { type: 'success' | 'error'; message: str
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+            role="status"
             className={cn(
-                'fixed top-4 right-4 z-[100] flex items-start gap-3',
-                'px-4 py-3 rounded-xl shadow-lg max-w-sm w-full',
-                'bg-white border text-[13px] font-medium backdrop-blur-sm',
-                type === 'success' ? 'border-teal-200 text-slate-800' : 'border-red-200 text-slate-800',
+                'fixed top-4 right-4 z-[100] flex max-w-sm w-[calc(100%-2rem)] items-start gap-3 overflow-hidden',
+                'rounded-xl border bg-white px-4 py-3 text-[13px] font-medium text-slate-800',
+                'shadow-[0_18px_40px_-16px_rgba(26,25,22,0.35)]',
+                type === 'success' ? 'border-teal-200' : 'border-rose-200',
             )}
         >
+            <motion.span
+                aria-hidden
+                initial={{ scaleX: 1 }}
+                animate={{ scaleX: 0 }}
+                transition={{ duration: 4.5, ease: 'linear' }}
+                className={cn(
+                    'absolute inset-x-0 bottom-0 h-0.5 origin-left',
+                    type === 'success' ? 'bg-teal-500' : 'bg-rose-500',
+                )}
+            />
             {type === 'success' ? (
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-teal-500 flex-shrink-0 mt-[1px]" aria-hidden>
                     <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3"/>
@@ -236,7 +246,7 @@ export default function AdminLayout({ children, title, breadcrumb }: Props) {
                         <SidebarMenuItem>
                             <SidebarMenuButton size="lg" tooltip={user?.email ?? ''}>
                                 {/* Avatar */}
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex-shrink-0 shadow-sm">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 flex-shrink-0">
                                     <span className="text-[11px] font-bold text-white leading-none">
                                         {initials}
                                     </span>
@@ -323,8 +333,10 @@ export default function AdminLayout({ children, title, breadcrumb }: Props) {
                 </header>
 
                 {/* ── Page Content ─────────────────────────────────── */}
-                <main className="flex flex-1 flex-col gap-4 p-4 overflow-auto">
-                    {children}
+                <main className="flex flex-1 flex-col overflow-auto p-4 sm:p-6 lg:p-8">
+                    <div className="mx-auto w-full max-w-6xl">
+                        {children}
+                    </div>
                 </main>
             </SidebarInset>
         </SidebarProvider>

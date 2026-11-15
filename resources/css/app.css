@@ -50,7 +50,7 @@
     --color-gold-600: #c98a07;
 
     /* ── SURFACES ───────────────────────────────────────────────── */
-    --color-surface: #f4f3ef;
+    --color-surface: #ffffff;
     --color-surface-card: #fafaf8;
     --color-surface-raised: #ffffff;
     --color-surface-subtle: #eeecea;
@@ -120,6 +120,11 @@
         color: var(--color-ink-primary);
         line-height: 1.15;
         letter-spacing: -0.02em;
+        text-wrap: balance;
+    }
+
+    p {
+        text-wrap: pretty;
     }
 
     img,

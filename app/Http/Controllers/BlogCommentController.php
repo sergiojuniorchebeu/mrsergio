@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\BlogPostComment;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class BlogCommentController extends Controller
@@ -63,10 +64,18 @@ class BlogCommentController extends Controller
         ], 201);
     }
 
-    public function destroy(BlogPostComment $comment): JsonResponse
+    /**
+     * Supprime un commentaire : réponse JSON pour la page publique (fetch),
+     * redirection avec message pour l'admin (Inertia).
+     */
+    public function destroy(Request $request, BlogPostComment $comment): JsonResponse|RedirectResponse
     {
         $comment->delete();
 
-        return response()->json(['deleted' => $comment->id]);
+        if ($request->wantsJson()) {
+            return response()->json(['deleted' => $comment->id]);
+        }
+
+        return back()->with('success', 'Commentaire supprimé.');
     }
 }

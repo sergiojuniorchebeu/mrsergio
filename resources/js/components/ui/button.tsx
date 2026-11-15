@@ -4,27 +4,26 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold select-none outline-none transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
     {
         variants: {
             variant: {
                 default:
-                    'bg-teal-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(29,158,117,0.3)_inset] hover:bg-teal-700',
+                    'bg-teal-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-teal-700',
                 primary:
-                    'bg-teal-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(29,158,117,0.3)_inset] hover:bg-teal-700',
+                    'bg-teal-600 text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-teal-700',
                 secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
-                ghost:
-                    'border border-slate-200 bg-transparent text-slate-700 hover:bg-slate-50 hover:text-slate-900',
+                ghost: 'bg-transparent text-slate-700 hover:bg-slate-100 hover:text-slate-900',
                 outline:
-                    'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900',
-                dark: 'border border-white/15 bg-white/10 text-white hover:border-white/25 hover:bg-white/18',
+                    'border border-slate-200 bg-white text-slate-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-slate-300 hover:bg-slate-50',
+                dark: 'border border-white/15 bg-transparent text-white hover:border-white/30 hover:bg-white/10',
                 destructive: 'bg-red-600 text-white hover:bg-red-700',
-                link: 'h-auto px-0 py-0 text-teal-600 underline-offset-4 hover:underline',
+                link: 'h-auto px-0 py-0 text-teal-600 underline-offset-4 hover:underline active:scale-100',
             },
             size: {
-                default: 'h-10 px-5 py-2',
-                sm: 'h-8 px-3.5 text-xs',
-                lg: 'h-11 px-6 text-[15px]',
+                default: 'h-10 px-5',
+                sm: 'h-9 px-4 text-[13px]',
+                lg: 'h-12 px-6 text-[15px]',
                 icon: 'h-10 w-10',
             },
         },
