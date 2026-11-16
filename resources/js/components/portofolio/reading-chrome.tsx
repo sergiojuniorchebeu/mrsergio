@@ -102,8 +102,17 @@ export function ExpandingCover({
                 )}
             >
                 {framed ? (
-                    <motion.div style={{ scale: imageScale }} className="absolute inset-0">
-                        <ShotPreview src={src} alt={alt} moreSrcs={moreSrcs} eager fit />
+                    <motion.div
+                        style={{ scale: imageScale }}
+                        className="absolute inset-0"
+                    >
+                        <ShotPreview
+                            src={src}
+                            alt={alt}
+                            moreSrcs={moreSrcs}
+                            eager
+                            fit
+                        />
                     </motion.div>
                 ) : (
                     <motion.img

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlogPost;
+use App\Models\Formation;
+use App\Models\Project;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,7 +15,7 @@ class HomeController extends Controller
 
     public function index(): Response
     {
-        $projects = Cache::remember(self::HOME_PROJECTS_CACHE_KEY, 600, function () {
+        $projects = Cache::remember(Project::localizedCacheKey(self::HOME_PROJECTS_CACHE_KEY), 600, function () {
             return \App\Models\Project::published()
                 ->featured()
                 ->ordered()
@@ -20,11 +23,11 @@ class HomeController extends Controller
                 ->get()
                 ->map(fn ($p) => [
                     'id' => $p->id,
-                    'title' => $p->title,
+                    'title' => $p->translated('title'),
                     'slug' => $p->slug,
                     'project_type' => $p->project_type,
                     'project_type_label' => $p->project_type_label,
-                    'description' => $p->description,
+                    'description' => $p->translated('description'),
                     'image_url' => $p->image_url,
                     'demo_url' => $p->demo_url,
                     'github_url' => $p->github_url,
@@ -36,16 +39,16 @@ class HomeController extends Controller
                 ]);
         });
 
-        $posts = Cache::remember('home.posts', 600, function () {
+        $posts = Cache::remember(BlogPost::localizedCacheKey('home.posts'), 600, function () {
             return \App\Models\BlogPost::published()
                 ->ordered()
                 ->take(3)
                 ->get()
                 ->map(fn ($post) => [
                     'id' => $post->id,
-                    'title' => $post->title,
+                    'title' => $post->translated('title'),
                     'slug' => $post->slug,
-                    'excerpt' => $post->excerpt,
+                    'excerpt' => $post->translated('excerpt'),
                     'cover_image_url' => $post->cover_image_url,
                     'tags' => $post->tags ?? [],
                     'published_at' => $post->published_at?->format('d M Y'),
@@ -53,7 +56,7 @@ class HomeController extends Controller
                 ]);
         });
 
-        $formations = Cache::remember('home.formations', 600, function () {
+        $formations = Cache::remember(Formation::localizedCacheKey('home.formations'), 600, function () {
             return \App\Models\Formation::published()
                 ->featured()
                 ->ordered()
@@ -61,9 +64,9 @@ class HomeController extends Controller
                 ->get()
                 ->map(fn ($f) => [
                     'id' => $f->id,
-                    'title' => $f->title,
+                    'title' => $f->translated('title'),
                     'slug' => $f->slug,
-                    'excerpt' => $f->excerpt,
+                    'excerpt' => $f->translated('excerpt'),
                     'cover_image_url' => $f->cover_image_url,
                     'category' => $f->category,
                     'tags' => $f->tags ?? [],

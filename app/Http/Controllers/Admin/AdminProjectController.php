@@ -97,6 +97,7 @@ class AdminProjectController extends Controller
                 'screenshots' => $project->screenshots ?? [],
                 'store_links' => $project->store_links ?? [],
             ],
+            'translation' => $project->translationState(),
         ]);
     }
 

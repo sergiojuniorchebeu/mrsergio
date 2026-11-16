@@ -14,14 +14,14 @@ class AdminFormationEnrollmentController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Formations/Enrollments', [
-            'enrollments' => FormationEnrollment::with('formation')->latest()->get(),
+            'enrollments' => FormationEnrollment::with(['formation', 'session'])->latest()->get(),
         ]);
     }
 
     public function update(Request $request, FormationEnrollment $enrollment): RedirectResponse
     {
         $enrollment->update($request->validate([
-            'status' => ['required', 'in:nouvelle,contactée,confirmée,archivée'],
+            'status' => ['required', 'in:nouvelle,en_attente,contactée,confirmée,présente,absente,archivée'],
         ]));
 
         return back()->with('success', 'Statut mis à jour.');

@@ -15,9 +15,13 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { CookieNotice } from '@/components/portofolio/cookie-notice';
 import { FooterWordmark } from '@/components/portofolio/footer-wordmark';
+import { LiveEventDot } from '@/components/portofolio/live-event';
+import { ThemeSelect, ThemeToggle } from '@/components/portofolio/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LanguageSelect, LanguageToggle, useTranslation } from '@/lib/i18n';
 import { cn, easings } from '@/lib/utils';
 
 interface Props {
@@ -25,24 +29,24 @@ interface Props {
 }
 
 const navLinks = [
-    { href: '/', label: 'Accueil' },
-    { href: '/projects', label: 'Projets' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/formations', label: 'Formations' },
-];
+    { href: '/', label: 'nav.home' },
+    { href: '/projects', label: 'nav.projects' },
+    { href: '/blog', label: 'nav.blog' },
+    { href: '/formations', label: 'nav.trainings' },
+] as const;
 
 const bottomNavLinks = [
-    { href: '/', label: 'Accueil', icon: House },
-    { href: '/projects', label: 'Projets', icon: FolderKanban },
-    { href: '/blog', label: 'Blog', icon: PenLine },
-    { href: '/formations', label: 'Formations', icon: GraduationCap },
-];
+    { href: '/', label: 'nav.home', icon: House },
+    { href: '/projects', label: 'nav.projects', icon: FolderKanban },
+    { href: '/blog', label: 'nav.blog', icon: PenLine },
+    { href: '/formations', label: 'nav.trainings', icon: GraduationCap },
+] as const;
 
 const footerLinks = [
-    { href: '/projects', label: 'Projets' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/formations', label: 'Formations' },
-];
+    { href: '/projects', label: 'nav.projects' },
+    { href: '/blog', label: 'nav.blog' },
+    { href: '/formations', label: 'nav.trainings' },
+] as const;
 
 const socials = [
     {
@@ -158,6 +162,7 @@ function isActiveLink(url: string, href: string): boolean {
 
 export default function MainLayout({ children }: Props) {
     const { url } = usePage();
+    const { t, l } = useTranslation();
     const [menuOpen, setMenuOpen] = useState(false);
     const [hostingLogoFailed, setHostingLogoFailed] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -216,7 +221,7 @@ export default function MainLayout({ children }: Props) {
     }, [menuOpen]);
 
     return (
-        <div className="min-h-screen bg-[#171511]">
+        <div className="min-h-screen bg-[#171511] dark:bg-[#0b0a09]">
             {/* ══ NAV ═══════════════════════════════════════════════════════ */}
             <motion.div
                 className="fixed inset-x-0 top-0 z-50 px-4 pt-3"
@@ -312,8 +317,11 @@ export default function MainLayout({ children }: Props) {
                                             />
                                         )}
                                         <span className="relative">
-                                            {link.label}
+                                            {t(link.label)}
                                         </span>
+                                        {link.href === '/formations' && (
+                                            <LiveEventDot className="absolute top-1.5 right-2" />
+                                        )}
                                         {isActive && (
                                             <motion.span
                                                 layoutId="nav-active-dot"
@@ -330,7 +338,9 @@ export default function MainLayout({ children }: Props) {
                             })}
                         </nav>
 
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-end gap-1">
+                            <LanguageToggle />
+                            <ThemeToggle />
                             <Link
                                 href="/contact"
                                 onClick={closeMenu}
@@ -339,9 +349,11 @@ export default function MainLayout({ children }: Props) {
                                     className: 'rounded-full',
                                 })}
                             >
-                                <span className="md:hidden">Contact</span>
+                                <span className="md:hidden">
+                                    {t('nav.contact')}
+                                </span>
                                 <span className="hidden md:inline">
-                                    Me contacter
+                                    {t('nav.contact_me')}
                                 </span>
                             </Link>
                         </div>
@@ -358,12 +370,15 @@ export default function MainLayout({ children }: Props) {
                         animate={{ clipPath: 'circle(150% at 90% 94%)' }}
                         exit={{ clipPath: 'circle(0% at 90% 94%)' }}
                         transition={{ duration: 0.6, ease: easings.expo }}
-                        className="fixed inset-0 z-[60] flex flex-col justify-between bg-[#171511] px-6 pt-24 pb-32 md:hidden"
+                        className="theme-lock fixed inset-0 z-[60] flex flex-col justify-between bg-[#171511] px-6 pt-24 pb-32 md:hidden"
                     >
                         <nav className="flex flex-col gap-1">
                             {[
                                 ...navLinks,
-                                { href: '/contact', label: 'Contact' },
+                                {
+                                    href: '/contact',
+                                    label: 'nav.contact' as const,
+                                },
                             ].map((link, i) => (
                                 <span
                                     key={link.href}
@@ -393,7 +408,10 @@ export default function MainLayout({ children }: Props) {
                                             <span className="font-mono text-[11px] font-normal tracking-normal text-white/30">
                                                 {String(i + 1).padStart(2, '0')}
                                             </span>
-                                            {link.label}
+                                            {t(link.label)}
+                                            {link.href === '/formations' && (
+                                                <LiveEventDot className="self-center" />
+                                            )}
                                         </Link>
                                     </motion.span>
                                 </span>
@@ -411,6 +429,10 @@ export default function MainLayout({ children }: Props) {
                             }}
                             className="flex flex-col gap-5"
                         >
+                            <div className="flex flex-wrap gap-2">
+                                <LanguageSelect />
+                                <ThemeSelect />
+                            </div>
                             <a
                                 href="mailto:contact@mrsergio.dev"
                                 className="font-mono text-[14px] text-white/60"
@@ -446,7 +468,7 @@ export default function MainLayout({ children }: Props) {
 
             {/* ══ BARRE DU BAS (mobile, zone du pouce) ═══════════════════ */}
             <motion.nav
-                aria-label="Navigation mobile"
+                aria-label={l('Navigation mobile', 'Mobile navigation')}
                 initial={false}
                 animate={{ y: isBottomBarHidden && !menuOpen ? '160%' : '0%' }}
                 transition={{ duration: 0.22, ease: easings.smooth }}
@@ -516,9 +538,12 @@ export default function MainLayout({ children }: Props) {
                                         className="h-[18px] w-[18px]"
                                         strokeWidth={1.8}
                                     />
+                                    {link.href === '/formations' && (
+                                        <LiveEventDot className="absolute -top-0.5 -right-1" />
+                                    )}
                                 </motion.span>
                                 <BottomBarLabel isVisible={showBottomLabels}>
-                                    {link.label}
+                                    {t(link.label)}
                                 </BottomBarLabel>
                             </Link>
                         );
@@ -528,7 +553,9 @@ export default function MainLayout({ children }: Props) {
                         type="button"
                         onClick={() => setMenuOpen((open) => !open)}
                         aria-label={
-                            menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'
+                            menuOpen
+                                ? l('Fermer le menu', 'Close menu')
+                                : l('Ouvrir le menu', 'Open menu')
                         }
                         aria-expanded={menuOpen}
                         className={cn(
@@ -560,7 +587,7 @@ export default function MainLayout({ children }: Props) {
                             )}
                         </motion.span>
                         <BottomBarLabel isVisible={showBottomLabels}>
-                            {menuOpen ? 'Fermer' : 'Menu'}
+                            {menuOpen ? l('Fermer', 'Close') : 'Menu'}
                         </BottomBarLabel>
                     </button>
                 </motion.div>
@@ -572,23 +599,22 @@ export default function MainLayout({ children }: Props) {
             </main>
 
             {/* ══ FOOTER ════════════════════════════════════════════════════ */}
-            <footer className="relative z-0 overflow-hidden bg-[#171511] pb-28 md:pb-0 [@media(min-width:1024px)_and_(min-height:780px)]:sticky [@media(min-width:1024px)_and_(min-height:780px)]:bottom-0">
+            <footer className="theme-lock relative z-0 overflow-hidden bg-[#171511] pb-28 md:pb-0 dark:bg-[#0b0a09] [@media(min-width:1024px)_and_(min-height:780px)]:sticky [@media(min-width:1024px)_and_(min-height:780px)]:bottom-0">
                 <div className="container-main relative pt-20 sm:pt-24">
                     <div className="grid gap-10 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:grid-cols-[minmax(0,1.2fr)_200px_240px]">
                         <div className="max-w-md">
                             <p className="font-display text-2xl leading-tight font-bold tracking-tight text-white sm:text-3xl">
-                                Une idée, une application à construire&nbsp;?
+                                {t('footer.idea')}
                             </p>
                             <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/45">
-                                Développeur full stack basé au Cameroun. Web,
-                                Android, et formations.
+                                {t('footer.description')}
                             </p>
                             <div className="mt-7 flex flex-wrap gap-3">
                                 <Link
                                     href="/contact"
                                     className={buttonVariants()}
                                 >
-                                    Me contacter
+                                    {t('nav.contact_me')}
                                 </Link>
                                 <a
                                     href="mailto:contact@mrsergio.dev"
@@ -604,7 +630,7 @@ export default function MainLayout({ children }: Props) {
 
                         <div>
                             <p className="mb-4 font-mono text-[11px] text-white/30">
-                                Explorer
+                                {t('footer.explore')}
                             </p>
                             <ul className="space-y-2.5">
                                 {footerLinks.map((link) => (
@@ -613,7 +639,7 @@ export default function MainLayout({ children }: Props) {
                                             href={link.href}
                                             className="text-[15px] text-white/55 transition-colors duration-200 hover:text-white"
                                         >
-                                            {link.label}
+                                            {t(link.label)}
                                         </Link>
                                     </li>
                                 ))}
@@ -622,7 +648,7 @@ export default function MainLayout({ children }: Props) {
 
                         <div>
                             <p className="mb-4 font-mono text-[11px] text-white/30">
-                                Suivre
+                                {t('footer.follow')}
                             </p>
                             <ul className="space-y-2.5">
                                 {socials.map((social) => (
@@ -651,13 +677,23 @@ export default function MainLayout({ children }: Props) {
                     <div className="mt-16 flex flex-col gap-4 border-t border-white/[0.08] pt-6 text-[12px] text-white/30 sm:flex-row sm:items-center sm:justify-between">
                         <p>
                             © {new Date().getFullYear()} Sergio Junior Chebeu ·
-                            Tous droits réservés
+                            {t('footer.rights')} ·{' '}
+                            <Link
+                                href="/cookies"
+                                className="transition-colors hover:text-white/70"
+                            >
+                                Cookies
+                            </Link>
                         </p>
+                        <ThemeSelect />
                         <a
                             href="https://www.kennhosting.com"
                             target="_blank"
                             rel="noreferrer"
-                            aria-label="Site hébergé par KennHosting"
+                            aria-label={l(
+                                'Site hébergé par KennHosting',
+                                'Website hosted by KennHosting',
+                            )}
                             className="group inline-flex w-fit items-center gap-2 transition-colors hover:text-white/70"
                         >
                             <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded text-[9px] font-black text-teal-300">
@@ -674,7 +710,7 @@ export default function MainLayout({ children }: Props) {
                                     />
                                 )}
                             </span>
-                            Hébergé par KennHosting
+                            {t('footer.hosted_by')} KennHosting
                         </a>
                     </div>
                 </div>
@@ -683,6 +719,8 @@ export default function MainLayout({ children }: Props) {
                     <FooterWordmark />
                 </div>
             </footer>
+
+            <CookieNotice />
         </div>
     );
 }

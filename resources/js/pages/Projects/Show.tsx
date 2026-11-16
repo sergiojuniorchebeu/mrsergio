@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/reveal';
 import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import MainLayout from '@/layouts/MainLayout';
+import { useTranslation } from '@/lib/i18n';
 import { easings } from '@/lib/utils';
 import type { Project, ProjectShowProps } from '@/types';
 
@@ -61,6 +62,7 @@ function FactRow({
 // ─── Projet suivant ──────────────────────────────────────────────────────────
 function NextProject({ projects }: { projects: Project[] }) {
     const [next, ...others] = projects;
+    const { l } = useTranslation();
 
     if (!next) {
         return null;
@@ -75,7 +77,7 @@ function NextProject({ projects }: { projects: Project[] }) {
             <div className="container-main">
                 <Reveal y={8}>
                     <p className="mb-8 font-mono text-[11px] text-slate-400">
-                        Projet suivant
+                        {l('Projet suivant', 'Next project')}
                     </p>
                 </Reveal>
 
@@ -101,7 +103,7 @@ function NextProject({ projects }: { projects: Project[] }) {
                                     className: 'mt-8',
                                 })}
                             >
-                                Découvrir le projet
+                                {l('Découvrir le projet', 'Explore the project')}
                             </span>
                         </Reveal>
                     </div>
@@ -123,7 +125,7 @@ function NextProject({ projects }: { projects: Project[] }) {
                 {others.length > 0 && (
                     <div className="mt-20">
                         <p className="mb-2 font-mono text-[11px] text-slate-400">
-                            Autres projets
+                            {l('Autres projets', 'More projects')}
                         </p>
                         <ul>
                             {others.map((project) => (
@@ -157,9 +159,10 @@ function NextProject({ projects }: { projects: Project[] }) {
 // ═════════════════════════════════════════════════════════════════════════════
 export default function Show({ project, related }: ProjectShowProps) {
     const prefersReducedMotion = useReducedMotion();
+    const { language, l } = useTranslation();
     const { name, tagline } = splitTitle(project.title);
     const year = projectYear(project.created_at);
-    const links = primaryLinks(project);
+    const links = primaryLinks(project, language);
     const hasPublicCode = Boolean(project.github_url) && !project.private_repo;
     const cover = previewImage(project);
     const screenshots = useMemo(
@@ -204,7 +207,7 @@ export default function Show({ project, related }: ProjectShowProps) {
                                 size: 'sm',
                             })}
                         >
-                            Tous les projets
+                            {l('Tous les projets', 'All projects')}
                         </Link>
                         <span className="font-mono text-[12px] text-slate-500">
                             <span className="capitalize">{typeLabel}</span>
@@ -220,7 +223,7 @@ export default function Show({ project, related }: ProjectShowProps) {
 
                     <div className="grid gap-12 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16">
                         <div>
-                            <h1 className="font-display text-[48px] leading-[0.96] font-bold tracking-[-0.05em] text-[#1a1916] sm:text-7xl lg:text-[104px]">
+                            <h1 className="font-display text-[48px] leading-[0.96] font-bold tracking-[-0.05em] text-ink-primary sm:text-7xl lg:text-[104px]">
                                 <SplitChars text={name} delay={0.1} />
                             </h1>
                             {tagline && (
@@ -273,7 +276,7 @@ export default function Show({ project, related }: ProjectShowProps) {
                                                 size: 'lg',
                                             })}
                                         >
-                                            Code source
+                                            {l('Code source', 'Source code')}
                                         </a>
                                     )}
                                 </motion.div>
@@ -285,7 +288,10 @@ export default function Show({ project, related }: ProjectShowProps) {
                                 <span className="capitalize">{typeLabel}</span>
                             </FactRow>
                             {project.platforms.length > 0 && (
-                                <FactRow label="Plateformes" delay={0.38}>
+                                <FactRow
+                                    label={l('Plateformes', 'Platforms')}
+                                    delay={0.38}
+                                >
                                     {project.platforms.join(', ')}
                                 </FactRow>
                             )}
@@ -295,12 +301,17 @@ export default function Show({ project, related }: ProjectShowProps) {
                                 </FactRow>
                             )}
                             {year && (
-                                <FactRow label="Année" delay={0.54}>
+                                <FactRow
+                                    label={l('Année', 'Year')}
+                                    delay={0.54}
+                                >
                                     {year}
                                 </FactRow>
                             )}
                             <FactRow label="Code" delay={0.62}>
-                                {hasPublicCode ? 'Public sur GitHub' : 'Privé'}
+                                {hasPublicCode
+                                    ? l('Public sur GitHub', 'Public on GitHub')
+                                    : l('Privé', 'Private')}
                             </FactRow>
                             <DrawLine />
                         </dl>

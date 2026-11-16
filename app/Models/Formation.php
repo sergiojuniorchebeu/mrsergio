@@ -4,26 +4,40 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Cache;
 
 class Formation extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
     protected static function booted(): void
     {
-        $invalidate = function (Formation $formation): void {
-            Cache::forget('home.formations');
-            Cache::forget('formations.index');
-            Cache::forget("formations.related.{$formation->id}");
-        };
+        $invalidate = fn (Formation $formation) => $formation->flushContentCache();
 
         static::saved($invalidate);
         static::deleted($invalidate);
+    }
+
+    public function flushContentCache(): void
+    {
+        static::forgetLocalizedCache(
+            'home.formations',
+            'formations.index',
+            "formations.related.{$this->id}",
+        );
+        FormationSession::forgetLiveEvent();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function translatableAttributes(): array
+    {
+        return ['title', 'excerpt', 'content', 'format', 'target_audience', 'prerequisites', 'outcomes', 'cta_label'];
     }
 
     protected $fillable = [
@@ -71,6 +85,11 @@ class Formation extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(FormationEnrollment::class);
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(FormationSession::class);
     }
 
     // ── Accessors ─────────────────────────────────────────────────────────

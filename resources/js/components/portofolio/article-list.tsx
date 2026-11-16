@@ -89,7 +89,7 @@ function PageCard({
         <div ref={ref} className="[perspective:1200px]">
             <motion.article
                 style={{ rotateX, y, opacity, transformOrigin: '50% 0%' }}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-[border-color,box-shadow] duration-300 hover:border-slate-300 active:brightness-95 hover:shadow-[0_16px_40px_-20px_rgba(26,25,22,0.3)]"
+                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-[border-color,box-shadow] duration-300 hover:border-slate-300 hover:shadow-[0_16px_40px_-20px_rgba(26,25,22,0.3)] active:brightness-95"
             >
                 <Link
                     href={`/blog/${article.slug}`}
@@ -119,9 +119,7 @@ function PageCard({
                     </p>
 
                     <h3 className="line-clamp-2 font-display text-[19px] leading-snug font-bold tracking-[-0.01em] text-slate-900">
-                        <HoverUnderline>
-                            {article.title}
-                        </HoverUnderline>
+                        <HoverUnderline>{article.title}</HoverUnderline>
                     </h3>
 
                     {(article.excerpt ?? article.desc) && (

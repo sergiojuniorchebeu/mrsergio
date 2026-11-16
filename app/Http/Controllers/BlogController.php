@@ -13,15 +13,15 @@ class BlogController extends Controller
 {
     public function index(): Response
     {
-        $posts = Cache::remember('blog.index', 600, function () {
+        $posts = Cache::remember(BlogPost::localizedCacheKey('blog.index'), 600, function () {
             return BlogPost::published()
                 ->ordered()
                 ->get()
                 ->map(fn ($post) => [
                     'id' => $post->id,
-                    'title' => $post->title,
+                    'title' => $post->translated('title'),
                     'slug' => $post->slug,
-                    'excerpt' => $post->excerpt,
+                    'excerpt' => $post->translated('excerpt'),
                     'cover_image_url' => $post->cover_image_url,
                     'tags' => $post->tags ?? [],
                     'featured' => (bool) $post->featured,
@@ -53,7 +53,7 @@ class BlogController extends Controller
     {
         abort_unless($post->published, 404);
 
-        $related = Cache::remember("blog.related.{$post->id}", 600, function () use ($post) {
+        $related = Cache::remember(BlogPost::localizedCacheKey("blog.related.{$post->id}"), 600, function () use ($post) {
             return BlogPost::published()
                 ->where('id', '!=', $post->id)
                 ->ordered()
@@ -61,9 +61,9 @@ class BlogController extends Controller
                 ->get()
                 ->map(fn ($p) => [
                     'id' => $p->id,
-                    'title' => $p->title,
+                    'title' => $p->translated('title'),
                     'slug' => $p->slug,
-                    'excerpt' => $p->excerpt,
+                    'excerpt' => $p->translated('excerpt'),
                     'cover_image_url' => $p->cover_image_url,
                     'tags' => $p->tags ?? [],
                     'published_at' => $p->published_at?->format('d M Y'),
@@ -73,10 +73,10 @@ class BlogController extends Controller
         return Inertia::render('Blog/Show', [
             'post' => [
                 'id' => $post->id,
-                'title' => $post->title,
+                'title' => $post->translated('title'),
                 'slug' => $post->slug,
-                'excerpt' => $post->excerpt,
-                'content' => $post->content,
+                'excerpt' => $post->translated('excerpt'),
+                'content' => $post->translated('content'),
                 'cover_image_url' => $post->cover_image_url,
                 'tags' => $post->tags ?? [],
                 'featured' => (bool) $post->featured,
@@ -96,8 +96,8 @@ class BlogController extends Controller
                     'created_at' => $c->created_at->diffForHumans(),
                 ]),
             'seo' => [
-                'title' => $post->title.' | Blog',
-                'description' => $post->excerpt,
+                'title' => $post->translated('title').' | Blog',
+                'description' => $post->translated('excerpt'),
                 'image' => $post->cover_image_url,
                 'type' => 'article',
                 'canonical' => route('blog.show', $post),
@@ -105,8 +105,8 @@ class BlogController extends Controller
                 'json_ld' => [
                     '@context' => 'https://schema.org',
                     '@type' => 'BlogPosting',
-                    'headline' => $post->title,
-                    'description' => $post->excerpt,
+                    'headline' => $post->translated('title'),
+                    'description' => $post->translated('excerpt'),
                     'image' => [$post->cover_image_url],
                     'datePublished' => $post->published_at?->toIso8601String(),
                     'dateModified' => $post->updated_at?->toIso8601String(),

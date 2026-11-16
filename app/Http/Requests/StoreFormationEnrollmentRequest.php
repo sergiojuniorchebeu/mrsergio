@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFormationEnrollmentRequest extends FormRequest
 {
@@ -21,11 +22,30 @@ class StoreFormationEnrollmentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $emailRules = ['required', 'email', 'max:150'];
+
+        if ($this->filled('formation_session_id')) {
+            $emailRules[] = Rule::unique('formation_enrollments', 'email')
+                ->where('formation_session_id', $this->integer('formation_session_id'))
+                ->whereNotIn('status', ['archivée', 'absente']);
+        }
+
         return [
             'name' => ['required', 'string', 'min:2', 'max:100'],
-            'email' => ['required', 'email', 'max:150'],
+            'email' => $emailRules,
             'phone' => ['nullable', 'string', 'max:40'],
             'message' => ['nullable', 'string', 'max:1000'],
+            'formation_session_id' => ['nullable', 'integer', 'exists:formation_sessions,id'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.unique' => __('Cette adresse est déjà inscrite à cette session.'),
         ];
     }
 }

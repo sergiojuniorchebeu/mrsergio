@@ -5,7 +5,7 @@
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/components/portofolio/markdown';
 import { buttonVariants } from '@/components/ui/button';
@@ -128,7 +128,190 @@ export function PublishedBadge({ published }: { published: boolean }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTERRUPTEUR DE PUBLICATION
+// INTERRUPTEUR (même rendu dans les listes et les formulaires)
+// ─────────────────────────────────────────────────────────────────────────────
+export function Switch({
+    checked,
+    onChange,
+    label,
+    disabled = false,
+    className,
+}: {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    label?: string;
+    disabled?: boolean;
+    className?: string;
+}) {
+    return (
+        <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            aria-label={label}
+            onClick={() => onChange(!checked)}
+            disabled={disabled}
+            className={cn(
+                'relative flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:outline-none',
+                checked
+                    ? 'justify-end bg-teal-600'
+                    : 'justify-start bg-slate-300',
+                disabled && 'cursor-wait opacity-60',
+                className,
+            )}
+        >
+            <motion.span
+                layout
+                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                className="h-5 w-5 rounded-full bg-white shadow-sm"
+            />
+        </button>
+    );
+}
+
+/**
+ * Ligne de réglage cliquable : libellé, explication courte, interrupteur à droite.
+ */
+export function SwitchField({
+    label,
+    description,
+    checked,
+    onChange,
+}: {
+    label: string;
+    description?: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+}) {
+    return (
+        <div
+            onClick={() => onChange(!checked)}
+            className={cn(
+                'flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3 transition-colors duration-200',
+                checked
+                    ? 'border-teal-200 bg-teal-50/50'
+                    : 'border-slate-200 hover:border-slate-300',
+            )}
+        >
+            <span className="min-w-0">
+                <span className="block text-[14px] font-medium text-slate-800">
+                    {label}
+                </span>
+                {description && (
+                    <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">
+                        {description}
+                    </span>
+                )}
+            </span>
+            <span onClick={(event) => event.stopPropagation()}>
+                <Switch checked={checked} onChange={onChange} label={label} />
+            </span>
+        </div>
+    );
+}
+
+/**
+ * Choix exclusif en contrôle segmenté (ex. Gratuite / Payante).
+ */
+export function SegmentedControl<T extends string>({
+    value,
+    onChange,
+    options,
+    className,
+}: {
+    value: T;
+    onChange: (value: T) => void;
+    options: { value: T; label: string }[];
+    className?: string;
+}) {
+    const groupId = useId();
+
+    return (
+        <div
+            role="radiogroup"
+            className={cn('flex gap-1 rounded-xl bg-slate-100 p-1', className)}
+        >
+            {options.map((option) => {
+                const isSelected = option.value === value;
+
+                return (
+                    <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => onChange(option.value)}
+                        className={cn(
+                            'relative flex-1 rounded-lg px-3 py-2 text-[13px] font-semibold transition-colors',
+                            isSelected
+                                ? 'text-slate-900'
+                                : 'text-slate-500 hover:text-slate-800',
+                        )}
+                    >
+                        {isSelected && (
+                            <motion.span
+                                layoutId={`segment-${groupId}`}
+                                transition={{
+                                    type: 'spring',
+                                    stiffness: 500,
+                                    damping: 38,
+                                }}
+                                className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                            />
+                        )}
+                        <span className="relative">{option.label}</span>
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+/**
+ * Carte de section d'un formulaire : titre, explication, contenu.
+ */
+export function FormSection({
+    title,
+    description,
+    children,
+    delay = 0,
+    className,
+}: {
+    title?: string;
+    description?: string;
+    children: ReactNode;
+    delay?: number;
+    className?: string;
+}) {
+    return (
+        <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay, ease: [0.23, 1, 0.32, 1] }}
+            className={cn(
+                'space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5',
+                className,
+            )}
+        >
+            {title && (
+                <header>
+                    <h3 className="font-display text-[15px] font-semibold text-slate-900">
+                        {title}
+                    </h3>
+                    {description && (
+                        <p className="mt-0.5 text-[13px] leading-snug text-slate-500">
+                            {description}
+                        </p>
+                    )}
+                </header>
+            )}
+            {children}
+        </motion.section>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERRUPTEUR DE PUBLICATION (listes)
 // ─────────────────────────────────────────────────────────────────────────────
 export function TogglePublished({
     published,
@@ -149,28 +332,12 @@ export function TogglePublished({
     }
 
     return (
-        <button
-            type="button"
-            role="switch"
-            aria-checked={published}
-            onClick={toggle}
+        <Switch
+            checked={published}
+            onChange={toggle}
             disabled={loading}
-            title={published ? 'Dépublier' : 'Publier'}
-            className={cn(
-                'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:outline-none',
-                published ? 'bg-teal-600' : 'bg-slate-300',
-                loading && 'cursor-wait opacity-60',
-            )}
-        >
-            <motion.span
-                layout
-                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                className={cn(
-                    'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm',
-                    published ? 'right-0.5' : 'left-0.5',
-                )}
-            />
-        </button>
+            label={published ? 'Dépublier' : 'Publier'}
+        />
     );
 }
 
@@ -502,7 +669,8 @@ export function MultiImageUpload({
                 {...dropProps}
                 className={cn(
                     'grid grid-cols-3 gap-3 rounded-xl p-1 transition-colors sm:grid-cols-4',
-                    isDragging && 'bg-teal-50 outline-2 outline-teal-500 outline-dashed',
+                    isDragging &&
+                        'bg-teal-50 outline-2 outline-teal-500 outline-dashed',
                 )}
             >
                 {currentUrls.map((url, index) => (

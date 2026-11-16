@@ -230,8 +230,8 @@
         --tw-prose-quote-borders: var(--color-teal-300);
         --tw-prose-captions: var(--color-ink-muted);
         --tw-prose-code: var(--color-teal-700);
-        --tw-prose-pre-code: var(--color-slate-100);
-        --tw-prose-pre-bg: var(--color-slate-900);
+        --tw-prose-pre-code: #f0efec;
+        --tw-prose-pre-bg: #1a1916;
         --tw-prose-th-borders: var(--color-slate-200);
         --tw-prose-td-borders: var(--color-slate-100);
     }
@@ -239,6 +239,111 @@
 
 @theme inline {
     --animate-blink-cursor: blink-cursor 1.2s step-end infinite;
+}
+
+/* ── DARK MODE ────────────────────────────────────────────────────────
+   Les composants utilisent la palette claire (white, slate, teal…).
+   En sombre, on inverse les variables : aucun composant à dupliquer.
+   `.theme-lock` restaure la palette d'origine dans les zones qui sont
+   déjà sombres par design (footer, menu mobile, lightbox, code…). */
+:root {
+    --shot-tint-l: 92%;
+    --shot-neutral: hsl(40 10% 95%);
+    --watermark-stroke: rgba(26, 25, 22, 0.08);
+}
+
+.dark {
+    color-scheme: dark;
+    --shot-tint-l: 17%;
+    --shot-neutral: hsl(40 6% 15%);
+    --watermark-stroke: rgba(255, 255, 255, 0.07);
+
+    --color-white: #131210;
+
+    --color-slate-50: #1a1916;
+    --color-slate-100: #22201c;
+    --color-slate-200: #2f2c27;
+    --color-slate-300: #423e37;
+    --color-slate-400: #6b665d;
+    --color-slate-500: #918b80;
+    --color-slate-600: #aca69a;
+    --color-slate-700: #c6c1b6;
+    --color-slate-800: #dbd7ce;
+    --color-slate-900: #ece9e2;
+    --color-slate-950: #f6f4f0;
+
+    --color-teal-50: #0f2420;
+    --color-teal-100: #123029;
+    --color-teal-200: #17463b;
+    --color-teal-300: #1f6553;
+    --color-teal-400: #2f9a80;
+    --color-teal-500: #3cb699;
+    --color-teal-600: #4cc7a8;
+    --color-teal-700: #6fd6bc;
+    --color-teal-800: #9ae4d1;
+    --color-teal-900: #c3f0e3;
+    --color-teal-950: #e3f9f2;
+
+    --color-rose-50: #2a1414;
+    --color-rose-200: #5a2424;
+    --color-rose-300: #7a2e2e;
+    --color-rose-600: #f08a8a;
+    --color-rose-700: #f5a3a3;
+    --color-red-50: #2a1414;
+    --color-amber-700: #f2c065;
+
+    --color-surface: #131210;
+    --color-surface-card: #1a1916;
+    --color-surface-raised: #1a1916;
+    --color-surface-subtle: #22201c;
+
+    --color-ink-primary: #f3f1ec;
+    --color-ink-secondary: #c6c1b6;
+    --color-ink-muted: #918b80;
+    --color-ink-subtle: #6b665d;
+}
+
+.dark .theme-lock {
+    color-scheme: light;
+    --watermark-stroke: rgba(26, 25, 22, 0.08);
+
+    --color-white: #ffffff;
+
+    --color-slate-50: #f8f8f7;
+    --color-slate-100: #f0efec;
+    --color-slate-200: #e2e0da;
+    --color-slate-300: #cac7be;
+    --color-slate-400: #a9a49a;
+    --color-slate-500: #8a8479;
+    --color-slate-600: #706a5f;
+    --color-slate-700: #5c564d;
+    --color-slate-800: #4d4840;
+    --color-slate-900: #433e37;
+    --color-slate-950: #1e1b16;
+
+    --color-teal-50: #effcf8;
+    --color-teal-100: #d2f5eb;
+    --color-teal-200: #a8ebd8;
+    --color-teal-300: #6fd9be;
+    --color-teal-400: #38bfa3;
+    --color-teal-500: #1aa389;
+    --color-teal-600: #138770;
+    --color-teal-700: #126b5b;
+    --color-teal-800: #125549;
+    --color-teal-900: #12463d;
+    --color-teal-950: #072b25;
+
+    --color-ink-primary: #1a1916;
+    --color-ink-secondary: #4a4740;
+    --color-ink-muted: #7a7670;
+    --color-ink-subtle: #aaa69e;
+}
+
+/* Changement de thème : le nouveau thème se dévoile en cercle (voir theme-toggle.tsx). */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
 }
 
 /* ── RESPONSIVE / PERF ───────────────────────────────────────────── */

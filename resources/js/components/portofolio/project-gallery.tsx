@@ -31,6 +31,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { MaskedLine } from '@/components/ui/reveal';
 import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from '@/lib/i18n';
 import { cn, easings } from '@/lib/utils';
 
 const SWIPE_THRESHOLD_PX = 60;
@@ -86,13 +87,21 @@ interface ShotLayout {
 function laptopHeight(width: number, ratio: number): number {
     const screenInnerWidth = width * LAPTOP_SCREEN_SHARE - LAPTOP_BEZEL_PX * 2;
 
-    return screenInnerWidth / ratio + LAPTOP_BEZEL_TOP_PX + LAPTOP_BEZEL_PX + width * LAPTOP_BASE_SHARE;
+    return (
+        screenInnerWidth / ratio +
+        LAPTOP_BEZEL_TOP_PX +
+        LAPTOP_BEZEL_PX +
+        width * LAPTOP_BASE_SHARE
+    );
 }
 
 /** Largeur d'un MacBook qui tient dans une hauteur donnée (inverse de laptopHeight). */
 function laptopWidth(height: number, ratio: number): number {
     return (
-        (height - LAPTOP_BEZEL_TOP_PX - LAPTOP_BEZEL_PX + (LAPTOP_BEZEL_PX * 2) / ratio) /
+        (height -
+            LAPTOP_BEZEL_TOP_PX -
+            LAPTOP_BEZEL_PX +
+            (LAPTOP_BEZEL_PX * 2) / ratio) /
         (LAPTOP_SCREEN_SHARE / ratio + LAPTOP_BASE_SHARE)
     );
 }
@@ -112,7 +121,8 @@ function computeLayout(
 
     return ratios.map((ratio) => {
         const kind = shotKind(ratio, projectType);
-        const maxWidth = stageWidth * (isNarrow ? 0.86 : kind === 'laptop' ? 0.66 : 0.6);
+        const maxWidth =
+            stageWidth * (isNarrow ? 0.86 : kind === 'laptop' ? 0.66 : 0.6);
         let width: number;
         let height: number;
 
@@ -121,7 +131,11 @@ function computeLayout(
             height = laptopHeight(width, ratio);
         } else {
             const verticalChrome =
-                kind === 'browser' ? BROWSER_BAR_PX : kind === 'phone' ? PHONE_BEZEL_PX * 2 : 0;
+                kind === 'browser'
+                    ? BROWSER_BAR_PX
+                    : kind === 'phone'
+                      ? PHONE_BEZEL_PX * 2
+                      : 0;
             const horizontalChrome = kind === 'phone' ? PHONE_BEZEL_PX * 2 : 0;
             height = stageHeight;
             width = (height - verticalChrome) * ratio + horizontalChrome;
@@ -149,7 +163,10 @@ function centerAt(layout: ShotLayout[], position: number): number {
     const upper = Math.min(lower + 1, layout.length - 1);
     const fraction = clamped - lower;
 
-    return layout[lower].center + (layout[upper].center - layout[lower].center) * fraction;
+    return (
+        layout[lower].center +
+        (layout[upper].center - layout[lower].center) * fraction
+    );
 }
 
 // ─── Cadres ──────────────────────────────────────────────────────────────────
@@ -163,7 +180,13 @@ function TrafficLights() {
     );
 }
 
-function SafariWindow({ image, host }: { image: ReactNode; host: string | null }) {
+function SafariWindow({
+    image,
+    host,
+}: {
+    image: ReactNode;
+    host: string | null;
+}) {
     return (
         <div className="flex h-full w-full flex-col overflow-hidden rounded-[12px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_30px_60px_-30px_rgba(26,25,22,0.5)]">
             <div
@@ -199,9 +222,14 @@ function MacBook({ image }: { image: ReactNode }) {
                 }}
             >
                 <span className="absolute top-[6px] left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-[#2b2b30] ring-1 ring-[#3a3a40]" />
-                <div className="min-h-0 flex-1 overflow-hidden rounded-[3px] bg-black">{image}</div>
+                <div className="min-h-0 flex-1 overflow-hidden rounded-[3px] bg-black">
+                    {image}
+                </div>
             </div>
-            <div className="relative w-full" style={{ aspectRatio: `${1 / LAPTOP_BASE_SHARE}` }}>
+            <div
+                className="relative w-full"
+                style={{ aspectRatio: `${1 / LAPTOP_BASE_SHARE}` }}
+            >
                 <div className="absolute inset-0 rounded-t-[3px] rounded-b-[14px] border-b-2 border-[#a9a9ae] bg-[#d6d6db] shadow-[0_18px_30px_-18px_rgba(26,25,22,0.6)]" />
                 <span className="absolute top-0 left-1/2 h-[45%] w-[15%] -translate-x-1/2 rounded-b-[6px] bg-[#bdbdc3]" />
             </div>
@@ -248,7 +276,9 @@ function Frame({
                 className="relative h-full w-full rounded-[2.4rem] bg-[#1a1916] shadow-[0_30px_60px_-30px_rgba(26,25,22,0.55)]"
                 style={{ padding: PHONE_BEZEL_PX }}
             >
-                <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-black">{image}</div>
+                <div className="relative h-full w-full overflow-hidden rounded-[1.9rem] bg-black">
+                    {image}
+                </div>
             </div>
         );
     }
@@ -288,6 +318,7 @@ function CoverflowItem({
     children: ReactNode;
     onSelect: (index: number) => void;
 }) {
+    const { l } = useTranslation();
     const maxRotation = isLight ? 30 : 50;
     const x = useTransform(
         position,
@@ -323,7 +354,7 @@ function CoverflowItem({
         <motion.button
             type="button"
             onClick={() => onSelect(index)}
-            aria-label={`Capture ${index + 1}`}
+            aria-label={`${l('Capture', 'Screenshot')} ${index + 1}`}
             style={{
                 x,
                 rotateY,
@@ -369,13 +400,19 @@ function Stage({
     header: ReactNode;
     stageProps?: React.ComponentProps<typeof motion.div>;
 }) {
+    const { l } = useTranslation();
     const stageRef = useRef<HTMLDivElement>(null);
     const isMobile = useIsMobile();
     const [stageSize, setStageSize] = useState({ width: 1200, height: 480 });
     const [ratios, setRatios] = useState<number[]>(() =>
         images.map(() => DEFAULT_RATIO),
     );
-    const layout = computeLayout(ratios, stageSize.height, stageSize.width, projectType);
+    const layout = computeLayout(
+        ratios,
+        stageSize.height,
+        stageSize.width,
+        projectType,
+    );
 
     const updateRatio = useCallback((index: number, ratio: number) => {
         setRatios((current) => {
@@ -454,7 +491,7 @@ function Stage({
                             key={src}
                             type="button"
                             onClick={() => onJump(index)}
-                            aria-label={`Aller à la capture ${index + 1}`}
+                            aria-label={`${l('Aller à la capture', 'Go to screenshot')} ${index + 1}`}
                             className="flex h-8 items-center px-0.5"
                         >
                             <span
@@ -475,13 +512,17 @@ function Stage({
 }
 
 function GalleryHeader({ count }: { count: number }) {
+    const { l } = useTranslation();
+
     return (
         <div className="container-main flex items-end justify-between gap-6">
             <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-slate-900 sm:text-[44px]">
-                <MaskedLine onScroll>En images</MaskedLine>
+                <MaskedLine onScroll>
+                    {l('En images', 'In pictures')}
+                </MaskedLine>
             </h2>
             <span className="font-mono text-[12px] text-slate-500">
-                {count} captures
+                {count} {l('captures', 'screenshots')}
             </span>
         </div>
     );
@@ -660,6 +701,7 @@ function Lightbox({
     onClose: () => void;
     onNavigate: (index: number) => void;
 }) {
+    const { l } = useTranslation();
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const total = images.length;
     const previous = useCallback(
@@ -700,12 +742,12 @@ function Lightbox({
         <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label={`Captures de ${title}`}
+            aria-label={`${l('Captures de', 'Screenshots of')} ${title}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[90] flex flex-col bg-[#0f0e0c]/95 backdrop-blur-sm"
+            className="theme-lock fixed inset-0 z-[90] flex flex-col bg-[#0f0e0c]/95 backdrop-blur-sm"
             onClick={onClose}
         >
             <div
@@ -720,7 +762,7 @@ function Lightbox({
                     ref={closeButtonRef}
                     type="button"
                     onClick={onClose}
-                    aria-label="Fermer"
+                    aria-label={l('Fermer', 'Close')}
                     className={buttonVariants({
                         variant: 'dark',
                         size: 'icon',
@@ -763,7 +805,10 @@ function Lightbox({
                                 e.stopPropagation();
                                 previous();
                             }}
-                            aria-label="Capture précédente"
+                            aria-label={l(
+                                'Capture précédente',
+                                'Previous screenshot',
+                            )}
                             className={buttonVariants({
                                 variant: 'dark',
                                 size: 'icon',
@@ -779,7 +824,10 @@ function Lightbox({
                                 e.stopPropagation();
                                 next();
                             }}
-                            aria-label="Capture suivante"
+                            aria-label={l(
+                                'Capture suivante',
+                                'Next screenshot',
+                            )}
                             className={buttonVariants({
                                 variant: 'dark',
                                 size: 'icon',

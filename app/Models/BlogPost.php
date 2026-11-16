@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Cache;
 
 class BlogPost extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
     protected $table = 'blog_posts';
 
@@ -36,14 +36,27 @@ class BlogPost extends Model
 
     protected static function booted(): void
     {
-        $invalidate = function (BlogPost $post): void {
-            Cache::forget('home.posts');
-            Cache::forget('blog.index');
-            Cache::forget("blog.related.{$post->id}");
-        };
+        $invalidate = fn (BlogPost $post) => $post->flushContentCache();
 
         static::saved($invalidate);
         static::deleted($invalidate);
+    }
+
+    public function flushContentCache(): void
+    {
+        static::forgetLocalizedCache(
+            'home.posts',
+            'blog.index',
+            "blog.related.{$this->id}",
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function translatableAttributes(): array
+    {
+        return ['title', 'excerpt', 'content'];
     }
 
     // ── Relations ──────────────────────────────────────────────────

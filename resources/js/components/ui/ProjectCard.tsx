@@ -10,6 +10,7 @@ import { HoverUnderline } from '@/components/ui/hover-underline';
 import { SpotlightCard } from '@/components/ui/SpotlightCard';
 import { cn, easings } from '@/lib/utils';
 import type { Project } from '@/types';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProjectCardProps {
     project: Project;
@@ -35,7 +36,8 @@ function GithubIcon({ className = 'w-4 h-4' }: { className?: string }) {
 export function ProjectCard({ project, index = 0, tiltMobile = false, isWide = false }: ProjectCardProps) {
     const prefersReducedMotion = useReducedMotion();
     const previewImage = getPreviewImage(project);
-    const externalLink = primaryLinks(project)[0] ?? null;
+    const { language, l } = useTranslation();
+    const externalLink = primaryLinks(project, language)[0] ?? null;
     const { name, tagline } = splitTitle(project.title);
     const number = String(index + 1).padStart(2, '0');
     const typeKey      = project.project_type ?? 'web';
@@ -89,7 +91,7 @@ export function ProjectCard({ project, index = 0, tiltMobile = false, isWide = f
                 <div className={cn('relative isolate flex flex-1 flex-col gap-3 overflow-hidden p-5 sm:p-6', isWide && 'md:justify-center md:gap-4 md:p-10')}>
                     <span
                         aria-hidden
-                        className="pointer-events-none absolute -right-[0.04em] -bottom-[0.22em] -z-10 font-display text-[110px] leading-none font-extrabold tracking-[-0.06em] text-transparent select-none [-webkit-text-stroke:1.2px_rgba(26,25,22,0.08)]"
+                        className="pointer-events-none absolute -right-[0.04em] -bottom-[0.22em] -z-10 font-display text-[110px] leading-none font-extrabold tracking-[-0.06em] text-transparent select-none [-webkit-text-stroke:1.2px_var(--watermark-stroke)]"
                     >
                         {number}
                     </span>
@@ -127,7 +129,7 @@ export function ProjectCard({ project, index = 0, tiltMobile = false, isWide = f
 
                     <div className="relative z-20 mt-auto flex flex-wrap items-center gap-2 pt-1">
                         <Link href={`/projects/${project.slug}`} className={buttonVariants({ size: 'sm' })}>
-                            Voir le projet
+                            {l('Voir le projet', 'View project')}
                         </Link>
                         {externalLink && (
                             <a
@@ -144,7 +146,7 @@ export function ProjectCard({ project, index = 0, tiltMobile = false, isWide = f
                                 href={project.github_url!}
                                 target="_blank"
                                 rel="noreferrer"
-                                aria-label="Code source sur GitHub"
+                                aria-label={l('Code source sur GitHub', 'Source code on GitHub')}
                                 className={buttonVariants({ variant: 'ghost', size: 'sm', className: 'px-2.5' })}
                             >
                                 <GithubIcon className="h-4 w-4" />

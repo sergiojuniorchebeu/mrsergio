@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Formation;
+use App\Models\FormationSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -65,5 +66,25 @@ class FormationShowTest extends TestCase
         $formation = $this->createFormation(['slug' => 'formation-privee', 'published' => false]);
 
         $this->get(route('formations.show', $formation))->assertNotFound();
+    }
+
+    public function test_free_formation_exposes_upcoming_sessions_without_the_meet_link(): void
+    {
+        $formation = $this->createFormation(['is_free' => true]);
+        FormationSession::create([
+            'formation_id' => $formation->id,
+            'starts_at' => now()->addWeek(),
+            'meet_url' => 'https://meet.google.com/private-room',
+            'capacity' => 15,
+            'published' => true,
+        ]);
+
+        $response = $this->get(route('formations.show', $formation));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('formation.sessions', 1)
+            ->where('formation.sessions.0.capacity', 15)
+            ->missing('formation.sessions.0.meet_url'));
+        $this->assertStringNotContainsString('private-room', $response->getContent());
     }
 }

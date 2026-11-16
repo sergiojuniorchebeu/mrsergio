@@ -1,7 +1,12 @@
 // resources/js/components/portofolio/footer-wordmark.tsx
 // « MR SERGIO » géant dont les lettres montent au fil du scroll.
 
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import {
+    motion,
+    useReducedMotion,
+    useScroll,
+    useTransform,
+} from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 
 const WORDMARK = 'MR SERGIO';
@@ -12,7 +17,9 @@ function distanceToPageBottom(scrollTop: number): number {
         return 0;
     }
 
-    return document.documentElement.scrollHeight - (scrollTop + window.innerHeight);
+    return (
+        document.documentElement.scrollHeight - (scrollTop + window.innerHeight)
+    );
 }
 
 function Letter({
@@ -28,8 +35,16 @@ function Letter({
 }) {
     const prefersReducedMotion = useReducedMotion();
     const start = (index / total) * 0.5;
-    const y = useTransform(progress, [start, start + 0.5], prefersReducedMotion ? ['0%', '0%'] : ['105%', '0%']);
-    const rotate = useTransform(progress, [start, start + 0.5], prefersReducedMotion ? [0, 0] : [8, 0]);
+    const y = useTransform(
+        progress,
+        [start, start + 0.5],
+        prefersReducedMotion ? ['0%', '0%'] : ['105%', '0%'],
+    );
+    const rotate = useTransform(
+        progress,
+        [start, start + 0.5],
+        prefersReducedMotion ? [0, 0] : [8, 0],
+    );
 
     if (letter === ' ') {
         return <span className="inline-block w-[0.22em]" />;
@@ -48,18 +63,33 @@ function Letter({
 export function FooterWordmark() {
     const { scrollY } = useScroll();
     const progress = useTransform(scrollY, (scrollTop) =>
-        Math.min(1, Math.max(0, 1 - distanceToPageBottom(scrollTop) / REVEAL_DISTANCE_PX)),
+        Math.min(
+            1,
+            Math.max(
+                0,
+                1 - distanceToPageBottom(scrollTop) / REVEAL_DISTANCE_PX,
+            ),
+        ),
     );
     const letters = WORDMARK.split('');
 
     return (
-        <div aria-hidden className="pointer-events-none overflow-hidden pt-[0.06em] select-none">
+        <div
+            aria-hidden
+            className="pointer-events-none overflow-hidden pt-[0.06em] select-none"
+        >
             <p
                 className="flex justify-center font-display leading-[0.78] font-extrabold tracking-[-0.06em] whitespace-nowrap"
                 style={{ fontSize: 'clamp(64px, 18.5vw, 280px)' }}
             >
                 {letters.map((letter, index) => (
-                    <Letter key={index} letter={letter} index={index} total={letters.length} progress={progress} />
+                    <Letter
+                        key={index}
+                        letter={letter}
+                        index={index}
+                        total={letters.length}
+                        progress={progress}
+                    />
                 ))}
             </p>
         </div>

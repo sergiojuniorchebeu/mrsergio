@@ -114,11 +114,28 @@ export interface Formation {
     price_formatted: string;
     featured: boolean;
     published_at?: string;
+    sessions?: FormationSession[];
+}
+
+export interface FormationSession {
+    id: number;
+    title?: string | null;
+    starts_at: string;
+    ends_at?: string | null;
+    date_label: string;
+    time_label: string;
+    capacity?: number | null;
+    registered_count: number;
+    places_remaining: number | null;
+    is_full: boolean;
+    calendar_url: string;
+    formation?: { title: string; slug: string } | null;
 }
 
 export interface FormationsIndexProps {
     formations: Formation[];
     categories: string[];
+    upcoming_sessions: FormationSession[];
 }
 
 export interface FormationShowProps {

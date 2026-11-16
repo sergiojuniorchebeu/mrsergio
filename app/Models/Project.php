@@ -2,28 +2,41 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
 
     protected static function booted(): void
     {
-        $invalidate = function (Project $project): void {
-            Cache::forget('home.projects');
-            Cache::forget('home.projects.v2');
-            Cache::forget('home.projects.v3');
-            Cache::forget('home.projects_count');
-            Cache::forget('projects.index');
-            Cache::forget("projects.related.{$project->id}");
-        };
+        $invalidate = fn (Project $project) => $project->flushContentCache();
 
         static::saved($invalidate);
         static::deleted($invalidate);
+    }
+
+    public function flushContentCache(): void
+    {
+        static::forgetLocalizedCache(
+            'home.projects',
+            'home.projects.v2',
+            'home.projects.v3',
+            'home.projects_count',
+            'projects.index',
+            "projects.related.{$this->id}",
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function translatableAttributes(): array
+    {
+        return ['title', 'description', 'content'];
     }
 
     protected $fillable = [

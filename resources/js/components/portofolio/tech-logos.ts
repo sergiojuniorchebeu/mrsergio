@@ -1,6 +1,12 @@
 // resources/js/components/portofolio/tech-logos.ts
 // Tracés SVG (viewBox 24×24) des logos des technos affichées sur l'accueil.
 
+/** Icône « serveur » (deux baies), utilisée pour le déploiement. */
+const SERVER_ICON = [
+    'M4 2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
+    'M4 13h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
+];
+
 export const TECH_LOGO_PATHS: Record<string, string[]> = {
     Laravel: [
         'M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.007-.04-.013-.059-.024L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.038.01-.073.014-.11a.337.337 0 01.033-.067c.01-.016.018-.034.03-.05.015-.014.032-.025.048-.038L5.044.05a.375.375 0 01.376 0L9.93 2.788c.018.01.03.026.044.038.016.013.033.024.048.039a.377.377 0 01.063.116c.006.016.006.033.01.051.003.036.012.072.012.109v9.653l3.76-2.164V5.528c0-.037.007-.072.012-.109a.377.377 0 01.042-.117c.01-.016.018-.033.03-.05.015-.014.032-.025.048-.038l4.51-2.738a.375.375 0 01.376 0l4.51 2.738c.017.011.03.026.044.038.016.013.032.024.048.039a.377.377 0 01.063.116c.005.016.006.033.009.051z',
@@ -27,11 +33,9 @@ export const TECH_LOGO_PATHS: Record<string, string[]> = {
     'Inertia.js': [
         'M6.527 12L0 8.701V15.3L6.527 12zm10.946 0L24 8.701V15.3L17.473 12zm-5.473 3.112L5.473 12 12 8.888 18.527 12l-6.527 3.112z',
     ],
-    Déploiement: [
-        'M4 2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
-        'M4 13h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2zm1.5 3.5v2h2v-2h-2zm4 0v2h2v-2h-2z',
-    ],
+    Déploiement: SERVER_ICON,
+    Deployment: SERVER_ICON,
 };
 
 /** Logos dessinés avec des parties en creux (règle de remplissage « evenodd »). */
-export const EVENODD_TECH_LOGOS = new Set(['Déploiement']);
+export const EVENODD_TECH_LOGOS = new Set(['Déploiement', 'Deployment']);

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/reveal';
 import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import MainLayout from '@/layouts/MainLayout';
+import { useTranslation } from '@/lib/i18n';
 import { cn, easings } from '@/lib/utils';
 import type { BlogComment, BlogShowProps } from '@/types';
 
@@ -76,6 +77,7 @@ function useActiveHeading(headings: MarkdownHeading[]): string | null {
 }
 
 function TableOfContents({ headings }: { headings: MarkdownHeading[] }) {
+    const { l } = useTranslation();
     const prefersReducedMotion = useReducedMotion();
     const activeId = useActiveHeading(headings);
     const activeIndex = Math.max(
@@ -84,19 +86,17 @@ function TableOfContents({ headings }: { headings: MarkdownHeading[] }) {
     );
 
     const goTo = (id: string) => {
-        document
-            .getElementById(id)
-            ?.scrollIntoView({
-                behavior: prefersReducedMotion ? 'auto' : 'smooth',
-                block: 'start',
-            });
+        document.getElementById(id)?.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+        });
         window.history.replaceState(null, '', `#${id}`);
     };
 
     return (
-        <nav aria-label="Sommaire" className="sticky top-28">
+        <nav aria-label={l('Sommaire', 'Contents')} className="sticky top-28">
             <p className="mb-5 font-mono text-[11px] text-slate-400">
-                Sommaire
+                {l('Sommaire', 'Contents')}
             </p>
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 w-px bg-slate-200" />
@@ -149,6 +149,7 @@ function LikeButton({
     initialCount: number;
     initialLiked: boolean;
 }) {
+    const { l } = useTranslation();
     const [liked, setLiked] = useState(initialLiked);
     const [count, setCount] = useState(initialCount);
     const [loading, setLoading] = useState(false);
@@ -215,12 +216,13 @@ function LikeButton({
                 />
             </motion.svg>
             <NumberFlow value={count} className="tabular-nums" />
-            <span>J&apos;aime</span>
+            <span>{l("J'aime", 'Like')}</span>
         </button>
     );
 }
 
 function ShareButton({ title }: { title: string }) {
+    const { l } = useTranslation();
     const [copied, setCopied] = useState(false);
 
     const share = async () => {
@@ -257,7 +259,9 @@ function ShareButton({ title }: { title: string }) {
                         transition={{ duration: 0.3, ease: easings.smooth }}
                         className={cn('block', copied && 'text-teal-700')}
                     >
-                        {copied ? 'Lien copié' : 'Partager'}
+                        {copied
+                            ? l('Lien copié', 'Link copied')
+                            : l('Partager', 'Share')}
                     </motion.span>
                 </AnimatePresence>
             </span>
@@ -267,6 +271,7 @@ function ShareButton({ title }: { title: string }) {
 
 // ─── Commentaires ────────────────────────────────────────────────────────────
 function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
+    const { l } = useTranslation();
     const { auth } = usePage<{ auth: { user: { is_admin: boolean } | null } }>()
         .props;
     const isAdmin = auth?.user?.is_admin ?? false;
@@ -278,7 +283,7 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
     const [sent, setSent] = useState(false);
 
     const deleteComment = async (id: number) => {
-        if (!confirm('Supprimer ce commentaire ?')) {
+        if (!confirm(l('Supprimer ce commentaire ?', 'Delete this comment?'))) {
             return;
         }
 
@@ -324,7 +329,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error ?? 'Une erreur est survenue.');
+                setError(
+                    data.error ??
+                        l('Une erreur est survenue.', 'Something went wrong.'),
+                );
             } else {
                 setComments((previous) => [data.comment, ...previous]);
                 setContent('');
@@ -333,7 +341,12 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                 setTimeout(() => setSent(false), 3000);
             }
         } catch {
-            setError("Impossible d'envoyer le commentaire.");
+            setError(
+                l(
+                    "Impossible d'envoyer le commentaire.",
+                    'Could not send your comment.',
+                ),
+            );
         } finally {
             setSending(false);
         }
@@ -355,8 +368,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                             <MaskedLine onScroll>Discussion</MaskedLine>
                         </h2>
                         <span className="font-mono text-[12px] text-slate-500">
-                            <NumberFlow value={comments.length} /> commentaire
-                            {comments.length > 1 ? 's' : ''}
+                            <NumberFlow value={comments.length} />{' '}
+                            {comments.length > 1
+                                ? l('commentaires', 'comments')
+                                : l('commentaire', 'comment')}
                         </span>
                     </div>
 
@@ -371,7 +386,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                                 onChange={(event) =>
                                     setName(event.target.value)
                                 }
-                                placeholder="Votre nom (facultatif)"
+                                placeholder={l(
+                                    'Votre nom (facultatif)',
+                                    'Your name (optional)',
+                                )}
                                 maxLength={80}
                                 className={fieldClass}
                             />
@@ -380,7 +398,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                                 onChange={(event) =>
                                     setContent(event.target.value)
                                 }
-                                placeholder="Votre commentaire…"
+                                placeholder={l(
+                                    'Votre commentaire…',
+                                    'Your comment…',
+                                )}
                                 required
                                 maxLength={1000}
                                 rows={4}
@@ -415,10 +436,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                                     })}
                                 >
                                     {sent
-                                        ? 'Envoyé'
+                                        ? l('Envoyé', 'Sent')
                                         : sending
-                                          ? 'Envoi…'
-                                          : 'Commenter'}
+                                          ? l('Envoi…', 'Sending…')
+                                          : l('Commenter', 'Comment')}
                                 </button>
                             </div>
                         </form>
@@ -426,8 +447,10 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
 
                     {comments.length === 0 ? (
                         <p className="rounded-2xl border border-dashed border-slate-200 px-6 py-10 text-center text-[16px] text-slate-500">
-                            Aucun commentaire pour l&apos;instant. Soyez le
-                            premier.
+                            {l(
+                                "Aucun commentaire pour l'instant. Soyez le premier.",
+                                'No comments yet. Be the first.',
+                            )}
                         </p>
                     ) : (
                         <ul className="flex flex-col">
@@ -454,7 +477,7 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                                             </span>
                                             <span className="font-display text-[14px] font-semibold text-slate-900">
                                                 {comment.author_name ??
-                                                    'Anonyme'}
+                                                    l('Anonyme', 'Anonymous')}
                                             </span>
                                             <span className="font-mono text-[11px] text-slate-400">
                                                 {comment.created_at}
@@ -474,7 +497,7 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
                                                             'ml-auto text-rose-600 hover:bg-rose-50',
                                                     })}
                                                 >
-                                                    Supprimer
+                                                    {l('Supprimer', 'Delete')}
                                                 </button>
                                             )}
                                         </div>
@@ -496,6 +519,7 @@ function Comments({ slug, initial }: { slug: string; initial: BlogComment[] }) {
 // PAGE
 // ═════════════════════════════════════════════════════════════════════════════
 export default function Show({ post, related, comments }: BlogShowProps) {
+    const { l } = useTranslation();
     const prefersReducedMotion = useReducedMotion();
     const headings = useMemo(
         () => extractHeadings(post.content ?? ''),
@@ -538,7 +562,7 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                                     size: 'sm',
                                 })}
                             >
-                                Tous les articles
+                                {l('Tous les articles', 'All articles')}
                             </Link>
                             {post.tags.length > 0 && (
                                 <span className="font-mono text-[12px] text-slate-500">
@@ -547,7 +571,7 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                             )}
                         </motion.div>
 
-                        <h1 className="font-display text-[34px] leading-[1.08] font-bold tracking-[-0.035em] text-[#1a1916] sm:text-5xl lg:text-[64px]">
+                        <h1 className="font-display text-[34px] leading-[1.08] font-bold tracking-[-0.035em] text-ink-primary sm:text-5xl lg:text-[64px]">
                             <SplitWords text={post.title} delay={0.1} />
                         </h1>
 
@@ -627,7 +651,10 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                                 <DrawLine />
                                 <div className="flex flex-wrap items-center justify-between gap-4 pt-8">
                                     <p className="font-display text-[15px] font-semibold text-slate-900">
-                                        Cet article vous a été utile&nbsp;?
+                                        {l(
+                                            'Cet article vous a été utile ?',
+                                            'Was this article helpful?',
+                                        )}
                                     </p>
                                     <div className="flex flex-wrap gap-2">
                                         <LikeButton
@@ -656,10 +683,10 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                                             {AUTHOR_NAME}
                                         </p>
                                         <p className="mt-1 text-[16px] leading-relaxed text-slate-600">
-                                            Je conçois des produits web clairs,
-                                            robustes et agréables à utiliser,
-                                            avec une attention particulière
-                                            portée au détail.
+                                            {l(
+                                                'Je conçois des produits web clairs, robustes et agréables à utiliser, avec une attention particulière portée au détail.',
+                                                'I design clear, robust and enjoyable web products, with careful attention to detail.',
+                                            )}
                                         </p>
                                     </div>
                                     <Link
@@ -669,7 +696,7 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                                             className: 'shrink-0',
                                         })}
                                     >
-                                        Me contacter
+                                        {l('Me contacter', 'Get in touch')}
                                     </Link>
                                 </div>
                             </Reveal>
@@ -687,7 +714,9 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                     <div className="container-main">
                         <div className="mb-10 flex flex-col gap-5 sm:mb-14 sm:flex-row sm:items-end sm:justify-between">
                             <h2 className="font-display text-4xl font-bold tracking-[-0.03em] text-slate-900 sm:text-5xl">
-                                <MaskedLine onScroll>À lire aussi</MaskedLine>
+                                <MaskedLine onScroll>
+                                    {l('À lire aussi', 'Keep reading')}
+                                </MaskedLine>
                             </h2>
                             <Reveal delay={0.15}>
                                 <Link
@@ -696,7 +725,7 @@ export default function Show({ post, related, comments }: BlogShowProps) {
                                         variant: 'outline',
                                     })}
                                 >
-                                    Tous les articles
+                                    {l('Tous les articles', 'All articles')}
                                 </Link>
                             </Reveal>
                         </div>

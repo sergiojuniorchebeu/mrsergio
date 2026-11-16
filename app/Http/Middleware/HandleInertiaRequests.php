@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ContactMessage;
+use App\Models\FormationEnrollment;
+use App\Models\FormationSession;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,10 +45,30 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'adminCounts' => fn (): ?array => $this->adminCounts($request),
+            'liveEvent' => fn (): ?array => $request->routeIs('admin.*') ? null : FormationSession::liveEvent(),
             'flash' => [
                 'success' => fn (): ?string => $request->session()->get('success'),
                 'error' => fn (): ?string => $request->session()->get('error'),
+                'enrollment' => fn (): mixed => $request->session()->get('enrollment'),
             ],
+        ];
+    }
+
+    /**
+     * Pastilles de la barre latérale de l'admin (éléments à traiter).
+     *
+     * @return array{messages: int, enrollments: int}|null
+     */
+    private function adminCounts(Request $request): ?array
+    {
+        if (! $request->routeIs('admin.*') || ! $request->user()?->is_admin) {
+            return null;
+        }
+
+        return [
+            'messages' => ContactMessage::query()->unread()->count(),
+            'enrollments' => FormationEnrollment::query()->whereIn('status', ['nouvelle', 'en_attente'])->count(),
         ];
     }
 }

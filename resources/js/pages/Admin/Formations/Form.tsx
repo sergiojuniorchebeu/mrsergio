@@ -1,15 +1,19 @@
 // resources/js/Pages/Admin/Formations/Form.tsx
 import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {
     Field,
+    FormSection,
     inputCls,
     errorInputCls,
     ImageUpload,
     TagInput,
     MarkdownEditor,
+    SegmentedControl,
+    SwitchField,
 } from '@/components/admin/shared';
+import { TranslationPanel } from '@/components/admin/translation-panel';
+import type { TranslationState } from '@/components/admin/translation-panel';
 import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
@@ -53,12 +57,21 @@ const categories = [
     'Node.js',
     'Autre',
 ];
-const levels = ['débutant', 'intermédiaire', 'avancé'];
+const levels = [
+    { value: 'débutant', label: 'Débutant' },
+    { value: 'intermédiaire', label: 'Intermédiaire' },
+    { value: 'avancé', label: 'Avancé' },
+];
+
+const PAID_CTA_LABEL = 'Demander cette formation';
+const FREE_CTA_LABEL = 'Réserver ma place gratuitement';
 
 export default function FormationForm({
     formation,
+    translation,
 }: {
     formation: Formation | null;
+    translation?: TranslationState;
 }) {
     const isEdit = !!formation;
 
@@ -74,7 +87,7 @@ export default function FormationForm({
         target_audience: formation?.target_audience ?? '',
         prerequisites: formation?.prerequisites ?? '',
         outcomes: formation?.outcomes ?? [],
-        cta_label: formation?.cta_label ?? 'Demander cette formation',
+        cta_label: formation?.cta_label ?? PAID_CTA_LABEL,
         cta_url: formation?.cta_url ?? '',
         duration_hours: formation?.duration_hours ?? 10,
         lessons_count: formation?.lessons_count ?? 20,
@@ -93,6 +106,21 @@ export default function FormationForm({
         value: (typeof values)[K],
     ) {
         setValues((v) => ({ ...v, [key]: value }));
+    }
+
+    function setAccess(access: 'free' | 'paid') {
+        const isFree = access === 'free';
+
+        setValues((current) => ({
+            ...current,
+            is_free: isFree,
+            cta_label:
+                current.cta_label === (isFree ? PAID_CTA_LABEL : FREE_CTA_LABEL)
+                    ? isFree
+                        ? FREE_CTA_LABEL
+                        : PAID_CTA_LABEL
+                    : current.cta_label,
+        }));
     }
 
     function handleSubmit(e: React.FormEvent) {
@@ -145,52 +173,47 @@ export default function FormationForm({
 
     return (
         <AdminLayout
-            title={isEdit ? 'Modifier la formation' : 'Nouvelle formation'}
+            breadcrumb={[
+                { label: 'Formations', href: '/admin/formations' },
+                {
+                    label: isEdit
+                        ? formation.title || 'Modifier'
+                        : 'Nouvelle formation',
+                },
+            ]}
         >
             <Head
                 title={`${isEdit ? 'Modifier' : 'Créer'} une formation — Admin`}
             />
 
-            <div className="mb-6 flex items-center gap-3">
-                <Link
-                    href="/admin/formations"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600"
-                >
-                    <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
-                </Link>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h2 className="font-display text-[26px] leading-tight font-bold tracking-[-0.02em] text-slate-900">
                         {isEdit
                             ? 'Modifier la formation'
                             : 'Nouvelle formation'}
                     </h2>
-                    {isEdit && (
-                        <p className="mt-0.5 text-xs text-slate-400">
-                            ID #{formation.id}
-                        </p>
-                    )}
+                    <p className="mt-1 text-[14px] text-slate-500">
+                        La fiche décrit la formation. Les dates en direct se
+                        gèrent ensuite dans « Sessions ».
+                    </p>
                 </div>
+                {isEdit && (
+                    <Link
+                        href={`/admin/formations/${formation.id}/sessions`}
+                        className={buttonVariants({ variant: 'outline' })}
+                    >
+                        Gérer les sessions
+                    </Link>
+                )}
             </div>
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <div className="space-y-5 lg:col-span-2">
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                        <FormSection
+                            title="L'essentiel"
+                            description="Ce que voit le visiteur en premier, sur la carte et en haut de la page."
                         >
                             <Field label="Titre" required error={errors.title}>
                                 <input
@@ -199,7 +222,7 @@ export default function FormationForm({
                                     onChange={(e) =>
                                         set('title', e.target.value)
                                     }
-                                    placeholder="Titre de la formation"
+                                    placeholder="Ex. Laravel de zéro à la mise en ligne"
                                     className={cn(
                                         inputCls,
                                         errors.title && errorInputCls,
@@ -207,7 +230,7 @@ export default function FormationForm({
                                 />
                             </Field>
                             <Field
-                                label="Description courte"
+                                label="Résumé"
                                 required
                                 error={errors.excerpt}
                             >
@@ -216,7 +239,7 @@ export default function FormationForm({
                                     onChange={(e) =>
                                         set('excerpt', e.target.value)
                                     }
-                                    placeholder="Résumé de la formation..."
+                                    placeholder="En deux phrases : ce qu'on apprend et pour quel résultat."
                                     rows={3}
                                     className={cn(
                                         inputCls,
@@ -225,9 +248,16 @@ export default function FormationForm({
                                     )}
                                 />
                             </Field>
+                        </FormSection>
+
+                        <FormSection
+                            title="Pour qui, et pour quoi"
+                            description="Aide le visiteur à savoir si la formation est faite pour lui."
+                            delay={0.03}
+                        >
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <Field
-                                    label="Pour qui ?"
+                                    label="Public visé"
                                     error={errors.target_audience}
                                 >
                                     <textarea
@@ -238,7 +268,7 @@ export default function FormationForm({
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="Développeurs débutants, étudiants..."
+                                        placeholder="Développeurs débutants, étudiants…"
                                         rows={3}
                                         className={cn(inputCls, 'resize-none')}
                                     />
@@ -252,33 +282,56 @@ export default function FormationForm({
                                         onChange={(e) =>
                                             set('prerequisites', e.target.value)
                                         }
-                                        placeholder="Ce qu'il faut connaître avant de commencer..."
+                                        placeholder="Ce qu'il faut savoir avant de commencer…"
                                         rows={3}
                                         className={cn(inputCls, 'resize-none')}
                                     />
                                 </Field>
                             </div>
                             <Field
-                                label="Programme (Markdown)"
-                                error={errors.content}
+                                label="À la fin, vous saurez… (un objectif par ligne)"
+                                error={errors.outcomes}
                             >
-                                <MarkdownEditor
-                                    value={values.content}
-                                    onChange={(v) => set('content', v)}
-                                    error={errors.content}
+                                <textarea
+                                    value={values.outcomes.join('\n')}
+                                    onChange={(e) =>
+                                        set(
+                                            'outcomes',
+                                            e.target.value
+                                                .split('\n')
+                                                .map((item) => item.trim())
+                                                .filter(Boolean),
+                                        )
+                                    }
+                                    placeholder={
+                                        'Créer une API Laravel\nDéployer une application'
+                                    }
+                                    rows={4}
+                                    className={cn(inputCls, 'resize-none')}
                                 />
                             </Field>
-                        </motion.div>
+                        </FormSection>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.05 }}
-                            className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                        <FormSection
+                            title="Programme"
+                            description="Le détail des modules, en Markdown. L'aperçu est identique au site."
+                            delay={0.06}
                         >
-                            <h3 className="text-sm font-semibold text-slate-700">
-                                Détails pédagogiques
-                            </h3>
+                            <MarkdownEditor
+                                value={values.content}
+                                onChange={(v) => set('content', v)}
+                                error={errors.content}
+                            />
+                        </FormSection>
+
+                        <FormSection title="Détails" delay={0.09}>
+                            <Field label="Niveau" required error={errors.level}>
+                                <SegmentedControl
+                                    value={values.level}
+                                    onChange={(level) => set('level', level)}
+                                    options={levels}
+                                />
+                            </Field>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <Field
                                     label="Catégorie"
@@ -301,37 +354,6 @@ export default function FormationForm({
                                     </select>
                                 </Field>
                                 <Field
-                                    label="Niveau"
-                                    required
-                                    error={errors.level}
-                                >
-                                    <select
-                                        value={values.level}
-                                        onChange={(e) =>
-                                            set('level', e.target.value)
-                                        }
-                                        className={cn(
-                                            inputCls,
-                                            errors.level && errorInputCls,
-                                        )}
-                                    >
-                                        {levels.map((l) => (
-                                            <option key={l}>{l}</option>
-                                        ))}
-                                    </select>
-                                </Field>
-                                <Field label="Langue" error={errors.language}>
-                                    <input
-                                        type="text"
-                                        value={values.language}
-                                        onChange={(e) =>
-                                            set('language', e.target.value)
-                                        }
-                                        placeholder="Français"
-                                        className={inputCls}
-                                    />
-                                </Field>
-                                <Field
                                     label="Format"
                                     required
                                     error={errors.format}
@@ -342,7 +364,7 @@ export default function FormationForm({
                                         onChange={(e) =>
                                             set('format', e.target.value)
                                         }
-                                        placeholder="Cours en ligne"
+                                        placeholder="Sessions en direct sur Google Meet"
                                         className={cn(
                                             inputCls,
                                             errors.format && errorInputCls,
@@ -350,7 +372,7 @@ export default function FormationForm({
                                     />
                                 </Field>
                                 <Field
-                                    label="Durée (heures)"
+                                    label="Durée totale (heures)"
                                     required
                                     error={errors.duration_hours}
                                 >
@@ -393,59 +415,72 @@ export default function FormationForm({
                                         )}
                                     />
                                 </Field>
+                                <Field label="Langue" error={errors.language}>
+                                    <input
+                                        type="text"
+                                        value={values.language}
+                                        onChange={(e) =>
+                                            set('language', e.target.value)
+                                        }
+                                        placeholder="Français"
+                                        className={inputCls}
+                                    />
+                                </Field>
                             </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.08 }}
-                            className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-                        >
-                            <h3 className="mb-3 text-sm font-semibold text-slate-700">
-                                Tags
-                            </h3>
-                            <TagInput
-                                tags={values.tags}
-                                onChange={(v) => set('tags', v)}
-                            />
-                            <Field
-                                label="Objectifs (un par ligne)"
-                                error={errors.outcomes}
-                            >
-                                <textarea
-                                    value={values.outcomes.join('\n')}
-                                    onChange={(e) =>
-                                        set(
-                                            'outcomes',
-                                            e.target.value
-                                                .split('\n')
-                                                .map((item) => item.trim())
-                                                .filter(Boolean),
-                                        )
-                                    }
-                                    placeholder={
-                                        'Créer une API Laravel\nStructurer une application'
-                                    }
-                                    rows={4}
-                                    className={cn(inputCls, 'mt-3 resize-none')}
+                            <Field label="Tags" error={errors.tags}>
+                                <TagInput
+                                    tags={values.tags}
+                                    onChange={(v) => set('tags', v)}
                                 />
                             </Field>
-                        </motion.div>
+                        </FormSection>
                     </div>
 
                     <div className="space-y-5">
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.04 }}
-                            className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                        <FormSection
+                            title="Accès"
+                            description={
+                                values.is_free
+                                    ? 'Les visiteurs réservent leur place sans payer.'
+                                    : 'Le prix est affiché sur la fiche.'
+                            }
+                            delay={0.03}
                         >
-                            <h3 className="text-sm font-semibold text-slate-700">
-                                Inscription
-                            </h3>
+                            <SegmentedControl
+                                value={values.is_free ? 'free' : 'paid'}
+                                onChange={setAccess}
+                                options={[
+                                    { value: 'free', label: 'Gratuite' },
+                                    { value: 'paid', label: 'Payante' },
+                                ]}
+                            />
+                            {!values.is_free && (
+                                <Field label="Prix (€)" error={errors.price}>
+                                    <input
+                                        type="number"
+                                        value={values.price}
+                                        onChange={(e) =>
+                                            set('price', e.target.value)
+                                        }
+                                        placeholder="29.99"
+                                        min={0}
+                                        step={0.01}
+                                        className={cn(
+                                            inputCls,
+                                            errors.price && errorInputCls,
+                                        )}
+                                    />
+                                </Field>
+                            )}
+                        </FormSection>
+
+                        <FormSection
+                            title="Inscription"
+                            description="Par défaut, les visiteurs s'inscrivent avec le formulaire du site."
+                            delay={0.05}
+                        >
                             <Field
-                                label="Texte du bouton"
+                                label="Texte du bouton d'inscription"
                                 error={errors.cta_label}
                             >
                                 <input
@@ -467,128 +502,32 @@ export default function FormationForm({
                                     onChange={(e) =>
                                         set('cta_url', e.target.value)
                                     }
-                                    placeholder="https://..."
+                                    placeholder="https://…"
                                     className={inputCls}
                                 />
+                                <p className="text-[12px] text-slate-400">
+                                    Rempli, le bouton principal mène vers ce
+                                    lien (Udemy, YouTube…) au lieu du
+                                    formulaire.
+                                </p>
                             </Field>
-                        </motion.div>
+                        </FormSection>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.04 }}
-                            className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-                        >
-                            <h3 className="text-sm font-semibold text-slate-700">
-                                Prix
-                            </h3>
-                            <label className="flex cursor-pointer items-center justify-between">
-                                <span className="text-sm text-slate-700">
-                                    Formation gratuite
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        set('is_free', !values.is_free)
-                                    }
-                                    className={cn(
-                                        'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                        values.is_free
-                                            ? 'bg-teal-500'
-                                            : 'bg-slate-300',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                            values.is_free
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0.5',
-                                        )}
-                                    />
-                                </button>
-                            </label>
-                            {!values.is_free && (
-                                <Field label="Prix (€)" error={errors.price}>
-                                    <input
-                                        type="number"
-                                        value={values.price}
-                                        onChange={(e) =>
-                                            set('price', e.target.value)
-                                        }
-                                        placeholder="29.99"
-                                        min={0}
-                                        step={0.01}
-                                        className={cn(
-                                            inputCls,
-                                            errors.price && errorInputCls,
-                                        )}
-                                    />
-                                </Field>
-                            )}
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.06 }}
-                            className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-                        >
-                            <h3 className="text-sm font-semibold text-slate-700">
-                                Publication
-                            </h3>
-                            <label className="flex cursor-pointer items-center justify-between">
-                                <span className="text-sm text-slate-700">
-                                    Publiée
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        set('published', !values.published)
-                                    }
-                                    className={cn(
-                                        'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                        values.published
-                                            ? 'bg-teal-500'
-                                            : 'bg-slate-300',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                            values.published
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0.5',
-                                        )}
-                                    />
-                                </button>
-                            </label>
-                            <label className="flex cursor-pointer items-center justify-between">
-                                <span className="text-sm text-slate-700">
-                                    Mise en avant
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        set('featured', !values.featured)
-                                    }
-                                    className={cn(
-                                        'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                        values.featured
-                                            ? 'bg-amber-500'
-                                            : 'bg-slate-300',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                            values.featured
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0.5',
-                                        )}
-                                    />
-                                </button>
-                            </label>
+                        <FormSection title="Publication" delay={0.07}>
+                            <SwitchField
+                                label="Publiée"
+                                description="Visible dans le catalogue public."
+                                checked={values.published}
+                                onChange={(checked) =>
+                                    set('published', checked)
+                                }
+                            />
+                            <SwitchField
+                                label="Mise en avant"
+                                description="Badge « Populaire » et première place."
+                                checked={values.featured}
+                                onChange={(checked) => set('featured', checked)}
+                            />
                             <Field label="Ordre d'affichage">
                                 <input
                                     type="number"
@@ -603,14 +542,9 @@ export default function FormationForm({
                                     min={0}
                                 />
                             </Field>
-                        </motion.div>
+                        </FormSection>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-                        >
+                        <FormSection delay={0.09}>
                             <ImageUpload
                                 label="Image de couverture"
                                 value={coverImage}
@@ -622,50 +556,34 @@ export default function FormationForm({
                                 }
                             />
                             {errors.cover_image && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="text-[12px] text-rose-600">
                                     {errors.cover_image}
                                 </p>
                             )}
-                        </motion.div>
+                        </FormSection>
 
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 lg:sticky lg:top-24">
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={buttonVariants({ size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
-                                {processing ? (
-                                    <>
-                                        <svg
-                                            className="h-4 w-4 animate-spin"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <circle
-                                                className="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                strokeWidth="4"
-                                            />
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                            />
-                                        </svg>{' '}
-                                        Enregistrement...
-                                    </>
-                                ) : isEdit ? (
-                                    'Mettre à jour'
-                                ) : (
-                                    'Créer la formation'
-                                )}
+                                {processing
+                                    ? 'Enregistrement…'
+                                    : isEdit
+                                      ? 'Enregistrer les modifications'
+                                      : 'Créer la formation'}
                             </button>
                             <Link
                                 href="/admin/formations"
-                                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
                                 Annuler
                             </Link>
@@ -673,6 +591,14 @@ export default function FormationForm({
                     </div>
                 </div>
             </form>
+
+            {formation && translation && (
+                <TranslationPanel
+                    type="formations"
+                    id={formation.id}
+                    state={translation}
+                />
+            )}
         </AdminLayout>
     );
 }

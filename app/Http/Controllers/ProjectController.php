@@ -11,17 +11,17 @@ class ProjectController extends Controller
 {
     public function index(): Response
     {
-        $projects = Cache::remember('projects.index', 600, function () {
+        $projects = Cache::remember(Project::localizedCacheKey('projects.index'), 600, function () {
             return Project::published()
                 ->ordered()
                 ->get()
                 ->map(fn ($p) => [
                     'id' => $p->id,
-                    'title' => $p->title,
+                    'title' => $p->translated('title'),
                     'slug' => $p->slug,
                     'project_type' => $p->project_type,
                     'project_type_label' => $p->project_type_label,
-                    'description' => $p->description,
+                    'description' => $p->translated('description'),
                     'image_url' => $p->image_url,
                     'demo_url' => $p->demo_url,
                     'github_url' => $p->github_url,
@@ -58,7 +58,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->published, 404);
 
-        $related = Cache::remember("projects.related.{$project->id}", 600, function () use ($project) {
+        $related = Cache::remember(Project::localizedCacheKey("projects.related.{$project->id}"), 600, function () use ($project) {
             return Project::published()
                 ->where('id', '!=', $project->id)
                 ->ordered()
@@ -66,11 +66,11 @@ class ProjectController extends Controller
                 ->get()
                 ->map(fn ($p) => [
                     'id' => $p->id,
-                    'title' => $p->title,
+                    'title' => $p->translated('title'),
                     'slug' => $p->slug,
                     'project_type' => $p->project_type,
                     'project_type_label' => $p->project_type_label,
-                    'description' => $p->description,
+                    'description' => $p->translated('description'),
                     'image_url' => $p->image_url,
                     'demo_url' => $p->demo_url,
                     'github_url' => $p->github_url,
@@ -87,12 +87,12 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => [
                 'id' => $project->id,
-                'title' => $project->title,
+                'title' => $project->translated('title'),
                 'slug' => $project->slug,
                 'project_type' => $project->project_type,
                 'project_type_label' => $project->project_type_label,
-                'description' => $project->description,
-                'content' => $project->content,
+                'description' => $project->translated('description'),
+                'content' => $project->translated('content'),
                 'image_url' => $project->image_url,
                 'demo_url' => $project->demo_url,
                 'github_url' => $project->github_url,
@@ -107,16 +107,16 @@ class ProjectController extends Controller
             ],
             'related' => $related,
             'seo' => [
-                'title' => $project->title.' | Projet',
-                'description' => $project->description,
+                'title' => $project->translated('title').' | Projet',
+                'description' => $project->translated('description'),
                 'image' => $project->image_url,
                 'type' => 'article',
                 'canonical' => route('projects.show', $project),
                 'json_ld' => [
                     '@context' => 'https://schema.org',
                     '@type' => 'CreativeWork',
-                    'name' => $project->title,
-                    'description' => $project->description,
+                    'name' => $project->translated('title'),
+                    'description' => $project->translated('description'),
                     'image' => [$project->image_url],
                     'url' => route('projects.show', $project),
                     'author' => [

@@ -15,6 +15,7 @@ import { primaryLinks, splitTitle } from '@/components/portofolio/project-meta';
 import { ShotPreview } from '@/components/portofolio/shot-preview';
 import { buttonVariants } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from '@/lib/i18n';
 import type { Project } from '@/types';
 
 const STACK_OFFSET_PX = 28;
@@ -56,11 +57,15 @@ function StackCard({
     const number = String(index + 1).padStart(2, '0');
     const { name, tagline } = splitTitle(project.title);
     const typeLabel = project.project_type_label ?? project.project_type;
-    const externalLink = primaryLinks(project)[0] ?? null;
+    const { language, l } = useTranslation();
+    const externalLink = primaryLinks(project, language)[0] ?? null;
     const facts = [
         { label: 'Type', value: typeLabel },
         project.platforms?.length
-            ? { label: 'Plateformes', value: project.platforms.join(', ') }
+            ? {
+                  label: l('Plateformes', 'Platforms'),
+                  value: project.platforms.join(', '),
+              }
             : null,
         project.tags.length
             ? { label: 'Stack', value: project.tags.slice(0, 4).join(', ') }
@@ -79,7 +84,7 @@ function StackCard({
                 <div className="relative isolate order-last flex flex-col justify-center gap-3 overflow-hidden p-5 sm:gap-5 sm:p-10 md:order-none md:w-[42%]">
                     <span
                         aria-hidden
-                        className="pointer-events-none absolute -right-[0.04em] -bottom-[0.2em] -z-10 font-display text-[96px] leading-none font-extrabold tracking-[-0.06em] text-transparent select-none [-webkit-text-stroke:1.5px_rgba(26,25,22,0.09)] md:text-[clamp(140px,17vw,240px)]"
+                        className="pointer-events-none absolute -right-[0.04em] -bottom-[0.2em] -z-10 font-display text-[96px] leading-none font-extrabold tracking-[-0.06em] text-transparent select-none [-webkit-text-stroke:1.5px_var(--watermark-stroke)] md:text-[clamp(140px,17vw,240px)]"
                     >
                         {number}
                     </span>
@@ -126,7 +131,7 @@ function StackCard({
                             href={`/projects/${project.slug}`}
                             className={buttonVariants()}
                         >
-                            Voir le projet
+                            {l('Voir le projet', 'View project')}
                         </Link>
                         {externalLink && (
                             <a
@@ -145,7 +150,7 @@ function StackCard({
 
                 <Link
                     href={`/projects/${project.slug}`}
-                    aria-label={`Voir ${project.title}`}
+                    aria-label={`${l('Voir', 'View')} ${project.title}`}
                     className="group relative order-first min-h-[140px] flex-1 overflow-hidden bg-slate-100 md:order-none md:m-3 md:rounded-2xl"
                 >
                     {previewImage ? (

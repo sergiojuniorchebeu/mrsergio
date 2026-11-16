@@ -16,6 +16,7 @@ import {
 import { HoverUnderline } from '@/components/ui/hover-underline';
 import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import MainLayout from '@/layouts/MainLayout';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { BlogIndexProps, BlogPost } from '@/types';
 
@@ -47,9 +48,7 @@ function PostCard({
             <div
                 className={cn(
                     'relative shrink-0 overflow-hidden bg-slate-100',
-                    isLead
-                        ? 'aspect-[16/9] lg:w-[56%]'
-                        : 'aspect-[16/9]',
+                    isLead ? 'aspect-[16/9] lg:w-[56%]' : 'aspect-[16/9]',
                 )}
             >
                 {post.cover_image_url ? (
@@ -117,12 +116,15 @@ function PostCard({
 // PAGE
 // ═════════════════════════════════════════════════════════════════════════════
 export default function Index({ posts }: BlogIndexProps) {
+    const { l } = useTranslation();
     const [activeTag, setActiveTag] = useState<string | null>(null);
 
     const tagOptions = useMemo(() => {
         const counts = new Map<string, number>();
         posts.forEach((post) =>
-            (post.tags ?? []).forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)),
+            (post.tags ?? []).forEach((tag) =>
+                counts.set(tag, (counts.get(tag) ?? 0) + 1),
+            ),
         );
 
         return Array.from(counts.entries())
@@ -131,9 +133,13 @@ export default function Index({ posts }: BlogIndexProps) {
     }, [posts]);
 
     const visiblePosts = useMemo(() => {
-        const filtered = activeTag ? posts.filter((post) => post.tags.includes(activeTag)) : posts;
+        const filtered = activeTag
+            ? posts.filter((post) => post.tags.includes(activeTag))
+            : posts;
 
-        return [...filtered].sort((a, b) => Number(b.featured) - Number(a.featured));
+        return [...filtered].sort(
+            (a, b) => Number(b.featured) - Number(a.featured),
+        );
     }, [posts, activeTag]);
 
     return (
@@ -142,9 +148,12 @@ export default function Index({ posts }: BlogIndexProps) {
 
             <ListingHero
                 eyebrow="Blog"
-                title="Notes &"
+                title={l('Notes &', 'Notes &')}
                 accent="articles"
-                intro="Retours d'expérience, architecture, productivité et notes de build : ce que j'apprends en construisant."
+                intro={l(
+                    "Retours d'expérience, architecture, productivité et notes de build : ce que j'apprends en construisant.",
+                    'Lessons learned, architecture, productivity and build notes: what I learn by building.',
+                )}
                 count={visiblePosts.length}
                 unit={['article', 'articles']}
                 filterLabel={activeTag ? `en ${activeTag}` : null}
@@ -166,22 +175,42 @@ export default function Index({ posts }: BlogIndexProps) {
                 <SectionBackdrop pattern="lines" withMargin />
                 <div className="container-main">
                     {posts.length === 0 ? (
-                        <EmptyResults message="Les premiers articles arrivent bientôt." />
+                        <EmptyResults
+                            message={l(
+                                'Les premiers articles arrivent bientôt.',
+                                'The first articles are coming soon.',
+                            )}
+                        />
                     ) : (
                         <FilterGrid id="blog-grid">
                             {visiblePosts.map((post, index) => (
-                                <FilterGridItem key={post.id} className={cn(index === 0 && 'sm:col-span-2')}>
-                                    <PostCard post={post} index={index} isLead={index === 0} />
+                                <FilterGridItem
+                                    key={post.id}
+                                    className={cn(
+                                        index === 0 && 'sm:col-span-2',
+                                    )}
+                                >
+                                    <PostCard
+                                        post={post}
+                                        index={index}
+                                        isLead={index === 0}
+                                    />
                                 </FilterGridItem>
                             ))}
                         </FilterGrid>
                     )}
 
                     <ListingCta
-                        title="Un sujet vous intéresse ?"
-                        text="Proposez-le, il fera peut-être l'objet du prochain article."
+                        title={l(
+                            'Un sujet vous intéresse ?',
+                            'A topic you care about?',
+                        )}
+                        text={l(
+                            "Proposez-le, il fera peut-être l'objet du prochain article.",
+                            'Suggest it, it might become the next article.',
+                        )}
                         href="/contact"
-                        label="Suggérer un sujet"
+                        label={l('Suggérer un sujet', 'Suggest a topic')}
                     />
                 </div>
             </section>

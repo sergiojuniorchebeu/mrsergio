@@ -7,6 +7,7 @@ import { HoverUnderline } from '@/components/ui/hover-underline';
 import { SpotlightCard } from '@/components/ui/SpotlightCard';
 import { easings } from '@/lib/utils';
 import type { Formation } from '@/types';
+import { durationLabel, levelLabel, useTranslation } from '@/lib/i18n';
 
 export function FormationCard({
     formation,
@@ -18,11 +19,12 @@ export function FormationCard({
     withEntrance?: boolean;
 }) {
     const prefersReducedMotion = useReducedMotion();
-    const levelLabel = formation.level.charAt(0).toUpperCase() + formation.level.slice(1);
+    const { language, l } = useTranslation();
+    const level = levelLabel(formation.level, language);
     const meta = [
-        formation.duration_formatted,
-        formation.lessons_count > 0 ? `${formation.lessons_count} leçons` : null,
-        formation.students_count ? `${formation.students_count} inscrits` : null,
+        durationLabel(formation.duration_formatted, language),
+        formation.lessons_count > 0 ? `${formation.lessons_count} ${l('leçons', 'lessons')}` : null,
+        formation.students_count ? `${formation.students_count} ${l('inscrits', 'students')}` : null,
     ].filter(Boolean);
 
     return (
@@ -55,13 +57,13 @@ export function FormationCard({
                     )}
 
                     <span className="absolute top-3 right-3 rounded-md bg-white/95 px-2 py-1 font-display text-[11px] font-semibold text-slate-800 shadow-sm">
-                        {formation.is_free ? 'Gratuit' : formation.price_formatted}
+                        {formation.is_free ? l('Gratuit', 'Free') : formation.price_formatted}
                     </span>
                 </div>
 
                 <div className="flex flex-1 flex-col gap-2.5 p-5">
                     <p className="font-mono text-[11px] tracking-wide text-slate-400">
-                        {formation.category} — {levelLabel}
+                        {formation.category} — {level}
                         {formation.featured && <span className="text-teal-600"> · populaire</span>}
                     </p>
 

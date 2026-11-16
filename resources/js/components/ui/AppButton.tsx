@@ -37,7 +37,7 @@ const base = cn(
 const variantStyles: Record<ButtonVariant, string> = {
     // CTA principal — fond sombre, texte blanc
     primary: cn(
-        "bg-[#1a1916] text-white",
+        "theme-lock bg-[#1a1916] text-white",
         "hover:bg-slate-800",
         "active:scale-[0.98]",
     ),

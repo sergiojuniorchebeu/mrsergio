@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 const MAX_MOBILE_SCREENS = 3;
 const MOBILE_GAP_PERCENT = 4;
 const SAMPLE_SIZE = 24;
-const NEUTRAL_TINT = 'hsl(40 10% 95%)';
+const NEUTRAL_TINT = 'var(--shot-neutral)';
 
 interface ImageInfo {
     ratio: number;
@@ -82,7 +82,7 @@ function tintFromImage(image: HTMLImageElement): string {
             hue = (r - g) / delta + 4;
         }
 
-        return `hsl(${Math.round((hue * 60 + 360) % 360)} ${Math.round(Math.min(saturation, 0.6) * 55)}% 92%)`;
+        return `hsl(${Math.round((hue * 60 + 360) % 360)} ${Math.round(Math.min(saturation, 0.6) * 55)}% var(--shot-tint-l))`;
     } catch {
         return NEUTRAL_TINT;
     }
@@ -270,7 +270,8 @@ export function ShotPreview({
      * sinon (panneau presque carré) elle s'ajuste en hauteur et déborde aussi à droite.
      */
     const widthFitHeightShare = boxRatio / groupRatio;
-    const bleedsRight = !fit && groupRatio >= boxRatio && widthFitHeightShare < 0.75;
+    const bleedsRight =
+        !fit && groupRatio >= boxRatio && widthFitHeightShare < 0.75;
     const fitsWidth = groupRatio >= boxRatio && !bleedsRight;
     const screenWidthPercent =
         (100 - gapPercent * (screens.length - 1)) / screens.length;
@@ -301,7 +302,9 @@ export function ShotPreview({
                 ref={boxRef}
                 className={cn(
                     'absolute flex',
-                    fit ? 'inset-[5%] items-center justify-center' : 'inset-x-[6%] top-[7%] -bottom-[18%] items-start',
+                    fit
+                        ? 'inset-[5%] items-center justify-center'
+                        : 'inset-x-[6%] top-[7%] -bottom-[18%] items-start',
                     !fit && (bleedsRight ? 'justify-start' : 'justify-center'),
                 )}
             >
@@ -332,7 +335,7 @@ export function ShotPreview({
                                     alt={
                                         index === 0
                                             ? alt
-                                            : `${alt} — écran ${index + 1}`
+                                            : `${alt} — ${index + 1}`
                                     }
                                     loading={eager ? 'eager' : 'lazy'}
                                     decoding="async"

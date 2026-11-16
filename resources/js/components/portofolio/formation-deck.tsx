@@ -50,14 +50,29 @@ function DealtCard({
     const centerColumn = (Math.min(COLUMNS, total) - 1) / 2;
     const start = index * 0.06;
 
-    const x = useTransform(progress, [start, 1], [`${(centerColumn - column) * 104}%`, '0%']);
+    const x = useTransform(
+        progress,
+        [start, 1],
+        [`${(centerColumn - column) * 104}%`, '0%'],
+    );
     const y = useTransform(progress, [start, 1], [`${-row * 100 + 18}%`, '0%']);
-    const rotate = useTransform(progress, [start, 1], [(column - centerColumn) * 9 + row * 3, 0]);
+    const rotate = useTransform(
+        progress,
+        [start, 1],
+        [(column - centerColumn) * 9 + row * 3, 0],
+    );
     const scale = useTransform(progress, [start, 1], [0.9, 1]);
 
     return (
-        <motion.div style={{ x, y, rotate, scale, zIndex: total - index }} className="relative w-[calc((100%-3rem)/3)] shrink-0">
-            <FormationCard formation={formation} index={index} withEntrance={false} />
+        <motion.div
+            style={{ x, y, rotate, scale, zIndex: total - index }}
+            className="relative w-[calc((100%-3rem)/3)] shrink-0"
+        >
+            <FormationCard
+                formation={formation}
+                index={index}
+                withEntrance={false}
+            />
         </motion.div>
     );
 }
@@ -68,7 +83,11 @@ function DesktopDeck({ formations }: { formations: Formation[] }) {
         target: ref,
         offset: ['start 0.95', 'start 0.3'],
     });
-    const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.5 });
+    const progress = useSpring(scrollYProgress, {
+        stiffness: 120,
+        damping: 24,
+        mass: 0.5,
+    });
 
     return (
         <div ref={ref} className="flex flex-wrap justify-center gap-6">
@@ -94,10 +113,18 @@ function MobileCarousel({ formations }: { formations: Formation[] }) {
                     initial={{ opacity: 0, x: 60, rotate: 3 }}
                     whileInView={{ opacity: 1, x: 0, rotate: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.7, delay: index * 0.08, ease: easings.smooth }}
+                    transition={{
+                        duration: 0.7,
+                        delay: index * 0.08,
+                        ease: easings.smooth,
+                    }}
                     className="w-[82%] shrink-0 snap-center"
                 >
-                    <FormationCard formation={formation} index={index} withEntrance={false} />
+                    <FormationCard
+                        formation={formation}
+                        index={index}
+                        withEntrance={false}
+                    />
                 </motion.div>
             ))}
         </div>
@@ -120,7 +147,11 @@ export function FormationDeck({ formations }: { formations: Formation[] }) {
     return (
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-3">
             {formations.map((formation, index) => (
-                <FormationCard key={formation.slug} formation={formation} index={index} />
+                <FormationCard
+                    key={formation.slug}
+                    formation={formation}
+                    index={index}
+                />
             ))}
         </div>
     );

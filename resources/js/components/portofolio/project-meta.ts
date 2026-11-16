@@ -20,7 +20,11 @@ export function splitTitle(title: string): {
     };
 }
 
-export function primaryLinks(project: Project): ProjectLink[] {
+export function primaryLinks(
+    project: Project,
+    language: 'fr' | 'en' = 'fr',
+): ProjectLink[] {
+    const isEnglish = language === 'en';
     const links = project.store_links ?? {};
     const candidates: (ProjectLink | null)[] = [
         project.demo_url
@@ -28,8 +32,12 @@ export function primaryLinks(project: Project): ProjectLink[] {
                   href: project.demo_url,
                   label:
                       project.project_type === 'web'
-                          ? 'Voir le site'
-                          : 'Voir la démo',
+                          ? isEnglish
+                              ? 'Visit website'
+                              : 'Voir le site'
+                          : isEnglish
+                            ? 'View demo'
+                            : 'Voir la démo',
               }
             : null,
         links.play_store

@@ -5,14 +5,17 @@
 use App\Http\Controllers\Admin\AdminBlogController;
 use App\Http\Controllers\Admin\AdminFormationController;
 use App\Http\Controllers\Admin\AdminFormationEnrollmentController;
+use App\Http\Controllers\Admin\AdminFormationSessionController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminProjectController;
+use App\Http\Controllers\Admin\AdminTranslationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BlogCommentController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogLikeController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CookiePolicyController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\FormationEnrollmentController;
 use App\Http\Controllers\HomeController;
@@ -44,6 +47,7 @@ Route::get('/formations/{formation:slug}', [FormationController::class, 'show'])
 Route::post('/formations/{formation:slug}/enroll', [FormationEnrollmentController::class, 'store'])->name('formations.enroll');
 Route::get('/contact', [ContactController::class,  'index'])->name('contact');
 Route::post('/contact', [ContactController::class,  'send'])->name('contact.send');
+Route::get('/cookies', CookiePolicyController::class)->name('cookies');
 
 // ── ADMIN ────────────────────────────────────────────────────────────────────
 Route::prefix('admin')
@@ -65,6 +69,14 @@ Route::prefix('admin')
         // Formations — resource + toggle séparé
         Route::resource('formations', AdminFormationController::class)->except(['show']);
         Route::patch('formations/{formation}/toggle', [AdminFormationController::class, 'togglePublished'])->name('formations.toggle');
+        Route::get('formations/{formation}/sessions', [AdminFormationSessionController::class, 'index'])->name('formations.sessions.index');
+        Route::post('formations/{formation}/sessions', [AdminFormationSessionController::class, 'store'])->name('formations.sessions.store');
+        Route::patch('formation-sessions/{session}', [AdminFormationSessionController::class, 'update'])->name('formations.sessions.update');
+        Route::delete('formation-sessions/{session}', [AdminFormationSessionController::class, 'destroy'])->name('formations.sessions.destroy');
+        Route::patch('translations/{type}/{id}', [AdminTranslationController::class, 'update'])
+            ->whereIn('type', ['projects', 'blog', 'formations'])->whereNumber('id')->name('translations.update');
+        Route::post('translations/{type}/{id}/regenerate', [AdminTranslationController::class, 'regenerate'])
+            ->whereIn('type', ['projects', 'blog', 'formations'])->whereNumber('id')->name('translations.regenerate');
         Route::get('formation-enrollments', [AdminFormationEnrollmentController::class, 'index'])->name('formation-enrollments.index');
         Route::patch('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'update'])->name('formation-enrollments.update');
         Route::delete('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'destroy'])->name('formation-enrollments.destroy');

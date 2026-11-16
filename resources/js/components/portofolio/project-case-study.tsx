@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { markdownComponents } from '@/components/portofolio/markdown';
 import { MaskedLine, Reveal } from '@/components/ui/reveal';
+import { useTranslation } from '@/lib/i18n';
 import { cn, slugify } from '@/lib/utils';
 
 export interface CaseStudySection {
@@ -20,7 +21,10 @@ export interface CaseStudySection {
  * Découpe le Markdown en chapitres à partir des titres « ## ».
  * Le texte placé avant le premier titre devient un chapitre « Aperçu ».
  */
-export function splitIntoSections(markdown: string): CaseStudySection[] {
+export function splitIntoSections(
+    markdown: string,
+    overviewTitle = 'Aperçu',
+): CaseStudySection[] {
     const [intro, ...parts] = markdown.split(/^##\s+/m);
     const sections: CaseStudySection[] = [];
     const usedIds = new Set<string>();
@@ -41,8 +45,8 @@ export function splitIntoSections(markdown: string): CaseStudySection[] {
 
     if (intro.trim()) {
         sections.push({
-            id: uniqueId('Aperçu'),
-            title: 'Aperçu',
+            id: uniqueId(overviewTitle),
+            title: overviewTitle,
             body: intro.trim(),
         });
     }
@@ -116,11 +120,16 @@ function TableOfContents({
         sections.findIndex((section) => section.id === activeId),
     );
 
+    const { l } = useTranslation();
+
     return (
         <aside className="hidden lg:block">
-            <nav aria-label="Sommaire" className="sticky top-28">
+            <nav
+                aria-label={l('Sommaire', 'Contents')}
+                className="sticky top-28"
+            >
                 <p className="mb-5 font-mono text-[11px] text-slate-400">
-                    Sommaire
+                    {l('Sommaire', 'Contents')}
                 </p>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 w-px bg-slate-200" />
@@ -219,7 +228,12 @@ export function ProjectCaseStudy({
     afterContext?: ReactNode;
 }) {
     const prefersReducedMotion = useReducedMotion();
-    const sections = useMemo(() => splitIntoSections(content), [content]);
+    const { l } = useTranslation();
+    const overviewTitle = l('Aperçu', 'Overview');
+    const sections = useMemo(
+        () => splitIntoSections(content, overviewTitle),
+        [content, overviewTitle],
+    );
     const ids = useMemo(
         () => sections.map((section) => section.id),
         [sections],

@@ -9,7 +9,10 @@ import {
     ImageUpload,
     TagInput,
     MarkdownEditor,
+    SwitchField,
 } from '@/components/admin/shared';
+import { TranslationPanel } from '@/components/admin/translation-panel';
+import type { TranslationState } from '@/components/admin/translation-panel';
 import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
@@ -101,47 +104,6 @@ const Ico = {
     ),
 };
 
-// ─── Toggle ───────────────────────────────────────────────────────────────────
-function Toggle({
-    checked,
-    onChange,
-    label,
-    accent = 'teal',
-}: {
-    checked: boolean;
-    onChange: () => void;
-    label: string;
-    accent?: 'teal' | 'amber';
-}) {
-    return (
-        <label className="group flex cursor-pointer items-center justify-between py-1">
-            <span className="text-[13px] font-medium text-slate-700 transition-colors group-hover:text-slate-900">
-                {label}
-            </span>
-            <button
-                type="button"
-                onClick={onChange}
-                aria-label={label}
-                className={cn(
-                    'relative h-5 w-10 flex-shrink-0 rounded-full transition-colors duration-200',
-                    checked
-                        ? accent === 'teal'
-                            ? 'bg-teal-500'
-                            : 'bg-amber-500'
-                        : 'bg-slate-200',
-                )}
-            >
-                <span
-                    className={cn(
-                        'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                        checked ? 'translate-x-5' : 'translate-x-0.5',
-                    )}
-                />
-            </button>
-        </label>
-    );
-}
-
 // ─── Section card ─────────────────────────────────────────────────────────────
 function SectionCard({
     children,
@@ -172,7 +134,13 @@ function SectionCard({
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function BlogForm({ post }: { post: Post | null }) {
+export default function BlogForm({
+    post,
+    translation,
+}: {
+    post: Post | null;
+    translation?: TranslationState;
+}) {
     const isEdit = !!post;
 
     const [values, setValues] = useState({
@@ -348,21 +316,21 @@ export default function BlogForm({ post }: { post: Post | null }) {
                                 Publication
                             </p>
                             <div className="space-y-2">
-                                <Toggle
+                                <SwitchField
+                                    label="Publié"
+                                    description="Visible sur le blog public."
                                     checked={values.published}
-                                    onChange={() =>
-                                        set('published', !values.published)
+                                    onChange={(checked) =>
+                                        set('published', checked)
                                     }
-                                    label="Publier"
-                                    accent="teal"
                                 />
-                                <Toggle
+                                <SwitchField
+                                    label="Mis en avant"
+                                    description="Affiché en tête du blog."
                                     checked={values.featured}
-                                    onChange={() =>
-                                        set('featured', !values.featured)
+                                    onChange={(checked) =>
+                                        set('featured', checked)
                                     }
-                                    label="Mettre en avant"
-                                    accent="amber"
                                 />
                             </div>
 
@@ -428,7 +396,10 @@ export default function BlogForm({ post }: { post: Post | null }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={buttonVariants({ size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
                                 {processing ? (
                                     <>
@@ -446,7 +417,11 @@ export default function BlogForm({ post }: { post: Post | null }) {
 
                             <Link
                                 href="/admin/blog"
-                                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
                                 Annuler
                             </Link>
@@ -496,6 +471,14 @@ export default function BlogForm({ post }: { post: Post | null }) {
                     </div>
                 </div>
             </form>
+
+            {post && translation && (
+                <TranslationPanel
+                    type="blog"
+                    id={post.id}
+                    state={translation}
+                />
+            )}
         </AdminLayout>
     );
 }

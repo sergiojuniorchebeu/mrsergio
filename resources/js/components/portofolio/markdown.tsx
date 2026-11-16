@@ -154,7 +154,7 @@ export const markdownComponents: Components = {
         </code>
     ),
     pre: ({ children }) => (
-        <pre className="my-8 overflow-x-auto rounded-xl bg-[#1a1916] p-5 font-mono text-[14px] leading-relaxed text-slate-100 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-inherit">
+        <pre className="theme-lock my-8 overflow-x-auto rounded-xl bg-[#1a1916] p-5 font-mono text-[14px] leading-relaxed text-slate-100 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-inherit">
             {children}
         </pre>
     ),

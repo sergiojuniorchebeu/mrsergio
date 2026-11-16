@@ -34,7 +34,7 @@ class BlogCommentController extends Controller
 
         if ($perIp >= self::PER_IP_LIMIT) {
             return response()->json([
-                'error' => 'Vous avez atteint la limite de 2 commentaires par heure.',
+                'error' => __('Vous avez atteint la limite de 2 commentaires par heure.'),
             ], 429);
         }
 
@@ -43,7 +43,7 @@ class BlogCommentController extends Controller
 
         if ($global >= self::GLOBAL_LIMIT) {
             return response()->json([
-                'error' => 'Trop de commentaires en ce moment. Réessayez dans quelques minutes.',
+                'error' => __('Trop de commentaires en ce moment. Réessayez dans quelques minutes.'),
             ], 429);
         }
 
@@ -59,7 +59,7 @@ class BlogCommentController extends Controller
                 'id' => $comment->id,
                 'author_name' => $comment->author_name,
                 'content' => $comment->content,
-                'created_at' => 'À l\'instant',
+                'created_at' => __('À l\'instant'),
             ],
         ], 201);
     }

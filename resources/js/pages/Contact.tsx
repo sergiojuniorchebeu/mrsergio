@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/reveal';
 import { useClipboard } from '@/hooks/use-clipboard';
 import MainLayout from '@/layouts/MainLayout';
+import { useTranslation } from '@/lib/i18n';
 import { cn, easings } from '@/lib/utils';
 
 const CONTACT_EMAIL = 'contact@mrsergio.dev';
@@ -23,18 +24,24 @@ const CONTACT_PHONE_HREF = 'tel:+237698824439';
 const MESSAGE_MAX_LENGTH = 2000;
 const YAOUNDE = { lat: 3.848, lng: 11.5021 };
 
-const PROJECT_TYPES = [
-    'Site web',
-    'Application mobile',
-    'Refonte',
-    'Formation',
-    'Autre chose',
+const PROJECT_TYPES: [french: string, english: string][] = [
+    ['Site web', 'Website'],
+    ['Application mobile', 'Mobile app'],
+    ['Refonte', 'Redesign'],
+    ['Formation', 'Training'],
+    ['Autre chose', 'Something else'],
 ];
 
-const COMMITMENTS = [
-    'Réponse initiale sous 24 h avec un retour concret.',
-    'Missions sélectives, collaborations et refontes à fort enjeu.',
-    'En remote ou depuis Yaoundé.',
+const COMMITMENTS: [french: string, english: string][] = [
+    [
+        'Réponse initiale sous 24 h avec un retour concret.',
+        'A first reply within 24 hours, with concrete feedback.',
+    ],
+    [
+        'Missions sélectives, collaborations et refontes à fort enjeu.',
+        'Selected missions, collaborations and high-stakes redesigns.',
+    ],
+    ['En remote ou depuis Yaoundé.', 'Remote, or from Yaoundé.'],
 ];
 
 const FIELD_CLASS =
@@ -132,6 +139,7 @@ function Channel({
 
 // ─── Formulaire ──────────────────────────────────────────────────────────────
 function ContactForm() {
+    const { l } = useTranslation();
     const [isSent, setIsSent] = useState(false);
     const { data, setData, post, processing, errors, reset, clearErrors } =
         useForm({
@@ -195,11 +203,13 @@ function ContactForm() {
                             </svg>
                         </span>
                         <p className="font-display text-2xl font-bold tracking-tight text-slate-900">
-                            Message envoyé
+                            {l('Message envoyé', 'Message sent')}
                         </p>
                         <p className="max-w-sm text-[17px] leading-relaxed text-slate-600">
-                            Votre message a bien été envoyé. Je vous réponds
-                            dans les plus brefs délais.
+                            {l(
+                                'Votre message a bien été envoyé. Je vous réponds dans les plus brefs délais.',
+                                'Your message has been sent. I will get back to you as soon as possible.',
+                            )}
                         </p>
                         <button
                             type="button"
@@ -210,7 +220,10 @@ function ContactForm() {
                                 className: 'mt-2',
                             })}
                         >
-                            Envoyer un autre message
+                            {l(
+                                'Envoyer un autre message',
+                                'Send another message',
+                            )}
                         </button>
                     </motion.div>
                 ) : (
@@ -225,10 +238,11 @@ function ContactForm() {
                     >
                         <div>
                             <p className="mb-3 font-display text-[13px] font-semibold text-slate-700">
-                                Votre projet
+                                {l('Votre projet', 'Your project')}
                             </p>
                             <div className="flex flex-wrap gap-2">
-                                {PROJECT_TYPES.map((type) => {
+                                {PROJECT_TYPES.map((labels) => {
+                                    const type = l(...labels);
                                     const isActive = data.subject === type;
 
                                     return (
@@ -254,14 +268,14 @@ function ContactForm() {
                         </div>
 
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="Nom" error={errors.name}>
+                            <Field label={l('Nom', 'Name')} error={errors.name}>
                                 <input
                                     type="text"
                                     value={data.name}
                                     onChange={(event) =>
                                         setData('name', event.target.value)
                                     }
-                                    placeholder="Votre nom"
+                                    placeholder={l('Votre nom', 'Your name')}
                                     autoComplete="name"
                                     aria-invalid={Boolean(errors.name)}
                                     className={cn(
@@ -277,7 +291,10 @@ function ContactForm() {
                                     onChange={(event) =>
                                         setData('email', event.target.value)
                                     }
-                                    placeholder="vous@email.com"
+                                    placeholder={l(
+                                        'vous@email.com',
+                                        'you@email.com',
+                                    )}
                                     autoComplete="email"
                                     aria-invalid={Boolean(errors.email)}
                                     className={cn(
@@ -288,14 +305,20 @@ function ContactForm() {
                             </Field>
                         </div>
 
-                        <Field label="Sujet" error={errors.subject}>
+                        <Field
+                            label={l('Sujet', 'Subject')}
+                            error={errors.subject}
+                        >
                             <input
                                 type="text"
                                 value={data.subject}
                                 onChange={(event) =>
                                     setData('subject', event.target.value)
                                 }
-                                placeholder="Refonte de mon site, application de gestion…"
+                                placeholder={l(
+                                    'Refonte de mon site, application de gestion…',
+                                    'Website redesign, management app…',
+                                )}
                                 aria-invalid={Boolean(errors.subject)}
                                 className={cn(
                                     FIELD_CLASS,
@@ -326,7 +349,10 @@ function ContactForm() {
                                 onChange={(event) =>
                                     setData('message', event.target.value)
                                 }
-                                placeholder="L'objectif, le délai, et le budget si vous l'avez déjà."
+                                placeholder={l(
+                                    "L'objectif, le délai, et le budget si vous l'avez déjà.",
+                                    'The goal, the timeline, and the budget if you already have one.',
+                                )}
                                 rows={6}
                                 maxLength={MESSAGE_MAX_LENGTH}
                                 aria-invalid={Boolean(errors.message)}
@@ -347,8 +373,8 @@ function ContactForm() {
                             })}
                         >
                             {processing
-                                ? 'Envoi en cours…'
-                                : 'Envoyer le message'}
+                                ? l('Envoi en cours…', 'Sending…')
+                                : l('Envoyer le message', 'Send message')}
                         </button>
                     </motion.form>
                 )}
@@ -362,6 +388,7 @@ function ContactForm() {
 // ═════════════════════════════════════════════════════════════════════════════
 export default function Contact() {
     const prefersReducedMotion = useReducedMotion();
+    const { l } = useTranslation();
     const localTime = useLocalTime();
     const [copiedText, copy] = useClipboard();
     const isEmailCopied = copiedText === CONTACT_EMAIL;
@@ -374,7 +401,12 @@ export default function Contact() {
 
     return (
         <MainLayout>
-            <Head title="Contact — Sergio Junior Chebeu" />
+            <Head
+                title={l(
+                    'Contact — Sergio Junior Chebeu',
+                    'Contact — Sergio Junior Chebeu',
+                )}
+            />
 
             <section className="relative isolate flex min-h-[78svh] items-end overflow-hidden bg-white">
                 <WorldMapBackdrop place={YAOUNDE} />
@@ -385,10 +417,21 @@ export default function Contact() {
                     >
                         Contact
                     </motion.p>
-                    <h1 className="max-w-4xl font-display text-[44px] leading-[1] font-bold tracking-[-0.045em] text-[#1a1916] sm:text-7xl lg:text-[84px]">
-                        <SplitWords text="Parlons d'un projet" delay={0.1} />
+                    <h1 className="max-w-4xl font-display text-[44px] leading-[1] font-bold tracking-[-0.045em] text-ink-primary sm:text-7xl lg:text-[84px]">
                         <SplitWords
-                            text="clair et ambitieux."
+                            key={l('fr-1', 'en-1')}
+                            text={l(
+                                "Parlons d'un projet",
+                                "Let's talk about a project",
+                            )}
+                            delay={0.1}
+                        />
+                        <SplitWords
+                            key={l('fr-2', 'en-2')}
+                            text={l(
+                                'clair et ambitieux.',
+                                'clear and ambitious.',
+                            )}
                             delay={0.3}
                             className="text-teal-600"
                         />
@@ -397,10 +440,10 @@ export default function Contact() {
                         {...fadeIn(0.6)}
                         className="mt-8 max-w-xl text-[19px] leading-[1.6] text-slate-600"
                     >
-                        Site, application, produit ou formation : j&apos;aime
-                        cadrer vite, simplifier ce qui est flou et poser une
-                        direction qui tient autant en design qu&apos;en
-                        exécution.
+                        {l(
+                            "Site, application, produit ou formation : j'aime cadrer vite, simplifier ce qui est flou et poser une direction qui tient autant en design qu'en exécution.",
+                            'Website, app, product or training: I like to frame things quickly, simplify what is unclear and set a direction that holds up in both design and execution.',
+                        )}
                     </motion.p>
                     <motion.p
                         {...fadeIn(0.75)}
@@ -410,7 +453,7 @@ export default function Contact() {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-70 motion-reduce:hidden" />
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-500" />
                         </span>
-                        Yaoundé, Cameroun
+                        {l('Yaoundé, Cameroun', 'Yaoundé, Cameroon')}
                         {localTime && (
                             <span className="text-slate-400">
                                 · {localTime}
@@ -425,7 +468,9 @@ export default function Contact() {
                     {/* ── Canaux directs ─────────────────────────── */}
                     <div>
                         <h2 className="mb-6 font-display text-3xl font-bold tracking-[-0.03em] text-slate-900">
-                            <MaskedLine onScroll>Directement</MaskedLine>
+                            <MaskedLine onScroll>
+                                {l('Directement', 'Directly')}
+                            </MaskedLine>
                         </h2>
 
                         <Channel label="Email" delay={0.05}>
@@ -445,11 +490,13 @@ export default function Contact() {
                                         className: 'h-8 px-3',
                                     })}
                                 >
-                                    {isEmailCopied ? 'Copié' : 'Copier'}
+                                    {isEmailCopied
+                                        ? l('Copié', 'Copied')
+                                        : l('Copier', 'Copy')}
                                 </button>
                             </div>
                         </Channel>
-                        <Channel label="Téléphone" delay={0.1}>
+                        <Channel label={l('Téléphone', 'Phone')} delay={0.1}>
                             <a
                                 href={CONTACT_PHONE_HREF}
                                 className="font-display text-[17px] font-semibold text-slate-900 transition-colors hover:text-teal-700"
@@ -457,12 +504,13 @@ export default function Contact() {
                                 {CONTACT_PHONE}
                             </a>
                         </Channel>
-                        <Channel label="Lieu" delay={0.15}>
+                        <Channel label={l('Lieu', 'Location')} delay={0.15}>
                             <p className="font-display text-[17px] font-semibold text-slate-900">
-                                Yaoundé, Cameroun
+                                {l('Yaoundé, Cameroun', 'Yaoundé, Cameroon')}
                                 {localTime && (
                                     <span className="ml-2 font-mono text-[13px] font-normal text-slate-500">
-                                        · {localTime} en ce moment
+                                        · {localTime}{' '}
+                                        {l('en ce moment', 'right now')}
                                     </span>
                                 )}
                             </p>
@@ -470,9 +518,9 @@ export default function Contact() {
                         <DrawLine />
 
                         <ul className="mt-10 flex flex-col gap-3">
-                            {COMMITMENTS.map((commitment, index) => (
+                            {COMMITMENTS.map((labels, index) => (
                                 <Reveal
-                                    key={commitment}
+                                    key={labels[0]}
                                     as="li"
                                     y={8}
                                     delay={index * 0.06}
@@ -482,7 +530,7 @@ export default function Contact() {
                                         aria-hidden
                                         className="mt-[0.7em] h-px w-4 shrink-0 bg-teal-500"
                                     />
-                                    {commitment}
+                                    {l(...labels)}
                                 </Reveal>
                             ))}
                         </ul>
@@ -491,7 +539,9 @@ export default function Contact() {
                     {/* ── Formulaire ─────────────────────────────── */}
                     <div className="lg:pt-2">
                         <h2 className="mb-6 font-display text-3xl font-bold tracking-[-0.03em] text-slate-900">
-                            <MaskedLine onScroll>Ou écrivez-moi ici</MaskedLine>
+                            <MaskedLine onScroll>
+                                {l('Ou écrivez-moi ici', 'Or write to me here')}
+                            </MaskedLine>
                         </h2>
                         <Reveal delay={0.1}>
                             <ContactForm />

@@ -9,7 +9,10 @@ import {
     TagInput,
     MarkdownEditor,
     MultiImageUpload,
+    SwitchField,
 } from '@/components/admin/shared';
+import { TranslationPanel } from '@/components/admin/translation-panel';
+import type { TranslationState } from '@/components/admin/translation-panel';
 import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
@@ -95,7 +98,13 @@ const platformSuggestions: Record<ProjectType, string[]> = {
     api: ['API'],
 };
 
-export default function ProjectForm({ project }: { project: Project | null }) {
+export default function ProjectForm({
+    project,
+    translation,
+}: {
+    project: Project | null;
+    translation?: TranslationState;
+}) {
     const isEdit = !!project;
 
     const [values, setValues] = useState<Values>({
@@ -655,59 +664,21 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                                 Publication
                             </h3>
 
-                            <label className="flex cursor-pointer items-center justify-between">
-                                <span className="text-sm text-slate-700">
-                                    Publié
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        set('published', !values.published)
-                                    }
-                                    className={cn(
-                                        'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                        values.published
-                                            ? 'bg-teal-500'
-                                            : 'bg-slate-300',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                            values.published
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0.5',
-                                        )}
-                                    />
-                                </button>
-                            </label>
+                            <SwitchField
+                                label="Publié"
+                                description="Visible sur le site public."
+                                checked={values.published}
+                                onChange={(checked) =>
+                                    set('published', checked)
+                                }
+                            />
 
-                            <label className="flex cursor-pointer items-center justify-between">
-                                <span className="text-sm text-slate-700">
-                                    Mis en avant
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        set('featured', !values.featured)
-                                    }
-                                    className={cn(
-                                        'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                        values.featured
-                                            ? 'bg-amber-500'
-                                            : 'bg-slate-300',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                            values.featured
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0.5',
-                                        )}
-                                    />
-                                </button>
-                            </label>
+                            <SwitchField
+                                label="Mis en avant"
+                                description="Affiché en premier sur l'accueil."
+                                checked={values.featured}
+                                onChange={(checked) => set('featured', checked)}
+                            />
 
                             <Field
                                 label="Ordre d'affichage"
@@ -767,35 +738,14 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                             </div>
 
                             <div className="mt-4">
-                                <label className="flex cursor-pointer items-center justify-between">
-                                    <span className="text-sm text-slate-700">
-                                        Repo privé (masquer le bouton GitHub)
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            set(
-                                                'private_repo',
-                                                !values.private_repo,
-                                            )
-                                        }
-                                        className={cn(
-                                            'relative h-5 w-10 rounded-full transition-colors duration-200',
-                                            values.private_repo
-                                                ? 'bg-slate-700'
-                                                : 'bg-slate-300',
-                                        )}
-                                    >
-                                        <span
-                                            className={cn(
-                                                'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                                                values.private_repo
-                                                    ? 'translate-x-5'
-                                                    : 'translate-x-0.5',
-                                            )}
-                                        />
-                                    </button>
-                                </label>
+                                <SwitchField
+                                    label="Dépôt privé"
+                                    description="Masque le bouton GitHub sur la page du projet."
+                                    checked={values.private_repo}
+                                    onChange={(checked) =>
+                                        set('private_repo', checked)
+                                    }
+                                />
                             </div>
 
                             {errors.image && (
@@ -814,7 +764,10 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className={buttonVariants({ size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
                                 {processing ? (
                                     <>
@@ -848,7 +801,11 @@ export default function ProjectForm({ project }: { project: Project | null }) {
 
                             <Link
                                 href="/admin/projects"
-                                className={buttonVariants({ variant: 'outline', size: 'lg', className: 'w-full' })}
+                                className={buttonVariants({
+                                    variant: 'outline',
+                                    size: 'lg',
+                                    className: 'w-full',
+                                })}
                             >
                                 Annuler
                             </Link>
@@ -856,6 +813,14 @@ export default function ProjectForm({ project }: { project: Project | null }) {
                     </div>
                 </div>
             </form>
+
+            {project && translation && (
+                <TranslationPanel
+                    type="projects"
+                    id={project.id}
+                    state={translation}
+                />
+            )}
         </AdminLayout>
     );
 }

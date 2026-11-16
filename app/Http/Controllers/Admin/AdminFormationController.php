@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,8 +19,28 @@ class AdminFormationController extends Controller
 {
     public function index(): Response
     {
+        $formations = Formation::query()
+            ->withCount([
+                'sessions as upcoming_sessions_count' => fn (Builder $query) => $query->where('starts_at', '>=', now()),
+                'enrollments as pending_enrollments_count' => fn (Builder $query) => $query->whereIn('status', ['nouvelle', 'en_attente']),
+            ])
+            ->with(['sessions' => fn (HasMany $query) => $query->upcoming()->limit(1)])
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->get()
+            ->each(function (Formation $formation): void {
+                $nextSession = $formation->sessions->first();
+                $formation->setAttribute('next_session', $nextSession ? [
+                    'starts_at' => $nextSession->starts_at->toIso8601String(),
+                    'date_label' => $nextSession->date_label,
+                    'time_label' => $nextSession->time_label,
+                    'published' => $nextSession->published,
+                ] : null);
+                $formation->unsetRelation('sessions');
+            });
+
         return Inertia::render('Admin/Formations/Index', [
-            'formations' => Formation::orderBy('sort_order')->orderByDesc('created_at')->get(),
+            'formations' => $formations,
         ]);
     }
 
@@ -49,6 +71,7 @@ class AdminFormationController extends Controller
     {
         return Inertia::render('Admin/Formations/Form', [
             'formation' => $formation,
+            'translation' => $formation->translationState(),
         ]);
     }
 

@@ -39,7 +39,7 @@ function FieldError({ message }: { message?: string }) {
 // ─── Panneau de marque ───────────────────────────────────────────────────────
 function BrandPanel() {
     return (
-        <aside className="relative isolate hidden overflow-hidden bg-[#171511] lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <aside className="theme-lock relative isolate hidden overflow-hidden bg-[#171511] lg:flex lg:flex-col lg:justify-between lg:p-12">
             <div
                 aria-hidden
                 className="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_80%_70%_at_30%_40%,black_30%,transparent_80%)] text-white/[0.09]"

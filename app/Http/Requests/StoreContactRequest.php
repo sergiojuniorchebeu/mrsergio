@@ -30,14 +30,14 @@ class StoreContactRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Le nom est obligatoire.',
-            'name.min' => 'Le nom doit contenir au moins 2 caractères.',
-            'email.required' => 'L\'email est obligatoire.',
-            'email.email' => 'L\'adresse email n\'est pas valide.',
-            'subject.required' => 'Le sujet est obligatoire.',
-            'subject.min' => 'Le sujet doit contenir au moins 3 caractères.',
-            'message.required' => 'Le message est obligatoire.',
-            'message.min' => 'Le message doit contenir au moins 10 caractères.',
+            'name.required' => __('Le nom est obligatoire.'),
+            'name.min' => __('Le nom doit contenir au moins 2 caractères.'),
+            'email.required' => __('L\'email est obligatoire.'),
+            'email.email' => __('L\'adresse email n\'est pas valide.'),
+            'subject.required' => __('Le sujet est obligatoire.'),
+            'subject.min' => __('Le sujet doit contenir au moins 3 caractères.'),
+            'message.required' => __('Le message est obligatoire.'),
+            'message.min' => __('Le message doit contenir au moins 10 caractères.'),
         ];
     }
 }

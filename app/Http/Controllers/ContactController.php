@@ -27,6 +27,6 @@ class ContactController extends Controller
     {
         ContactMessage::create($request->validated());
 
-        return back()->with('success', 'Votre message a bien été envoyé ! Je vous répondrai dans les plus brefs délais.');
+        return back()->with('success', __('Votre message a bien été envoyé ! Je vous répondrai dans les plus brefs délais.'));
     }
 }

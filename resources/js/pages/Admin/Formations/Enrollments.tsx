@@ -4,7 +4,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { LayoutGroup, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
-import { AdminEmptyState, AdminPageHeader, AdminPanel, DeleteModal } from '@/components/admin/shared';
+import {
+    AdminEmptyState,
+    AdminPageHeader,
+    AdminPanel,
+    DeleteModal,
+} from '@/components/admin/shared';
 import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
@@ -17,27 +22,54 @@ interface Enrollment {
     message: string | null;
     status: string;
     formation: { title: string };
+    session: { title: string | null; starts_at: string } | null;
 }
 
-const STATUSES = ['nouvelle', 'contactée', 'confirmée', 'archivée'] as const;
+const STATUSES = [
+    'nouvelle',
+    'en_attente',
+    'contactée',
+    'confirmée',
+    'présente',
+    'absente',
+    'archivée',
+] as const;
 
 function statusLabel(status: string): string {
     return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-export default function Enrollments({ enrollments }: { enrollments: Enrollment[] }) {
+export default function Enrollments({
+    enrollments,
+}: {
+    enrollments: Enrollment[];
+}) {
     const [deleteTarget, setDeleteTarget] = useState<Enrollment | null>(null);
     const [statusFilter, setStatusFilter] = useState<string | null>('nouvelle');
 
     const counts = useMemo(
-        () => Object.fromEntries(STATUSES.map((status) => [status, enrollments.filter((enrollment) => enrollment.status === status).length])),
+        () =>
+            Object.fromEntries(
+                STATUSES.map((status) => [
+                    status,
+                    enrollments.filter(
+                        (enrollment) => enrollment.status === status,
+                    ).length,
+                ]),
+            ),
         [enrollments],
     );
 
-    const visibleEnrollments = statusFilter ? enrollments.filter((enrollment) => enrollment.status === statusFilter) : enrollments;
+    const visibleEnrollments = statusFilter
+        ? enrollments.filter((enrollment) => enrollment.status === statusFilter)
+        : enrollments;
 
     function updateStatus(enrollment: Enrollment, status: string) {
-        router.patch(`/admin/formation-enrollments/${enrollment.id}`, { status }, { preserveScroll: true });
+        router.patch(
+            `/admin/formation-enrollments/${enrollment.id}`,
+            { status },
+            { preserveScroll: true },
+        );
     }
 
     function deleteEnrollment() {
@@ -51,7 +83,14 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
         });
     }
 
-    const filterOptions = [{ value: null, label: 'Toutes', count: enrollments.length }, ...STATUSES.map((status) => ({ value: status, label: statusLabel(status), count: counts[status] }))];
+    const filterOptions = [
+        { value: null, label: 'Toutes', count: enrollments.length },
+        ...STATUSES.map((status) => ({
+            value: status,
+            label: statusLabel(status),
+            count: counts[status],
+        })),
+    ];
 
     return (
         <AdminLayout title="Demandes de formation">
@@ -61,7 +100,10 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
                 title="Demandes d'inscription"
                 description={`${enrollments.length} demande${enrollments.length > 1 ? 's' : ''} · ${counts.nouvelle} à traiter`}
                 actions={
-                    <Link href="/admin/formations" className={buttonVariants({ variant: 'outline' })}>
+                    <Link
+                        href="/admin/formations"
+                        className={buttonVariants({ variant: 'outline' })}
+                    >
                         Formations
                     </Link>
                 }
@@ -79,12 +121,22 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
                                 onClick={() => setStatusFilter(option.value)}
                                 className={cn(
                                     'relative shrink-0 rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors',
-                                    isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800',
+                                    isActive
+                                        ? 'text-slate-900'
+                                        : 'text-slate-500 hover:text-slate-800',
                                 )}
                             >
-                                {isActive && <motion.span layoutId="enrollment-filter-active" className="absolute inset-0 rounded-md bg-white shadow-sm" />}
+                                {isActive && (
+                                    <motion.span
+                                        layoutId="enrollment-filter-active"
+                                        className="absolute inset-0 rounded-md bg-white shadow-sm"
+                                    />
+                                )}
                                 <span className="relative">
-                                    {option.label} <span className="font-mono text-[11px] text-slate-400">{option.count}</span>
+                                    {option.label}{' '}
+                                    <span className="font-mono text-[11px] text-slate-400">
+                                        {option.count}
+                                    </span>
                                 </span>
                             </button>
                         );
@@ -94,20 +146,49 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
 
             <AdminPanel>
                 {visibleEnrollments.length === 0 ? (
-                    <AdminEmptyState message={enrollments.length === 0 ? 'Aucune demande pour le moment.' : 'Aucune demande avec ce statut.'} />
+                    <AdminEmptyState
+                        message={
+                            enrollments.length === 0
+                                ? 'Aucune demande pour le moment.'
+                                : 'Aucune demande avec ce statut.'
+                        }
+                    />
                 ) : (
                     <ul className="divide-y divide-slate-100">
                         {visibleEnrollments.map((enrollment) => (
-                            <li key={enrollment.id} className="flex flex-col gap-4 px-5 py-5 lg:flex-row lg:items-start lg:justify-between">
+                            <li
+                                key={enrollment.id}
+                                className="flex flex-col gap-4 px-5 py-5 lg:flex-row lg:items-start lg:justify-between"
+                            >
                                 <div className="min-w-0">
-                                    <p className="font-mono text-[11px] text-teal-700">{enrollment.formation.title}</p>
-                                    <p className="mt-1 font-display text-[16px] font-semibold text-slate-900">{enrollment.name}</p>
+                                    <p className="font-mono text-[11px] text-teal-700">
+                                        {enrollment.formation.title}
+                                    </p>
+                                    <p className="mt-1 font-display text-[16px] font-semibold text-slate-900">
+                                        {enrollment.name}
+                                    </p>
+                                    {enrollment.session && (
+                                        <p className="mt-1 text-[12px] text-teal-700">
+                                            {enrollment.session.title ||
+                                                'Session en direct'}{' '}
+                                            ·{' '}
+                                            {new Date(
+                                                enrollment.session.starts_at,
+                                            ).toLocaleDateString('fr-FR')}
+                                        </p>
+                                    )}
                                     <p className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-slate-500">
-                                        <a href={`mailto:${enrollment.email}`} className="hover:text-teal-700">
+                                        <a
+                                            href={`mailto:${enrollment.email}`}
+                                            className="hover:text-teal-700"
+                                        >
                                             {enrollment.email}
                                         </a>
                                         {enrollment.phone && (
-                                            <a href={`tel:${enrollment.phone.replace(/\s+/g, '')}`} className="hover:text-teal-700">
+                                            <a
+                                                href={`tel:${enrollment.phone.replace(/\s+/g, '')}`}
+                                                className="hover:text-teal-700"
+                                            >
                                                 {enrollment.phone}
                                             </a>
                                         )}
@@ -120,14 +201,27 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
                                 </div>
 
                                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                                    <div role="radiogroup" aria-label="Statut" className="flex gap-1 rounded-lg border border-slate-200 p-1">
+                                    <div
+                                        role="radiogroup"
+                                        aria-label="Statut"
+                                        className="flex gap-1 rounded-lg border border-slate-200 p-1"
+                                    >
                                         {STATUSES.map((status) => (
                                             <button
                                                 key={status}
                                                 type="button"
                                                 role="radio"
-                                                aria-checked={enrollment.status === status}
-                                                onClick={() => enrollment.status !== status && updateStatus(enrollment, status)}
+                                                aria-checked={
+                                                    enrollment.status === status
+                                                }
+                                                onClick={() =>
+                                                    enrollment.status !==
+                                                        status &&
+                                                    updateStatus(
+                                                        enrollment,
+                                                        status,
+                                                    )
+                                                }
                                                 className={cn(
                                                     'rounded-md px-2.5 py-1 text-[12px] font-semibold transition-colors',
                                                     enrollment.status === status
@@ -143,11 +237,14 @@ export default function Enrollments({ enrollments }: { enrollments: Enrollment[]
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setDeleteTarget(enrollment)}
+                                        onClick={() =>
+                                            setDeleteTarget(enrollment)
+                                        }
                                         className={buttonVariants({
                                             variant: 'ghost',
                                             size: 'sm',
-                                            className: 'text-rose-600 hover:bg-rose-50 hover:text-rose-700',
+                                            className:
+                                                'text-rose-600 hover:bg-rose-50 hover:text-rose-700',
                                         })}
                                     >
                                         Supprimer

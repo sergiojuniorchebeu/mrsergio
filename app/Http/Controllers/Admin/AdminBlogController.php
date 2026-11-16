@@ -78,6 +78,7 @@ class AdminBlogController extends Controller
     {
         return Inertia::render('Admin/Blog/Form', [
             'post' => $blog,
+            'translation' => $blog->translationState(),
         ]);
     }
 

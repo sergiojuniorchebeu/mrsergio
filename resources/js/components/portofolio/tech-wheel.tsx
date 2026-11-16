@@ -11,8 +11,12 @@ import {
 } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { EVENODD_TECH_LOGOS, TECH_LOGO_PATHS } from '@/components/portofolio/tech-logos';
+import {
+    EVENODD_TECH_LOGOS,
+    TECH_LOGO_PATHS,
+} from '@/components/portofolio/tech-logos';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from '@/lib/i18n';
 
 const SCROLL_VH_PER_ITEM = 30;
 const SCROLL_VH_PER_ITEM_MOBILE = 15;
@@ -49,7 +53,9 @@ function WheelItem({
         Math.max(0, 1 - Math.abs(p - index) * 0.38),
     );
     const color = useTransform(position, (p) =>
-        Math.abs(p - index) < 0.5 ? '#138770' : '#1a1916',
+        Math.abs(p - index) < 0.5
+            ? 'var(--color-teal-600)'
+            : 'var(--color-ink-primary)',
     );
 
     return (
@@ -66,10 +72,24 @@ function WheelItem({
  * Logo géant de la techno au centre de la roue, en fond : il pivote et se fond
  * dans le suivant à mesure que la roue tourne.
  */
-function TechLogo({ name, index, position }: { name: string; index: number; position: MotionValue<number> }) {
+function TechLogo({
+    name,
+    index,
+    position,
+}: {
+    name: string;
+    index: number;
+    position: MotionValue<number>;
+}) {
     const paths = TECH_LOGO_PATHS[name];
-    const opacity = useTransform(position, (p) => Math.max(0, 1 - Math.abs(p - index) * 1.6) * 0.036);
-    const scale = useTransform(position, (p) => 1 - Math.min(Math.abs(p - index), 1) * 0.25);
+    const opacity = useTransform(
+        position,
+        (p) => Math.max(0, 1 - Math.abs(p - index) * 1.6) * 0.036,
+    );
+    const scale = useTransform(
+        position,
+        (p) => 1 - Math.min(Math.abs(p - index), 1) * 0.25,
+    );
     const rotate = useTransform(position, (p) => (index - p) * 35);
 
     if (!paths) {
@@ -84,7 +104,13 @@ function TechLogo({ name, index, position }: { name: string; index: number; posi
             className="absolute aspect-square h-[60%] max-h-[320px] text-teal-700"
         >
             {paths.map((path) => (
-                <path key={path} d={path} fillRule={EVENODD_TECH_LOGOS.has(name) ? 'evenodd' : undefined} />
+                <path
+                    key={path}
+                    d={path}
+                    fillRule={
+                        EVENODD_TECH_LOGOS.has(name) ? 'evenodd' : undefined
+                    }
+                />
             ))}
         </motion.svg>
     );
@@ -112,6 +138,7 @@ export function TechWheel({ items }: { items: string[] }) {
 
     const pinLine = PIN_TOP_PX + pinnedHeight;
     const prefersReducedMotion = useReducedMotion();
+    const { l } = useTranslation();
     const { scrollYProgress } = useScroll({
         target: spacerRef,
         offset: [`0 ${pinLine}px`, `1 ${pinLine}px`],
@@ -131,7 +158,9 @@ export function TechWheel({ items }: { items: string[] }) {
     );
 
     const isMobile = useIsMobile();
-    const scrollPerItem = isMobile ? SCROLL_VH_PER_ITEM_MOBILE : SCROLL_VH_PER_ITEM;
+    const scrollPerItem = isMobile
+        ? SCROLL_VH_PER_ITEM_MOBILE
+        : SCROLL_VH_PER_ITEM;
 
     useMotionValueEvent(counter, 'change', () => {
         if (isMobile && !prefersReducedMotion) {
@@ -150,7 +179,7 @@ export function TechWheel({ items }: { items: string[] }) {
             <section className="bg-white py-20">
                 <div className="container-main">
                     <p className="mb-4 font-mono text-[11px] text-slate-400">
-                        Au quotidien
+                        {l('Au quotidien', 'Day to day')}
                     </p>
                     <p className="font-display text-3xl font-bold tracking-tight text-slate-900">
                         {items.join(' · ')}
@@ -162,7 +191,7 @@ export function TechWheel({ items }: { items: string[] }) {
 
     return (
         <section
-            aria-label="Technologies utilisées"
+            aria-label={l('Technologies utilisées', 'Technologies I use')}
             className="relative bg-white pt-6 sm:pt-8"
         >
             <div
@@ -175,16 +204,24 @@ export function TechWheel({ items }: { items: string[] }) {
                     className="pointer-events-none absolute inset-y-0 right-0 -z-10 flex w-full items-center justify-center lg:w-[62%]"
                 >
                     {items.map((item, index) => (
-                        <TechLogo key={item} name={item} index={index} position={position} />
+                        <TechLogo
+                            key={item}
+                            name={item}
+                            index={index}
+                            position={position}
+                        />
                     ))}
                 </div>
                 <div className="container-main grid w-full items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
                     <div className="flex flex-col gap-6">
                         <p className="font-mono text-[11px] text-slate-400">
-                            Au quotidien
+                            {l('Au quotidien', 'Day to day')}
                         </p>
                         <p className="max-w-sm font-display text-2xl leading-snug font-bold tracking-tight text-slate-900 sm:text-3xl">
-                            Les outils avec lesquels je construis, chaque jour.
+                            {l(
+                                'Les outils avec lesquels je construis, chaque jour.',
+                                'The tools I build with, every day.',
+                            )}
                         </p>
                         <div className="flex items-center gap-4 font-mono text-[13px] text-slate-500">
                             <span className="tabular-nums">

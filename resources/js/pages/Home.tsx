@@ -11,6 +11,7 @@ import { useRef, useSyncExternalStore } from 'react';
 import { ArticleList } from '@/components/portofolio/article-list';
 import { AvailabilityBadge } from '@/components/portofolio/availability-badge';
 import { FormationDeck } from '@/components/portofolio/formation-deck';
+import { LiveEventCard } from '@/components/portofolio/live-event';
 import { StackedProjects } from '@/components/portofolio/stacked-projects';
 import { TechWheel } from '@/components/portofolio/tech-wheel';
 import { buttonVariants } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import { ScrollTextReveal } from '@/components/ui/scroll-text-reveal';
 import { SectionBackdrop } from '@/components/ui/section-backdrop';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MainLayout from '@/layouts/MainLayout';
+import { useTranslation } from '@/lib/i18n';
 import { easings } from '@/lib/utils';
 
 const CONTACT_EMAIL = 'contact@mrsergio.dev';
@@ -99,7 +101,7 @@ function Stat({
             ref={ref}
             className="flex flex-col gap-1 border-t border-slate-200 pt-5"
         >
-            <span className="font-display text-5xl font-bold tracking-tight text-[#1a1916] tabular-nums sm:text-6xl">
+            <span className="font-display text-5xl font-bold tracking-tight text-ink-primary tabular-nums sm:text-6xl">
                 <NumberFlow
                     value={inView ? value : 0}
                     transformTiming={{
@@ -181,7 +183,11 @@ export default function Home({
     projectsCount?: number;
 }) {
     const prefersReducedMotion = useReducedMotion();
+    const { l } = useTranslation();
     const localTime = useLocalTime();
+    const techItems = techStack.map((tech) =>
+        tech === 'Déploiement' ? l('Déploiement', 'Deployment') : tech,
+    );
     const isMobile = useIsMobile();
     const parallaxScale = prefersReducedMotion ? 0 : isMobile ? 0.4 : 1;
 
@@ -215,7 +221,12 @@ export default function Home({
 
     return (
         <MainLayout>
-            <Head title="Accueil — Sergio Junior Chebeu" />
+            <Head
+                title={l(
+                    'Accueil — Sergio Junior Chebeu',
+                    'Home — Sergio Junior Chebeu',
+                )}
+            />
 
             {/* ══ HERO ═══════════════════════════════════════════════ */}
             <section ref={heroRef}>
@@ -229,11 +240,15 @@ export default function Home({
                                 }}
                                 className="order-2 flex flex-col lg:order-1"
                             >
-                                <motion.div {...fadeIn(0.05)} className="mb-8">
+                                <motion.div
+                                    {...fadeIn(0.05)}
+                                    className="mb-8 flex flex-col items-start gap-3"
+                                >
+                                    <LiveEventCard />
                                     <AvailabilityBadge localTime={localTime} />
                                 </motion.div>
 
-                                <h1 className="font-display text-[48px] leading-[0.98] font-bold tracking-[-0.045em] text-[#1a1916] sm:text-7xl lg:text-[88px]">
+                                <h1 className="font-display text-[48px] leading-[0.98] font-bold tracking-[-0.045em] text-ink-primary sm:text-7xl lg:text-[88px]">
                                     <SplitChars
                                         text="Sergio Junior"
                                         delay={0.15}
@@ -249,10 +264,10 @@ export default function Home({
                                     {...fadeIn(0.85)}
                                     className="mt-8 max-w-[34rem] text-[20px] leading-[1.6] text-slate-700"
                                 >
-                                    Développeur full stack. Je conçois des
-                                    applications web et Android pour des
-                                    entreprises et des porteurs de projet, de
-                                    l&apos;idée jusqu&apos;à la mise en ligne.
+                                    {l(
+                                        "Développeur full stack. Je conçois des applications web et Android pour des entreprises et des porteurs de projet, de l'idée jusqu'à la mise en ligne.",
+                                        'Full-stack developer. I design and build web and Android applications for businesses and founders, from the first idea to launch.',
+                                    )}
                                 </motion.p>
 
                                 <motion.div
@@ -265,7 +280,7 @@ export default function Home({
                                             size: 'lg',
                                         })}
                                     >
-                                        Voir mes projets
+                                        {l('Voir mes projets', 'See my work')}
                                     </Link>
                                     <Link
                                         href="/contact"
@@ -274,7 +289,7 @@ export default function Home({
                                             size: 'lg',
                                         })}
                                     >
-                                        Me contacter
+                                        {l('Me contacter', 'Get in touch')}
                                     </Link>
                                 </motion.div>
 
@@ -363,7 +378,7 @@ export default function Home({
             </section>
 
             {/* ══ TECHNOS (roue épinglée) ═════════════════════════ */}
-            <TechWheel items={techStack} />
+            <TechWheel items={techItems} />
 
             {/* ══ MANIFESTE + CHIFFRES ═══════════════════════════════ */}
             <section className="relative isolate overflow-clip bg-white py-24 sm:py-36">
@@ -371,12 +386,19 @@ export default function Home({
                 <div className="container-main">
                     <Reveal y={8}>
                         <p className="mb-8 font-mono text-[11px] text-slate-400">
-                            Ma façon de travailler
+                            {l('Ma façon de travailler', 'How I work')}
                         </p>
                     </Reveal>
                     <ScrollTextReveal
-                        text="Je construis des applications claires, fiables et agréables à utiliser. Je pars de votre besoin réel, je livre par étapes, et je reste là après la mise en ligne."
-                        highlight={['claires', 'fiables', 'agréables']}
+                        key={l('fr', 'en')}
+                        text={l(
+                            'Je construis des applications claires, fiables et agréables à utiliser. Je pars de votre besoin réel, je livre par étapes, et je reste là après la mise en ligne.',
+                            'I build applications that are clear, reliable and enjoyable to use. I start from your real needs, ship in steps, and stay around after launch.',
+                        )}
+                        highlight={l(
+                            'claires|fiables|agréables',
+                            'clear|reliable|enjoyable',
+                        ).split('|')}
                         className="max-w-5xl font-display text-[30px] leading-[1.25] font-bold tracking-[-0.03em] text-slate-900 sm:text-5xl lg:text-[56px]"
                     />
 
@@ -385,15 +407,24 @@ export default function Home({
                             {
                                 value: 3,
                                 suffix: '+',
-                                label: "ans d'expérience",
+                                label: l(
+                                    "ans d'expérience",
+                                    'years of experience',
+                                ),
                             },
                             {
                                 value: projectsCount,
-                                label: 'projets publiés ici',
+                                label: l(
+                                    'projets publiés ici',
+                                    'projects published here',
+                                ),
                             },
                             {
                                 value: techStack.length,
-                                label: 'technologies au quotidien',
+                                label: l(
+                                    'technologies au quotidien',
+                                    'technologies I use daily',
+                                ),
                             },
                         ].map((stat, i) => (
                             <Reveal key={stat.label} delay={i * 0.1}>
@@ -410,14 +441,22 @@ export default function Home({
                 <div className="container-main">
                     <SectionHeader
                         index="01 — Projets"
-                        title="Travaux récents"
-                        intro="Une sélection d'applications livrées, du site vitrine à l'outil métier."
+                        title={l('Travaux récents', 'Recent work')}
+                        intro={l(
+                            "Une sélection d'applications livrées, du site vitrine à l'outil métier.",
+                            'A selection of shipped applications, from showcase websites to business tools.',
+                        )}
                         href="/projects"
-                        linkLabel="Tous les projets"
+                        linkLabel={l('Tous les projets', 'All projects')}
                     />
 
                     {projects.length === 0 ? (
-                        <EmptyState message="Aucun projet publié pour l'instant." />
+                        <EmptyState
+                            message={l(
+                                "Aucun projet publié pour l'instant.",
+                                'No projects published yet.',
+                            )}
+                        />
                     ) : (
                         <StackedProjects projects={projects} />
                     )}
@@ -430,14 +469,22 @@ export default function Home({
                 <div className="container-main">
                     <SectionHeader
                         index="02 — Blog"
-                        title="Ce que j'écris"
-                        intro="Notes de terrain sur le développement, les outils et les projets en cours."
+                        title={l("Ce que j'écris", 'What I write')}
+                        intro={l(
+                            'Notes de terrain sur le développement, les outils et les projets en cours.',
+                            'Field notes on development, tools and ongoing projects.',
+                        )}
                         href="/blog"
-                        linkLabel="Tous les articles"
+                        linkLabel={l('Tous les articles', 'All articles')}
                     />
 
                     {posts.length === 0 ? (
-                        <EmptyState message="Aucun article publié pour l'instant." />
+                        <EmptyState
+                            message={l(
+                                "Aucun article publié pour l'instant.",
+                                'No articles published yet.',
+                            )}
+                        />
                     ) : (
                         <ArticleList articles={posts} />
                     )}
@@ -450,14 +497,22 @@ export default function Home({
                 <div className="container-main">
                     <SectionHeader
                         index="03 — Formations"
-                        title="Apprendre avec moi"
-                        intro="Des formations pratiques, construites à partir de vrais projets."
+                        title={l('Apprendre avec moi', 'Learn with me')}
+                        intro={l(
+                            'Des formations pratiques, construites à partir de vrais projets.',
+                            'Hands-on training, built from real projects.',
+                        )}
                         href="/formations"
-                        linkLabel="Toutes les formations"
+                        linkLabel={l('Toutes les formations', 'All training')}
                     />
 
                     {formations.length === 0 ? (
-                        <EmptyState message="Aucune formation publiée pour l'instant." />
+                        <EmptyState
+                            message={l(
+                                "Aucune formation publiée pour l'instant.",
+                                'No training published yet.',
+                            )}
+                        />
                     ) : (
                         <FormationDeck formations={formations} />
                     )}
