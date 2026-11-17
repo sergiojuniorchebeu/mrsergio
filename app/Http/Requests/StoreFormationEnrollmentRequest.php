@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\FormationEnrollment;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,7 @@ class StoreFormationEnrollmentRequest extends FormRequest
         if ($this->filled('formation_session_id')) {
             $emailRules[] = Rule::unique('formation_enrollments', 'email')
                 ->where('formation_session_id', $this->integer('formation_session_id'))
-                ->whereNotIn('status', ['archivée', 'absente']);
+                ->whereNot('status', FormationEnrollment::STATUS_CANCELLED);
         }
 
         return [

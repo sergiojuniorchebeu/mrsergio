@@ -68,7 +68,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'messages' => ContactMessage::query()->unread()->count(),
-            'enrollments' => FormationEnrollment::query()->whereIn('status', ['nouvelle', 'en_attente'])->count(),
+            'enrollments' => FormationEnrollment::query()->toHandle()->count(),
         ];
     }
 }

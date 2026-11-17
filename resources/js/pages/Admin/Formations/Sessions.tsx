@@ -25,9 +25,17 @@ interface Session {
     starts_at: string;
     ends_at: string | null;
     meet_url: string | null;
+    google_event_id: string | null;
     capacity: number | null;
     published: boolean;
     registered_count: number;
+    attended_count: number;
+}
+
+interface GoogleCalendarStatus {
+    configured: boolean;
+    connected: boolean;
+    email: string | null;
 }
 
 interface FormationRef {
@@ -74,12 +82,75 @@ function sessionValues(session: Session): SessionValues {
     };
 }
 
+/**
+ * Compte Google relié : chaque session obtient sa visio Meet, seuls les inscrits sont invités.
+ */
+function GoogleCalendarCard({ status }: { status: GoogleCalendarStatus }) {
+    return (
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+                <p className="flex items-center gap-2 font-display text-[14px] font-semibold text-slate-900">
+                    <span
+                        className={cn(
+                            'h-2 w-2 shrink-0 rounded-full',
+                            status.connected ? 'bg-teal-500' : 'bg-slate-300',
+                        )}
+                    />
+                    Google Agenda
+                    {status.connected && status.email && (
+                        <span className="truncate font-mono text-[12px] font-normal text-slate-500">
+                            {status.email}
+                        </span>
+                    )}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                    {status.connected
+                        ? 'Chaque nouvelle session reçoit sa visio Meet. Seuls les inscrits avec une place sont invités : réglez l’accès Meet sur « Restreint » pour que les autres doivent demander à entrer.'
+                        : status.configured
+                          ? 'Reliez votre compte pour créer les visios Meet automatiquement et n’inviter que les inscrits.'
+                          : 'Ajoutez GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans le fichier .env pour relier Google Agenda.'}
+                </p>
+            </div>
+            {status.configured &&
+                (status.connected ? (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            router.delete('/admin/google-calendar', {
+                                preserveScroll: true,
+                            })
+                        }
+                        className={buttonVariants({
+                            variant: 'outline',
+                            size: 'sm',
+                            className: 'shrink-0',
+                        })}
+                    >
+                        Déconnecter
+                    </button>
+                ) : (
+                    <a
+                        href="/admin/google-calendar/connect"
+                        className={buttonVariants({
+                            size: 'sm',
+                            className: 'shrink-0',
+                        })}
+                    >
+                        Relier Google Agenda
+                    </a>
+                ))}
+        </div>
+    );
+}
+
 export default function Sessions({
     formation,
     sessions,
+    googleCalendar,
 }: {
     formation: FormationRef;
     sessions: Session[];
+    googleCalendar: GoogleCalendarStatus;
 }) {
     const [values, setValues] = useState<SessionValues>(EMPTY_VALUES);
     const [editing, setEditing] = useState<Session | null>(null);
@@ -152,6 +223,8 @@ export default function Sessions({
                     </Link>
                 }
             />
+
+            <GoogleCalendarCard status={googleCalendar} />
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <AdminPanel>
@@ -232,9 +305,11 @@ export default function Sessions({
                                                                 : 'bg-amber-50 text-amber-700',
                                                         )}
                                                     >
-                                                        {session.meet_url
-                                                            ? 'Lien Meet prêt'
-                                                            : 'Lien Meet manquant'}
+                                                        {session.google_event_id
+                                                            ? 'Meet · invités synchronisés'
+                                                            : session.meet_url
+                                                              ? 'Lien Meet prêt'
+                                                              : 'Lien Meet manquant'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -249,7 +324,7 @@ export default function Sessions({
                                                     placesRemaining,
                                                 is_full: placesRemaining === 0,
                                             }}
-                                            label={`${session.registered_count}${session.capacity ? ` / ${session.capacity}` : ''} inscrit${session.registered_count > 1 ? 's' : ''}`}
+                                            label={`${session.registered_count}${session.capacity ? ` / ${session.capacity}` : ''} inscrit${session.registered_count > 1 ? 's' : ''}${isPast ? ` · ${session.attended_count} présent${session.attended_count > 1 ? 's' : ''}` : ''}`}
                                         />
                                         <div className="flex shrink-0 gap-1">
                                             <button
@@ -346,7 +421,11 @@ export default function Sessions({
                             onChange={(event) =>
                                 setValue('meet_url', event.target.value)
                             }
-                            placeholder="https://meet.google.com/..."
+                            placeholder={
+                                googleCalendar.connected
+                                    ? 'Vide : créé automatiquement'
+                                    : 'https://meet.google.com/...'
+                            }
                             className={cn(
                                 inputCls,
                                 errors.meet_url && errorInputCls,

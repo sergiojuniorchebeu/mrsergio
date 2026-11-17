@@ -20,24 +20,61 @@ interface Enrollment {
     email: string;
     phone: string | null;
     message: string | null;
-    status: string;
+    status: Status;
+    attended_at: string | null;
     formation: { title: string };
     session: { title: string | null; starts_at: string } | null;
 }
 
-const STATUSES = [
-    'nouvelle',
-    'en_attente',
-    'contactée',
-    'confirmée',
-    'présente',
-    'absente',
-    'archivée',
-] as const;
+type Status = 'inscrite' | 'en_attente' | 'traitée' | 'annulée';
 
-function statusLabel(status: string): string {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-}
+// Session en direct : place réservée, liste d'attente (promue seule quand une place se libère).
+const SESSION_STATUSES: { value: Status; label: string }[] = [
+    { value: 'inscrite', label: 'Inscrit' },
+    { value: 'en_attente', label: "Liste d'attente" },
+    { value: 'annulée', label: 'Annulé' },
+];
+
+// Demande sans session (formation payante) : à traiter, puis traitée.
+const REQUEST_STATUSES: { value: Status; label: string }[] = [
+    { value: 'inscrite', label: 'À traiter' },
+    { value: 'traitée', label: 'Traitée' },
+    { value: 'annulée', label: 'Annulée' },
+];
+
+type Filter = 'registered' | 'waitlist' | 'to_handle' | 'handled' | 'cancelled';
+
+const FILTERS: {
+    value: Filter;
+    label: string;
+    matches: (enrollment: Enrollment) => boolean;
+}[] = [
+    {
+        value: 'registered',
+        label: 'Inscrits',
+        matches: (e) => e.session !== null && e.status === 'inscrite',
+    },
+    {
+        value: 'waitlist',
+        label: "Liste d'attente",
+        matches: (e) => e.status === 'en_attente',
+    },
+    {
+        value: 'to_handle',
+        label: 'Demandes à traiter',
+        matches: (e) => e.session === null && e.status === 'inscrite',
+    },
+    {
+        value: 'handled',
+        label: 'Traitées',
+        matches: (e) => e.status === 'traitée',
+    },
+    {
+        value: 'cancelled',
+        label: 'Annulés',
+        matches: (e) => e.status === 'annulée',
+    },
+];
 
 export default function Enrollments({
     enrollments,
@@ -45,26 +82,27 @@ export default function Enrollments({
     enrollments: Enrollment[];
 }) {
     const [deleteTarget, setDeleteTarget] = useState<Enrollment | null>(null);
-    const [statusFilter, setStatusFilter] = useState<string | null>('nouvelle');
+    const [statusFilter, setStatusFilter] = useState<Filter | null>(null);
 
     const counts = useMemo(
         () =>
             Object.fromEntries(
-                STATUSES.map((status) => [
-                    status,
-                    enrollments.filter(
-                        (enrollment) => enrollment.status === status,
-                    ).length,
+                FILTERS.map((filter) => [
+                    filter.value,
+                    enrollments.filter(filter.matches).length,
                 ]),
-            ),
+            ) as Record<Filter, number>,
         [enrollments],
     );
 
-    const visibleEnrollments = statusFilter
-        ? enrollments.filter((enrollment) => enrollment.status === statusFilter)
+    const activeFilter = FILTERS.find(
+        (filter) => filter.value === statusFilter,
+    );
+    const visibleEnrollments = activeFilter
+        ? enrollments.filter(activeFilter.matches)
         : enrollments;
 
-    function updateStatus(enrollment: Enrollment, status: string) {
+    function updateStatus(enrollment: Enrollment, status: Status) {
         router.patch(
             `/admin/formation-enrollments/${enrollment.id}`,
             { status },
@@ -85,10 +123,13 @@ export default function Enrollments({
 
     const filterOptions = [
         { value: null, label: 'Toutes', count: enrollments.length },
-        ...STATUSES.map((status) => ({
-            value: status,
-            label: statusLabel(status),
-            count: counts[status],
+        ...FILTERS.filter(
+            (filter) =>
+                counts[filter.value] > 0 || filter.value === statusFilter,
+        ).map((filter) => ({
+            value: filter.value,
+            label: filter.label,
+            count: counts[filter.value],
         })),
     ];
 
@@ -98,7 +139,7 @@ export default function Enrollments({
 
             <AdminPageHeader
                 title="Demandes d'inscription"
-                description={`${enrollments.length} demande${enrollments.length > 1 ? 's' : ''} · ${counts.nouvelle} à traiter`}
+                description={`${counts.registered} inscrit${counts.registered > 1 ? 's' : ''} · ${counts.waitlist} en liste d'attente · ${counts.to_handle} demande${counts.to_handle > 1 ? 's' : ''} à traiter`}
                 actions={
                     <Link
                         href="/admin/formations"
@@ -175,6 +216,11 @@ export default function Enrollments({
                                             {new Date(
                                                 enrollment.session.starts_at,
                                             ).toLocaleDateString('fr-FR')}
+                                            {enrollment.attended_at && (
+                                                <span className="ml-2 rounded-full bg-teal-50 px-2 py-0.5 font-mono text-[11px] text-teal-700">
+                                                    Présent
+                                                </span>
+                                            )}
                                         </p>
                                     )}
                                     <p className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-slate-500">
@@ -206,32 +252,38 @@ export default function Enrollments({
                                         aria-label="Statut"
                                         className="flex gap-1 rounded-lg border border-slate-200 p-1"
                                     >
-                                        {STATUSES.map((status) => (
+                                        {(enrollment.session
+                                            ? SESSION_STATUSES
+                                            : REQUEST_STATUSES
+                                        ).map((status) => (
                                             <button
-                                                key={status}
+                                                key={status.value}
                                                 type="button"
                                                 role="radio"
                                                 aria-checked={
-                                                    enrollment.status === status
+                                                    enrollment.status ===
+                                                    status.value
                                                 }
                                                 onClick={() =>
                                                     enrollment.status !==
-                                                        status &&
+                                                        status.value &&
                                                     updateStatus(
                                                         enrollment,
-                                                        status,
+                                                        status.value,
                                                     )
                                                 }
                                                 className={cn(
                                                     'rounded-md px-2.5 py-1 text-[12px] font-semibold transition-colors',
-                                                    enrollment.status === status
-                                                        ? status === 'confirmée'
+                                                    enrollment.status ===
+                                                        status.value
+                                                        ? status.value ===
+                                                          'inscrite'
                                                             ? 'bg-teal-600 text-white'
                                                             : 'bg-slate-900 text-white'
                                                         : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800',
                                                 )}
                                             >
-                                                {statusLabel(status)}
+                                                {status.label}
                                             </button>
                                         ))}
                                     </div>

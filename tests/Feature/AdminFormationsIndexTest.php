@@ -53,9 +53,11 @@ class AdminFormationsIndexTest extends TestCase
         FormationSession::create(['formation_id' => $formation->id, 'starts_at' => now()->subDay(), 'published' => true]);
         $nextSession = FormationSession::create(['formation_id' => $formation->id, 'starts_at' => now()->addDays(3)->setTime(18, 0), 'published' => true]);
         FormationSession::create(['formation_id' => $formation->id, 'starts_at' => now()->addDays(10), 'published' => false]);
-        $this->enroll($formation, 'nouvelle', $nextSession);
+        $this->enroll($formation, 'inscrite', $nextSession);
         $this->enroll($formation, 'en_attente', $nextSession);
-        $this->enroll($formation, 'confirmée', $nextSession);
+        $this->enroll($formation, 'inscrite');
+        $this->enroll($formation, 'inscrite');
+        $this->enroll($formation, 'traitée');
 
         $this->get('/admin/formations')
             ->assertOk()
@@ -75,8 +77,9 @@ class AdminFormationsIndexTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['is_admin' => true]));
         $formation = $this->createFormation();
-        $this->enroll($formation, 'nouvelle');
-        $this->enroll($formation, 'archivée');
+        $this->enroll($formation, 'inscrite');
+        $this->enroll($formation, 'traitée');
+        $this->enroll($formation, 'inscrite', FormationSession::create(['formation_id' => $formation->id, 'starts_at' => now()->addDay(), 'published' => true]));
         ContactMessage::create(['name' => 'Awa', 'email' => 'awa@example.com', 'subject' => 'Projet', 'message' => 'Bonjour', 'read' => false]);
         ContactMessage::create(['name' => 'Awa', 'email' => 'awa@example.com', 'subject' => 'Projet', 'message' => 'Bonjour', 'read' => true]);
 

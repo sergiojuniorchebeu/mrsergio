@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminBlogController;
 use App\Http\Controllers\Admin\AdminFormationController;
 use App\Http\Controllers\Admin\AdminFormationEnrollmentController;
 use App\Http\Controllers\Admin\AdminFormationSessionController;
+use App\Http\Controllers\Admin\AdminGoogleCalendarController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\AdminTranslationController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookiePolicyController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\FormationEnrollmentController;
+use App\Http\Controllers\FormationEnrollmentLinkController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SitemapController;
@@ -45,6 +47,11 @@ Route::post('/blog/{post:slug}/comments', [BlogCommentController::class, 'store'
 Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
 Route::get('/formations/{formation:slug}', [FormationController::class, 'show'])->name('formations.show');
 Route::post('/formations/{formation:slug}/enroll', [FormationEnrollmentController::class, 'store'])->name('formations.enroll');
+Route::middleware(['signed', 'throttle:30,1'])->prefix('/formations/inscriptions/{enrollment}')->group(function () {
+    Route::get('/annuler', [FormationEnrollmentLinkController::class, 'showCancel'])->name('formations.enrollments.cancel');
+    Route::post('/annuler', [FormationEnrollmentLinkController::class, 'cancel']);
+    Route::get('/rejoindre', [FormationEnrollmentLinkController::class, 'join'])->name('formations.enrollments.join');
+});
 Route::get('/contact', [ContactController::class,  'index'])->name('contact');
 Route::post('/contact', [ContactController::class,  'send'])->name('contact.send');
 Route::get('/cookies', CookiePolicyController::class)->name('cookies');
@@ -77,6 +84,9 @@ Route::prefix('admin')
             ->whereIn('type', ['projects', 'blog', 'formations'])->whereNumber('id')->name('translations.update');
         Route::post('translations/{type}/{id}/regenerate', [AdminTranslationController::class, 'regenerate'])
             ->whereIn('type', ['projects', 'blog', 'formations'])->whereNumber('id')->name('translations.regenerate');
+        Route::get('google-calendar/connect', [AdminGoogleCalendarController::class, 'connect'])->name('google-calendar.connect');
+        Route::get('google-calendar/callback', [AdminGoogleCalendarController::class, 'callback'])->name('google-calendar.callback');
+        Route::delete('google-calendar', [AdminGoogleCalendarController::class, 'disconnect'])->name('google-calendar.disconnect');
         Route::get('formation-enrollments', [AdminFormationEnrollmentController::class, 'index'])->name('formation-enrollments.index');
         Route::patch('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'update'])->name('formation-enrollments.update');
         Route::delete('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'destroy'])->name('formation-enrollments.destroy');

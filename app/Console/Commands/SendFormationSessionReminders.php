@@ -36,7 +36,7 @@ class SendFormationSessionReminders extends Command
     public function handle(): int
     {
         $enrollments = FormationEnrollment::with(['formation', 'session'])
-            ->whereIn('status', ['nouvelle', 'confirmée'])
+            ->holdingSeat()
             ->whereNull('reminder_sent_at')
             ->whereHas('session', function ($query): void {
                 $query->whereBetween('starts_at', [now(), now()->addMinutes(self::REMINDER_WINDOW_MINUTES)]);

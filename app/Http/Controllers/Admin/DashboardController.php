@@ -28,7 +28,7 @@ class DashboardController extends Controller
                 'formations_pub' => Formation::where('published', true)->count(),
                 'messages' => ContactMessage::count(),
                 'messages_unread' => ContactMessage::unread()->count(),
-                'enrollments_new' => FormationEnrollment::query()->where('status', 'nouvelle')->count(),
+                'enrollments_new' => FormationEnrollment::query()->toHandle()->count(),
                 'comments_week' => BlogPostComment::query()->where('created_at', '>=', now()->subWeek())->count(),
             ],
             'recent_messages' => ContactMessage::latest()

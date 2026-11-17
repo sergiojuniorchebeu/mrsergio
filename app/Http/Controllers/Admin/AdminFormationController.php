@@ -22,7 +22,7 @@ class AdminFormationController extends Controller
         $formations = Formation::query()
             ->withCount([
                 'sessions as upcoming_sessions_count' => fn (Builder $query) => $query->where('starts_at', '>=', now()),
-                'enrollments as pending_enrollments_count' => fn (Builder $query) => $query->whereIn('status', ['nouvelle', 'en_attente']),
+                'enrollments as pending_enrollments_count' => fn (Builder $query) => $query->toHandle(),
             ])
             ->with(['sessions' => fn (HasMany $query) => $query->upcoming()->limit(1)])
             ->orderBy('sort_order')

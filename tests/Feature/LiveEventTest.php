@@ -105,7 +105,7 @@ class LiveEventTest extends TestCase
             'formation_session_id' => $session->id,
             'name' => 'Awa',
             'email' => 'awa@example.com',
-            'status' => 'nouvelle',
+            'status' => 'inscrite',
         ]);
 
         $this->get('/')->assertInertia(fn (Assert $page) => $page->where('liveEvent.is_full', true));

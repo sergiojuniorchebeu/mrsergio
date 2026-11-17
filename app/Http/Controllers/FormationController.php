@@ -25,7 +25,7 @@ class FormationController extends Controller
         $upcomingSessions = FormationSession::query()
             ->with('formation:id,title,slug')
             ->withCount(['enrollments as registered_count' => function ($query): void {
-                $query->whereIn('status', ['nouvelle', 'confirmée', 'présente']);
+                $query->holdingSeat();
             }])
             ->whereHas('formation', function ($query): void {
                 $query->published()->where('is_free', true);
@@ -85,7 +85,7 @@ class FormationController extends Controller
         $formation->load([
             'sessions' => function ($query): void {
                 $query->withCount(['enrollments as registered_count' => function ($enrollments): void {
-                    $enrollments->whereIn('status', ['nouvelle', 'confirmée', 'présente']);
+                    $enrollments->holdingSeat();
                 }])->where('published', true)->upcoming();
             },
         ]);

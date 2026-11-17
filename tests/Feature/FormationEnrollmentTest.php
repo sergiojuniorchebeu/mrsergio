@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Formation;
+use App\Models\FormationEnrollment;
 use App\Models\FormationSession;
 use App\Models\User;
 use App\Notifications\FormationEnrollmentConfirmation;
@@ -35,7 +36,7 @@ class FormationEnrollmentTest extends TestCase
         $this->assertDatabaseHas('formation_enrollments', [
             'formation_id' => $formation->id,
             'email' => 'aline@example.com',
-            'status' => 'nouvelle',
+            'status' => 'inscrite',
         ]);
     }
 
@@ -95,7 +96,7 @@ class FormationEnrollmentTest extends TestCase
         $this->assertDatabaseHas('formation_enrollments', [
             'email' => 'aline@example.com',
             'formation_session_id' => $session->id,
-            'status' => 'nouvelle',
+            'status' => 'inscrite',
         ]);
         $this->assertDatabaseHas('formation_enrollments', [
             'email' => 'benoit@example.com',
@@ -115,7 +116,7 @@ class FormationEnrollmentTest extends TestCase
             'name' => 'Aline M.',
             'email' => 'aline@example.com',
             'formation_session_id' => $session->id,
-        ])->assertSessionHas('enrollment.meet_url', 'https://meet.google.com/example');
+        ])->assertSessionHas('enrollment', fn (array $enrollment): bool => str_contains($enrollment['meet_url'], '/rejoindre?signature='));
 
         $this->post(route('formations.enroll', $formation), [
             'name' => 'Benoît N.',
@@ -135,10 +136,11 @@ class FormationEnrollmentTest extends TestCase
                     return false;
                 }
 
-                $mail = $notification->toMail($notifiable);
-                $content = implode("\n", [...$mail->introLines, ...$mail->outroLines, (string) $mail->actionUrl]);
+                $content = (string) $notification->toMail($notifiable)->render();
 
-                return ! str_contains(urldecode($content), 'meet.google.com');
+                return ! str_contains(urldecode($content), 'meet.google.com')
+                    && ! str_contains($content, '/rejoindre')
+                    && str_contains($content, 'liste d&#039;attente');
             },
         );
     }
@@ -185,13 +187,13 @@ class FormationEnrollmentTest extends TestCase
             'formation_id' => $session->formation_id,
             'name' => 'Aline M.',
             'email' => 'aline@example.com',
-            'status' => 'nouvelle',
+            'status' => 'inscrite',
         ]);
         $later->enrollments()->create([
             'formation_id' => $later->formation_id,
             'name' => 'Benoît N.',
             'email' => 'benoit@example.com',
-            'status' => 'nouvelle',
+            'status' => 'inscrite',
         ]);
 
         $this->artisan('formations:send-session-reminders')->assertSuccessful();
@@ -199,6 +201,122 @@ class FormationEnrollmentTest extends TestCase
 
         Notification::assertSentOnDemandTimes(FormationEnrollmentConfirmation::class, 1);
         $this->assertNotNull($enrollment->fresh()->reminder_sent_at);
+    }
+
+    public function test_cancelling_a_registration_promotes_the_first_waitlisted_person_and_sends_the_meet_link(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 1);
+        $registered = $this->enrollIn($session, 'aline@example.com', FormationEnrollment::STATUS_REGISTERED);
+        $first = $this->enrollIn($session, 'benoit@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $second = $this->enrollIn($session, 'chloe@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->patch(route('admin.formation-enrollments.update', $registered), ['status' => FormationEnrollment::STATUS_CANCELLED])
+            ->assertRedirect();
+
+        $this->assertSame(FormationEnrollment::STATUS_REGISTERED, $first->fresh()->status);
+        $this->assertSame(FormationEnrollment::STATUS_WAITLISTED, $second->fresh()->status);
+        $this->assertMeetLinkSentTo('benoit@example.com');
+        Notification::assertSentOnDemandTimes(FormationEnrollmentConfirmation::class, 1);
+    }
+
+    public function test_deleting_a_registration_or_raising_the_capacity_frees_seats_for_the_waitlist(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 1);
+        $registered = $this->enrollIn($session, 'aline@example.com', FormationEnrollment::STATUS_REGISTERED);
+        $first = $this->enrollIn($session, 'benoit@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $second = $this->enrollIn($session, 'chloe@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $third = $this->enrollIn($session, 'david@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->delete(route('admin.formation-enrollments.destroy', $registered))->assertRedirect();
+        $this->assertSame(FormationEnrollment::STATUS_REGISTERED, $first->fresh()->status);
+
+        $this->patch(route('admin.formations.sessions.update', $session), [
+            'starts_at' => $session->starts_at->format('Y-m-d H:i:s'),
+            'capacity' => 2,
+            'published' => true,
+        ])->assertRedirect();
+
+        $this->assertSame(FormationEnrollment::STATUS_REGISTERED, $second->fresh()->status);
+        $this->assertSame(FormationEnrollment::STATUS_WAITLISTED, $third->fresh()->status);
+        $this->assertMeetLinkSentTo('chloe@example.com');
+    }
+
+    public function test_moving_someone_off_the_waitlist_by_hand_sends_them_the_meet_link(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 1);
+        $this->enrollIn($session, 'aline@example.com', FormationEnrollment::STATUS_REGISTERED);
+        $waitlisted = $this->enrollIn($session, 'benoit@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->patch(route('admin.formation-enrollments.update', $waitlisted), ['status' => FormationEnrollment::STATUS_REGISTERED])
+            ->assertRedirect();
+
+        $this->assertMeetLinkSentTo('benoit@example.com');
+    }
+
+    public function test_past_sessions_do_not_promote_the_waitlist_and_unknown_statuses_are_rejected(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 1, startsAt: now()->subHour());
+        $registered = $this->enrollIn($session, 'aline@example.com', FormationEnrollment::STATUS_REGISTERED);
+        $waitlisted = $this->enrollIn($session, 'benoit@example.com', FormationEnrollment::STATUS_WAITLISTED);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->patch(route('admin.formation-enrollments.update', $registered), ['status' => 'présente'])
+            ->assertSessionHasErrors('status');
+        $this->patch(route('admin.formation-enrollments.update', $registered), ['status' => FormationEnrollment::STATUS_CANCELLED]);
+
+        $this->assertSame(FormationEnrollment::STATUS_WAITLISTED, $waitlisted->fresh()->status);
+        Notification::assertNothingSent();
+    }
+
+    public function test_a_cancelled_person_can_enroll_again_in_the_same_session(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 5);
+        $this->enrollIn($session, 'aline@example.com', FormationEnrollment::STATUS_CANCELLED);
+
+        $this->post(route('formations.enroll', $session->formation), [
+            'name' => 'Aline M.',
+            'email' => 'aline@example.com',
+            'formation_session_id' => $session->id,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('formation_enrollments', [
+            'email' => 'aline@example.com',
+            'status' => FormationEnrollment::STATUS_REGISTERED,
+        ]);
+    }
+
+    private function enrollIn(FormationSession $session, string $email, string $status): FormationEnrollment
+    {
+        return $session->enrollments()->create([
+            'formation_id' => $session->formation_id,
+            'name' => 'Participant',
+            'email' => $email,
+            'status' => $status,
+        ]);
+    }
+
+    private function assertMeetLinkSentTo(string $email): void
+    {
+        Notification::assertSentOnDemand(
+            FormationEnrollmentConfirmation::class,
+            function (FormationEnrollmentConfirmation $notification, array $channels, object $notifiable) use ($email): bool {
+                if ($notifiable->routes['mail'] !== $email || ! $notification->promoted) {
+                    return false;
+                }
+
+                $content = $notification->content();
+
+                return $content['kind'] === 'promoted' && str_contains((string) $content['joinUrl'], '/rejoindre?signature=');
+            },
+        );
     }
 
     private function createLiveSession(int $capacity, ?\DateTimeInterface $startsAt = null): FormationSession
