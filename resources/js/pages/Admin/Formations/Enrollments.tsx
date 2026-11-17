@@ -14,8 +14,16 @@ import { buttonVariants } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { cn } from '@/lib/utils';
 
+interface SessionOption {
+    id: number;
+    formation_id: number;
+    label: string;
+    is_full: boolean;
+}
+
 interface Enrollment {
     id: number;
+    formation_id: number;
     name: string;
     email: string;
     phone: string | null;
@@ -76,10 +84,71 @@ const FILTERS: {
     },
 ];
 
+/**
+ * Place une demande sans session (ancienne demande, formation payante) dans une session à venir.
+ */
+function AssignSession({
+    enrollment,
+    sessions,
+}: {
+    enrollment: Enrollment;
+    sessions: SessionOption[];
+}) {
+    const [error, setError] = useState<string | null>(null);
+    const options = sessions.filter(
+        (session) => session.formation_id === enrollment.formation_id,
+    );
+
+    if (options.length === 0) {
+        return null;
+    }
+
+    function assign(sessionId: string) {
+        if (!sessionId) {
+            return;
+        }
+
+        router.patch(
+            `/admin/formation-enrollments/${enrollment.id}/session`,
+            { formation_session_id: Number(sessionId) },
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setError(errors.formation_session_id ?? null),
+                onSuccess: () => setError(null),
+            },
+        );
+    }
+
+    return (
+        <div className="mt-3">
+            <select
+                defaultValue=""
+                onChange={(event) => assign(event.target.value)}
+                aria-label={`Ajouter ${enrollment.name} à une session`}
+                className="max-w-full rounded-lg border border-teal-200 bg-teal-50/60 px-3 py-2 text-[13px] font-semibold text-teal-800 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
+            >
+                <option value="">Ajouter aux inscrits d'une session…</option>
+                {options.map((session) => (
+                    <option key={session.id} value={session.id}>
+                        {session.label}
+                        {session.is_full ? " (complète : liste d'attente)" : ''}
+                    </option>
+                ))}
+            </select>
+            {error && (
+                <p className="mt-1.5 text-[12px] text-rose-600">{error}</p>
+            )}
+        </div>
+    );
+}
+
 export default function Enrollments({
     enrollments,
+    sessions,
 }: {
     enrollments: Enrollment[];
+    sessions: SessionOption[];
 }) {
     const [deleteTarget, setDeleteTarget] = useState<Enrollment | null>(null);
     const [statusFilter, setStatusFilter] = useState<Filter | null>(null);
@@ -244,6 +313,13 @@ export default function Enrollments({
                                             {enrollment.message}
                                         </p>
                                     )}
+                                    {!enrollment.session &&
+                                        enrollment.status !== 'annulée' && (
+                                            <AssignSession
+                                                enrollment={enrollment}
+                                                sessions={sessions}
+                                            />
+                                        )}
                                 </div>
 
                                 <div className="flex shrink-0 flex-wrap items-center gap-2">

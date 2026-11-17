@@ -89,6 +89,7 @@ Route::prefix('admin')
         Route::delete('google-calendar', [AdminGoogleCalendarController::class, 'disconnect'])->name('google-calendar.disconnect');
         Route::get('formation-enrollments', [AdminFormationEnrollmentController::class, 'index'])->name('formation-enrollments.index');
         Route::patch('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'update'])->name('formation-enrollments.update');
+        Route::patch('formation-enrollments/{enrollment}/session', [AdminFormationEnrollmentController::class, 'assignSession'])->name('formation-enrollments.assign-session');
         Route::delete('formation-enrollments/{enrollment}', [AdminFormationEnrollmentController::class, 'destroy'])->name('formation-enrollments.destroy');
 
         // Messages

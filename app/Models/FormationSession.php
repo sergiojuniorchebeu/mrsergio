@@ -108,6 +108,17 @@ class FormationSession extends Model
     }
 
     /**
+     * Statut d'une nouvelle inscription : une place si la session n'est pas complète, sinon la liste d'attente.
+     * À appeler avec la session verrouillée (lockForUpdate) pour ne pas dépasser la capacité.
+     */
+    public function statusForNewEnrollment(): string
+    {
+        $isFull = $this->capacity !== null && $this->enrollments()->holdingSeat()->count() >= $this->capacity;
+
+        return $isFull ? FormationEnrollment::STATUS_WAITLISTED : FormationEnrollment::STATUS_REGISTERED;
+    }
+
+    /**
      * Fait monter la liste d'attente (premiers arrivés d'abord) dans les places libres,
      * puis envoie à chaque personne promue son email avec le lien Meet.
      *

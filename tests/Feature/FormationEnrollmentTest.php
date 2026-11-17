@@ -293,6 +293,52 @@ class FormationEnrollmentTest extends TestCase
         ]);
     }
 
+    public function test_an_admin_can_add_a_request_without_session_to_a_session(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 1);
+        $request = $session->formation->enrollments()->create(['name' => 'Zida', 'email' => 'zida@example.com', 'status' => FormationEnrollment::STATUS_HANDLED]);
+        $late = $session->formation->enrollments()->create(['name' => 'Enjome', 'email' => 'enjome@example.com']);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->get(route('admin.formation-enrollments.index'))
+            ->assertInertia(fn ($page) => $page->where('sessions.0.id', $session->id)->where('sessions.0.is_full', false));
+
+        $this->patch(route('admin.formation-enrollments.assign-session', $request), ['formation_session_id' => $session->id])
+            ->assertSessionHas('success');
+        $this->patch(route('admin.formation-enrollments.assign-session', $late), ['formation_session_id' => $session->id])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('formation_enrollments', ['id' => $request->id, 'formation_session_id' => $session->id, 'status' => FormationEnrollment::STATUS_REGISTERED]);
+        $this->assertDatabaseHas('formation_enrollments', ['id' => $late->id, 'formation_session_id' => $session->id, 'status' => FormationEnrollment::STATUS_WAITLISTED]);
+        Notification::assertSentOnDemand(
+            FormationEnrollmentConfirmation::class,
+            fn (FormationEnrollmentConfirmation $notification, array $channels, object $notifiable): bool => $notifiable->routes['mail'] === 'zida@example.com'
+                && $notification->content()['kind'] === 'registered'
+                && str_contains((string) $notification->content()['joinUrl'], '/rejoindre?signature='),
+        );
+    }
+
+    public function test_a_request_cannot_be_added_to_another_formation_or_twice_to_a_session(): void
+    {
+        Notification::fake();
+        $session = $this->createLiveSession(capacity: 5);
+        $otherSession = $this->createLiveSession(capacity: 5);
+        $pastSession = $this->createLiveSession(capacity: 5, startsAt: now()->subHour());
+        $pastSession->update(['formation_id' => $session->formation_id]);
+        $this->enrollIn($session, 'zida@example.com', FormationEnrollment::STATUS_REGISTERED);
+        $request = $session->formation->enrollments()->create(['name' => 'Zida', 'email' => 'zida@example.com']);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        foreach ([$otherSession, $pastSession, $session] as $target) {
+            $this->patch(route('admin.formation-enrollments.assign-session', $request), ['formation_session_id' => $target->id])
+                ->assertSessionHasErrors('formation_session_id');
+        }
+
+        $this->assertNull($request->fresh()->formation_session_id);
+        Notification::assertNothingSent();
+    }
+
     private function enrollIn(FormationSession $session, string $email, string $status): FormationEnrollment
     {
         return $session->enrollments()->create([

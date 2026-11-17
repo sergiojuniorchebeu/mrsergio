@@ -27,12 +27,7 @@ class FormationEnrollmentController extends Controller
                     ->lockForUpdate()
                     ->findOrFail($data['formation_session_id']);
 
-                $registeredCount = $session->enrollments()
-                    ->holdingSeat()
-                    ->count();
-                $data['status'] = $session->capacity !== null && $registeredCount >= $session->capacity
-                    ? FormationEnrollment::STATUS_WAITLISTED
-                    : FormationEnrollment::STATUS_REGISTERED;
+                $data['status'] = $session->statusForNewEnrollment();
             }
 
             return $formation->enrollments()->create($data);
